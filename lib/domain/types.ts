@@ -1,0 +1,100 @@
+export const CLAIM_KIND = {
+  EMPLOYER_POLICY: "EMPLOYER_POLICY",
+  LIVED_EXPERIENCE: "LIVED_EXPERIENCE",
+} as const
+export type ClaimKind = (typeof CLAIM_KIND)[keyof typeof CLAIM_KIND]
+
+export const AUTHORITY_SCOPE = {
+  EMPLOYER_STATED: "EMPLOYER_STATED",
+  REPORTED_EXPERIENCE: "REPORTED_EXPERIENCE",
+  CANDIDATE_SPECIFIC_ANSWER: "CANDIDATE_SPECIFIC_ANSWER",
+} as const
+export type AuthorityScope = (typeof AUTHORITY_SCOPE)[keyof typeof AUTHORITY_SCOPE]
+
+export const IMPORTANCE = {
+  LOW: "LOW",
+  MEDIUM: "MEDIUM",
+  HIGH: "HIGH",
+  CRITICAL: "CRITICAL",
+} as const
+export type Importance = (typeof IMPORTANCE)[keyof typeof IMPORTANCE]
+
+export const EVIDENCE_STANCE = {
+  SUPPORTS: "SUPPORTS",
+  CHALLENGES: "CHALLENGES",
+  NEUTRAL: "NEUTRAL",
+} as const
+export type EvidenceStance = (typeof EVIDENCE_STANCE)[keyof typeof EVIDENCE_STANCE]
+
+export const CLAIM_STATUS = {
+  UNVERIFIED: "UNVERIFIED",
+  SUPPORTED: "SUPPORTED",
+  MATERIAL_AMBIGUITY: "MATERIAL_AMBIGUITY",
+  CHALLENGED: "CHALLENGED",
+} as const
+export type ClaimStatus = (typeof CLAIM_STATUS)[keyof typeof CLAIM_STATUS]
+
+export const CASE_ORIGIN = {
+  DEMO_FIXTURE: "DEMO_FIXTURE",
+  AGENT_IMPORTED: "AGENT_IMPORTED",
+} as const
+export type CaseOrigin = (typeof CASE_ORIGIN)[keyof typeof CASE_ORIGIN]
+
+export type Evidence = {
+  readonly id: string
+  readonly scope: AuthorityScope
+  readonly stance: EvidenceStance
+  readonly text: string
+  readonly speakerRole?: string
+}
+
+export type SourceClaim = {
+  readonly id: string
+  readonly dimension: string
+  readonly employerStatement: string
+  readonly importance: Importance
+  readonly unresolvedVariable: string
+  readonly measurableForm: string
+  readonly evidence: readonly Evidence[]
+  readonly kind?: ClaimKind
+}
+
+export type RoleCase = {
+  readonly id: string
+  readonly company: string
+  readonly role: string
+  readonly origin: CaseOrigin
+  readonly claims: readonly SourceClaim[]
+}
+
+export type DerivedClaim = {
+  readonly id: string
+  readonly dimension: string
+  readonly employerStatement: string
+  readonly importance: Importance
+  readonly kind: ClaimKind
+  readonly unresolvedVariable: string
+  readonly measurableForm: string
+  readonly evidence: readonly Evidence[]
+  readonly unresolvedness: number
+  readonly tension: number
+  readonly probeEligible: boolean
+  readonly probePriority: number
+  readonly status: ClaimStatus
+}
+
+export type DerivedCase = {
+  readonly id: string
+  readonly company: string
+  readonly role: string
+  readonly origin: CaseOrigin
+  readonly claims: readonly DerivedClaim[]
+  readonly topProbeId: string | null
+}
+
+export type InterviewAnswerInput = {
+  readonly claimId: string
+  readonly stance: EvidenceStance
+  readonly text: string
+  readonly speakerRole: string
+}
