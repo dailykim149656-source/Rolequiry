@@ -1,5 +1,5 @@
 import type { CaseStore } from "@/lib/case-store";
-import type { DerivedClaim } from "@/lib/domain/types";
+import type { DerivedClaim, SpeakerRole } from "@/lib/domain/types";
 
 function publicClaim(claim: DerivedClaim, rankingVisible: boolean) {
   return {
@@ -92,11 +92,17 @@ export function recordInterviewAnswerTool(
     claimId: string;
     stance: "SUPPORTS" | "CHALLENGES" | "NEUTRAL";
     text: string;
-    speakerRole: string;
+    speakerRole: SpeakerRole;
   },
 ) {
+  const exists = store
+    .getState()
+    .source.claims.some((claim) => claim.id === input.claimId);
+  if (!exists) {
+    return { ok: false as const, error: "Unknown claim id" };
+  }
   store.recordAnswer(input);
-  return getCaseState(store);
+  return { ok: true as const, ...getCaseState(store) };
 }
 
 export const CASE_TOOL_CONTRACTS = [

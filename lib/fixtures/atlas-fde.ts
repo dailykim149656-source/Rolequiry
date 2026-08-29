@@ -111,7 +111,7 @@ export const ATLAS_FDE: RoleCase = {
           scope: AUTHORITY_SCOPE.CANDIDATE_SPECIFIC_ANSWER,
           stance: "SUPPORTS",
           text: "Recruiter previously said customer work is real and weekly.",
-          speakerRole: "recruiter",
+          speakerRole: "RECRUITER",
         },
       ],
     },

@@ -67,7 +67,7 @@ describe("Fixture A deriveCase", () => {
       claimId: "technical-ownership",
       stance: "CHALLENGES",
       text: "Hiring manager said ownership is split with a central platform team after design review.",
-      speakerRole: "hiring-manager",
+      speakerRole: "HIRING_MANAGER",
     });
     const derived = deriveCase(answered);
     const ownership = derived.claims.find(

@@ -21,7 +21,10 @@ const answerSchema = {
     claimId: { type: "string" },
     stance: { type: "string", enum: ["SUPPORTS", "CHALLENGES", "NEUTRAL"] },
     text: { type: "string" },
-    speakerRole: { type: "string" },
+    speakerRole: {
+      type: "string",
+      enum: ["RECRUITER", "HIRING_MANAGER", "TEAM_MEMBER", "OTHER"],
+    },
   },
   required: ["claimId", "stance", "text", "speakerRole"],
   additionalProperties: false,
@@ -62,7 +65,7 @@ export function useCaseWebMCPTools(store: CaseStore) {
       claimId: string;
       stance: "SUPPORTS" | "CHALLENGES" | "NEUTRAL";
       text: string;
-      speakerRole: string;
+      speakerRole: "RECRUITER" | "HIRING_MANAGER" | "TEAM_MEMBER" | "OTHER";
     }) => recordInterviewAnswerTool(store, args),
   });
 

@@ -2,7 +2,7 @@
 
 import { useMemo, useSyncExternalStore } from "react";
 import { createCaseStore } from "@/lib/case-store";
-import { IMPORTANCE, type Importance } from "@/lib/domain/types";
+import { IMPORTANCE, type Importance, SPEAKER_ROLE } from "@/lib/domain/types";
 import { useCaseWebMCPTools } from "@/lib/webmcp/use-case-tools";
 
 const IMPORTANCE_OPTIONS = [
@@ -36,46 +36,18 @@ export function CaseApp() {
         agent asks; you bring the answer back.
       </p>
 
-      <div className="mt-6 flex flex-wrap gap-3">
-        <button
-          type="button"
-          className={chip(snapshot.source.id === "atlas-fde")}
-          onClick={() => store.loadFixture("atlas-fde")}
-        >
-          Fixture A · Atlas FDE
-        </button>
-        <button
-          type="button"
-          className={chip(snapshot.source.id === "kestrel-solutions")}
-          onClick={() => store.loadFixture("kestrel-solutions")}
-        >
-          Fixture B · Kestrel Solutions
-        </button>
-        <button
-          type="button"
-          className={chip(false)}
-          onClick={() => store.reset()}
-        >
-          Reset demo
-        </button>
-        <button
-          type="button"
-          className={chip(false)}
-          onClick={() => store.selectDecisionChanger()}
-        >
-          Select decision changer
-        </button>
-      </div>
-
-      <p className="mt-4 text-sm text-zinc-500" data-testid="tool-status">
-        WebMCP tools: get_role_claims, get_case_state, select_decision_changer,
-        record_interview_answer. Registered:{" "}
-        {String(
-          [webmcp.claims, webmcp.state, webmcp.select, webmcp.record].filter(
-            (item) => item.registered,
-          ).length,
-        )}
+      <p className="mt-2 text-sm text-zinc-500" data-testid="case-origin">
+        {snapshot.source.origin === "DEMO_FIXTURE"
+          ? "Demo case"
+          : "Imported case"}
       </p>
+
+      <section className="mt-8">
+        <h2 className="text-lg font-medium">What the employer claims</h2>
+        <p className="mt-1 text-sm text-zinc-500">
+          Set what matters to you. The agent reads this same live case.
+        </p>
+      </section>
 
       <section className="mt-8 grid gap-4 md:grid-cols-2">
         {snapshot.derived.claims.map((claim) => (
@@ -131,7 +103,7 @@ export function CaseApp() {
       </section>
 
       <section className="mt-8 rounded-2xl bg-zinc-950 p-5 text-zinc-50">
-        <h2 className="text-lg font-medium">Decision changer</h2>
+        <h2 className="text-lg font-medium">What to ask next</h2>
         {selected ? (
           <div className="mt-3 space-y-2 text-sm">
             <p data-testid="active-probe">Active probe: {selected.dimension}</p>
@@ -145,7 +117,7 @@ export function CaseApp() {
                   claimId: selected.id,
                   stance: "CHALLENGES",
                   text: "Hiring manager said ownership is split with a central platform team after design review.",
-                  speakerRole: "hiring-manager",
+                  speakerRole: SPEAKER_ROLE.HIRING_MANAGER,
                 })
               }
             >
@@ -159,6 +131,51 @@ export function CaseApp() {
           </p>
         )}
       </section>
+
+      <details className="mt-10 rounded-2xl border border-dashed border-zinc-300 p-4 text-sm text-zinc-600">
+        <summary className="cursor-pointer font-medium text-zinc-800">
+          Demo controls
+        </summary>
+        <div className="mt-4 flex flex-wrap gap-3">
+          <button
+            type="button"
+            className={chip(snapshot.source.id === "atlas-fde")}
+            onClick={() => store.loadFixture("atlas-fde")}
+          >
+            Atlas FDE
+          </button>
+          <button
+            type="button"
+            className={chip(snapshot.source.id === "kestrel-solutions")}
+            onClick={() => store.loadFixture("kestrel-solutions")}
+          >
+            Kestrel Solutions
+          </button>
+          <button
+            type="button"
+            className={chip(false)}
+            onClick={() => store.reset()}
+          >
+            Reset demo
+          </button>
+          <button
+            type="button"
+            className={chip(false)}
+            onClick={() => store.selectDecisionChanger()}
+          >
+            Rank next question
+          </button>
+        </div>
+        <p className="mt-3" data-testid="tool-status">
+          WebMCP registered:{" "}
+          {String(
+            [webmcp.claims, webmcp.state, webmcp.select, webmcp.record].filter(
+              (item) => item.registered,
+            ).length,
+          )}
+          /4
+        </p>
+      </details>
     </main>
   );
 }

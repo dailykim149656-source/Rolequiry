@@ -28,6 +28,14 @@ export const EVIDENCE_STANCE = {
 export type EvidenceStance =
   (typeof EVIDENCE_STANCE)[keyof typeof EVIDENCE_STANCE];
 
+export const SPEAKER_ROLE = {
+  RECRUITER: "RECRUITER",
+  HIRING_MANAGER: "HIRING_MANAGER",
+  TEAM_MEMBER: "TEAM_MEMBER",
+  OTHER: "OTHER",
+} as const;
+export type SpeakerRole = (typeof SPEAKER_ROLE)[keyof typeof SPEAKER_ROLE];
+
 export const CLAIM_STATUS = {
   UNVERIFIED: "UNVERIFIED",
   SUPPORTED: "SUPPORTED",
@@ -47,7 +55,7 @@ export type Evidence = {
   readonly scope: AuthorityScope;
   readonly stance: EvidenceStance;
   readonly text: string;
-  readonly speakerRole?: string;
+  readonly speakerRole?: SpeakerRole;
 };
 
 export type SourceClaim = {
@@ -98,5 +106,5 @@ export type InterviewAnswerInput = {
   readonly claimId: string;
   readonly stance: EvidenceStance;
   readonly text: string;
-  readonly speakerRole: string;
+  readonly speakerRole: SpeakerRole;
 };
