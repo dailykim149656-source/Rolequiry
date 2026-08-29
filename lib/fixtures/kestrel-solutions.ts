@@ -1,4 +1,10 @@
-import { AUTHORITY_SCOPE, CASE_ORIGIN, CLAIM_KIND, IMPORTANCE, type RoleCase } from "@/lib/domain/types"
+import {
+  AUTHORITY_SCOPE,
+  CASE_ORIGIN,
+  CLAIM_KIND,
+  IMPORTANCE,
+  type RoleCase,
+} from "@/lib/domain/types";
 
 export const KESTREL_SOLUTIONS: RoleCase = {
   id: "kestrel-solutions",
@@ -27,8 +33,10 @@ export const KESTREL_SOLUTIONS: RoleCase = {
       dimension: "Hands-on coding share",
       employerStatement: "Most solutions work is hands-on coding",
       importance: IMPORTANCE.HIGH,
-      unresolvedVariable: "What share of the week is spent writing code versus customer enablement?",
-      measurableForm: "Typical weekly split between coding and customer enablement.",
+      unresolvedVariable:
+        "What share of the week is spent writing code versus customer enablement?",
+      measurableForm:
+        "Typical weekly split between coding and customer enablement.",
       evidence: [
         {
           id: "coding-employer",
@@ -91,4 +99,4 @@ export const KESTREL_SOLUTIONS: RoleCase = {
       ],
     },
   ],
-}
+};

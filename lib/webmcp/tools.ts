@@ -1,5 +1,5 @@
-import type { CaseStore } from "@/lib/case-store"
-import type { DerivedClaim } from "@/lib/domain/types"
+import type { CaseStore } from "@/lib/case-store";
+import type { DerivedClaim } from "@/lib/domain/types";
 
 function publicClaim(claim: DerivedClaim, rankingVisible: boolean) {
   return {
@@ -25,11 +25,11 @@ function publicClaim(claim: DerivedClaim, rankingVisible: boolean) {
           measurableForm: claim.measurableForm,
         }
       : {}),
-  }
+  };
 }
 
 export function getRoleClaims(store: CaseStore) {
-  const { source } = store.getState()
+  const { source } = store.getState();
   return {
     company: source.company,
     role: source.role,
@@ -43,11 +43,11 @@ export function getRoleClaims(store: CaseStore) {
         .filter((item) => item.scope === "EMPLOYER_STATED")
         .map((item) => item.text),
     })),
-  }
+  };
 }
 
 export function getCaseState(store: CaseStore) {
-  const snapshot = store.getState()
+  const snapshot = store.getState();
   return {
     company: snapshot.source.company,
     role: snapshot.source.role,
@@ -55,14 +55,16 @@ export function getCaseState(store: CaseStore) {
     activeProbeId: snapshot.activeProbeId,
     rankingVisible: snapshot.rankingVisible,
     claims: snapshot.derived.claims.map((claim) => publicClaim(claim, false)),
-  }
+  };
 }
 
 export function selectDecisionChanger(store: CaseStore) {
-  const derived = store.selectDecisionChanger()
-  const selected = derived.claims.find((claim) => claim.id === derived.topProbeId)
+  const derived = store.selectDecisionChanger();
+  const selected = derived.claims.find(
+    (claim) => claim.id === derived.topProbeId,
+  );
   if (!selected) {
-    return { ok: false as const, error: "No probe-eligible claim" }
+    return { ok: false as const, error: "No probe-eligible claim" };
   }
   return {
     ok: true as const,
@@ -81,15 +83,20 @@ export function selectDecisionChanger(store: CaseStore) {
         id: claim.id,
         probePriority: Number(claim.probePriority.toFixed(3)),
       })),
-  }
+  };
 }
 
 export function recordInterviewAnswerTool(
   store: CaseStore,
-  input: { claimId: string; stance: "SUPPORTS" | "CHALLENGES" | "NEUTRAL"; text: string; speakerRole: string },
+  input: {
+    claimId: string;
+    stance: "SUPPORTS" | "CHALLENGES" | "NEUTRAL";
+    text: string;
+    speakerRole: string;
+  },
 ) {
-  store.recordAnswer(input)
-  return getCaseState(store)
+  store.recordAnswer(input);
+  return getCaseState(store);
 }
 
 export const CASE_TOOL_CONTRACTS = [
@@ -117,4 +124,4 @@ export const CASE_TOOL_CONTRACTS = [
       "Record an answer the user personally obtained from an interviewer. Never fabricate an answer.",
     annotations: { readOnlyHint: false },
   },
-] as const
+] as const;

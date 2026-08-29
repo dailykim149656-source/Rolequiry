@@ -1,4 +1,10 @@
-import { claimStatus, deriveClaimKind, probePriority, tensionFor, unresolvednessFor } from "./policy"
+import {
+  claimStatus,
+  deriveClaimKind,
+  probePriority,
+  tensionFor,
+  unresolvednessFor,
+} from "./policy";
 import type {
   DerivedCase,
   DerivedClaim,
@@ -6,18 +12,18 @@ import type {
   InterviewAnswerInput,
   RoleCase,
   SourceClaim,
-} from "./types"
-import { AUTHORITY_SCOPE } from "./types"
+} from "./types";
+import { AUTHORITY_SCOPE } from "./types";
 
 function deriveClaim(claim: SourceClaim): DerivedClaim {
-  const kind = deriveClaimKind(claim)
-  const unresolvedness = unresolvednessFor(kind, claim.evidence)
-  const tension = tensionFor(claim.evidence)
+  const kind = deriveClaimKind(claim);
+  const unresolvedness = unresolvednessFor(kind, claim.evidence);
+  const tension = tensionFor(claim.evidence);
   const ranking = probePriority({
     importance: claim.importance,
     unresolvedness,
     tension,
-  })
+  });
   return {
     id: claim.id,
     dimension: claim.dimension,
@@ -36,16 +42,16 @@ function deriveClaim(claim: SourceClaim): DerivedClaim {
       unresolvedness,
       tension,
     }),
-  }
+  };
 }
 
 export function deriveCase(roleCase: RoleCase): DerivedCase {
-  const claims = roleCase.claims.map(deriveClaim)
-  const eligible = claims.filter((claim) => claim.probeEligible)
+  const claims = roleCase.claims.map(deriveClaim);
+  const eligible = claims.filter((claim) => claim.probeEligible);
   const top = eligible.reduce<DerivedClaim | null>((best, claim) => {
-    if (!best || claim.probePriority > best.probePriority) return claim
-    return best
-  }, null)
+    if (!best || claim.probePriority > best.probePriority) return claim;
+    return best;
+  }, null);
   return {
     id: roleCase.id,
     company: roleCase.company,
@@ -53,7 +59,7 @@ export function deriveCase(roleCase: RoleCase): DerivedCase {
     origin: roleCase.origin,
     claims,
     topProbeId: top?.id ?? null,
-  }
+  };
 }
 
 export function setClaimImportance(
@@ -66,7 +72,7 @@ export function setClaimImportance(
     claims: roleCase.claims.map((claim) =>
       claim.id === claimId ? { ...claim, importance } : claim,
     ),
-  }
+  };
 }
 
 export function recordInterviewAnswer(
@@ -76,7 +82,7 @@ export function recordInterviewAnswer(
   return {
     ...roleCase,
     claims: roleCase.claims.map((claim) => {
-      if (claim.id !== input.claimId) return claim
+      if (claim.id !== input.claimId) return claim;
       const nextEvidence = [
         ...claim.evidence,
         {
@@ -86,8 +92,8 @@ export function recordInterviewAnswer(
           text: input.text,
           speakerRole: input.speakerRole,
         },
-      ]
-      return { ...claim, evidence: nextEvidence }
+      ];
+      return { ...claim, evidence: nextEvidence };
     }),
-  }
+  };
 }

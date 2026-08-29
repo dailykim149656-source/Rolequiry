@@ -6,6 +6,7 @@ RoleProbe is an agent-native candidate due-diligence app for the OpenAI WebMCP C
 
 ## One URL to test
 
+- Live demo: https://roleprobe-five.vercel.app/case
 - Canonical judging surface: `/case`
 - Employer reference surface: `/employer/atlas-fde`
 - Local: `bun run dev -- --port 3100` then open `http://127.0.0.1:3100/case`

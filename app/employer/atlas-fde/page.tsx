@@ -1,5 +1,5 @@
-import { EmployerApp } from "@/components/EmployerApp"
+import { EmployerApp } from "@/components/EmployerApp";
 
 export default function EmployerPage() {
-  return <EmployerApp />
+  return <EmployerApp />;
 }

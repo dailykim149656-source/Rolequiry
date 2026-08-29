@@ -1,4 +1,10 @@
-import { AUTHORITY_SCOPE, CASE_ORIGIN, CLAIM_KIND, IMPORTANCE, type RoleCase } from "@/lib/domain/types"
+import {
+  AUTHORITY_SCOPE,
+  CASE_ORIGIN,
+  CLAIM_KIND,
+  IMPORTANCE,
+  type RoleCase,
+} from "@/lib/domain/types";
 
 export const ATLAS_FDE: RoleCase = {
   id: "atlas-fde",
@@ -11,8 +17,10 @@ export const ATLAS_FDE: RoleCase = {
       dimension: "Technical ownership",
       employerStatement: "High ownership from design through deployment",
       importance: IMPORTANCE.CRITICAL,
-      unresolvedVariable: "Who owns architecture decisions after a robot is deployed to a customer site?",
-      measurableForm: "Named owner plus the last customer-site change that person shipped without a central-platform review.",
+      unresolvedVariable:
+        "Who owns architecture decisions after a robot is deployed to a customer site?",
+      measurableForm:
+        "Named owner plus the last customer-site change that person shipped without a central-platform review.",
       evidence: [
         {
           id: "ownership-employer",
@@ -39,8 +47,10 @@ export const ATLAS_FDE: RoleCase = {
       dimension: "Travel",
       employerStatement: "Average travel ~30%",
       importance: IMPORTANCE.LOW,
-      unresolvedVariable: "What travel load should a candidate expect in the first year?",
-      measurableForm: "Days on-site in the last two quarters for this team, not a company-wide average.",
+      unresolvedVariable:
+        "What travel load should a candidate expect in the first year?",
+      measurableForm:
+        "Days on-site in the last two quarters for this team, not a company-wide average.",
       evidence: [
         {
           id: "travel-employer",
@@ -73,8 +83,10 @@ export const ATLAS_FDE: RoleCase = {
       dimension: "Customer interaction",
       employerStatement: "Direct customer work",
       importance: IMPORTANCE.MEDIUM,
-      unresolvedVariable: "How much of the week is spent with customers versus internal engineering?",
-      measurableForm: "Typical weekly split between customer-facing time and internal engineering.",
+      unresolvedVariable:
+        "How much of the week is spent with customers versus internal engineering?",
+      measurableForm:
+        "Typical weekly split between customer-facing time and internal engineering.",
       evidence: [
         {
           id: "customer-employer",
@@ -121,4 +133,4 @@ export const ATLAS_FDE: RoleCase = {
       ],
     },
   ],
-}
+};

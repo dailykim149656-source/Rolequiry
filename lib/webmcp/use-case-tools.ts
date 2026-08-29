@@ -1,19 +1,19 @@
-"use client"
+"use client";
 
-import { useWebMCP } from "use-webmcp-tool"
-import type { CaseStore } from "@/lib/case-store"
+import { useWebMCP } from "use-webmcp-tool";
+import type { CaseStore } from "@/lib/case-store";
 import {
   getCaseState,
   getRoleClaims,
   recordInterviewAnswerTool,
   selectDecisionChanger,
-} from "@/lib/webmcp/tools"
+} from "@/lib/webmcp/tools";
 
 const emptySchema = {
   type: "object",
   properties: {},
   additionalProperties: false,
-} as const
+} as const;
 
 const answerSchema = {
   type: "object",
@@ -25,9 +25,9 @@ const answerSchema = {
   },
   required: ["claimId", "stance", "text", "speakerRole"],
   additionalProperties: false,
-} as const
+} as const;
 
-export function CaseWebMCPTools({ store }: { store: CaseStore }) {
+export function useCaseWebMCPTools(store: CaseStore) {
   const claims = useWebMCP({
     name: "get_role_claims",
     description:
@@ -35,7 +35,7 @@ export function CaseWebMCPTools({ store }: { store: CaseStore }) {
     inputSchema: emptySchema,
     annotations: { readOnlyHint: true, untrustedContentHint: true },
     execute: () => getRoleClaims(store),
-  })
+  });
   const state = useWebMCP({
     name: "get_case_state",
     description:
@@ -43,7 +43,7 @@ export function CaseWebMCPTools({ store }: { store: CaseStore }) {
     inputSchema: emptySchema,
     annotations: { readOnlyHint: true },
     execute: () => getCaseState(store),
-  })
+  });
   const select = useWebMCP({
     name: "select_decision_changer",
     description:
@@ -51,15 +51,20 @@ export function CaseWebMCPTools({ store }: { store: CaseStore }) {
     inputSchema: emptySchema,
     annotations: { readOnlyHint: false },
     execute: () => selectDecisionChanger(store),
-  })
+  });
   const record = useWebMCP({
     name: "record_interview_answer",
-    description: "Record an answer the user personally obtained from an interviewer. Never fabricate an answer.",
+    description:
+      "Record an answer the user personally obtained from an interviewer. Never fabricate an answer.",
     inputSchema: answerSchema,
     annotations: { readOnlyHint: false },
-    execute: (args: { claimId: string; stance: "SUPPORTS" | "CHALLENGES" | "NEUTRAL"; text: string; speakerRole: string }) =>
-      recordInterviewAnswerTool(store, args),
-  })
+    execute: (args: {
+      claimId: string;
+      stance: "SUPPORTS" | "CHALLENGES" | "NEUTRAL";
+      text: string;
+      speakerRole: string;
+    }) => recordInterviewAnswerTool(store, args),
+  });
 
-  return { claims, state, select, record }
+  return { claims, state, select, record };
 }
