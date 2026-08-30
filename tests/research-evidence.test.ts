@@ -53,7 +53,7 @@ describe("record_research_evidence", () => {
     expect(added?.scope).toBe("REPORTED_EXPERIENCE");
     expect(added?.sourceKind).toBe("REPORTED_EXPERIENCE");
     expect(added?.sourceUrl).toBe("https://example.com/post");
-    expect(store.getState().selectionState).toBe("IDLE");
+    expect(store.getState().selectionState).toBe("EVIDENCE_UPDATED");
   });
 
   it("rejects news-like sources that the authority model cannot own", () => {

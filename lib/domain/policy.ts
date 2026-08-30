@@ -48,6 +48,60 @@ export function requiredScopes(kind: ClaimKind): readonly AuthorityScope[] {
   ];
 }
 
+export function sourceOrganization(url?: string): string {
+  if (!url) return "";
+  try {
+    const host = new URL(url).hostname.toLowerCase().replace(/^www\./, "");
+    const parts = host.split(".").filter(Boolean);
+    if (parts.length <= 2) return host;
+    return parts.slice(-2).join(".");
+  } catch {
+    return url.toLowerCase();
+  }
+}
+
+export function uniqueResolvingReportCount(
+  evidence: readonly Evidence[],
+): number {
+  const reports = evidence.filter(
+    (item) =>
+      item.scope === AUTHORITY_SCOPE.REPORTED_EXPERIENCE &&
+      item.stance !== "NEUTRAL",
+  );
+  const seen = new Set<string>();
+  let unlabeled = 0;
+  for (const item of reports) {
+    const org = sourceOrganization(item.sourceUrl);
+    if (!org) {
+      unlabeled += 1;
+      continue;
+    }
+    seen.add(org);
+  }
+  return seen.size + unlabeled;
+}
+
+export function uniqueChallengingReportCount(
+  evidence: readonly Evidence[],
+): number {
+  const reports = evidence.filter(
+    (item) =>
+      item.scope === AUTHORITY_SCOPE.REPORTED_EXPERIENCE &&
+      item.stance === "CHALLENGES",
+  );
+  const seen = new Set<string>();
+  let unlabeled = 0;
+  for (const item of reports) {
+    const org = sourceOrganization(item.sourceUrl);
+    if (!org) {
+      unlabeled += 1;
+      continue;
+    }
+    seen.add(org);
+  }
+  return seen.size + unlabeled;
+}
+
 export function reportedCoverage(reportCount: number): number {
   if (reportCount <= 0) return 0;
   if (reportCount === 1) return 0.3;
@@ -70,16 +124,12 @@ export function coverageBreakdownFor(
   const employerPresent = evidence.some(
     (item) => item.scope === AUTHORITY_SCOPE.EMPLOYER_STATED,
   );
-  const reports = evidence.filter(
-    (item) =>
-      item.scope === AUTHORITY_SCOPE.REPORTED_EXPERIENCE &&
-      item.stance !== "NEUTRAL",
-  );
   const answers = evidence.filter(
     (item) => item.scope === AUTHORITY_SCOPE.CANDIDATE_SPECIFIC_ANSWER,
   );
   const resolvingAnswer = answers.some((item) => item.stance !== "NEUTRAL");
-  const reportCoverage = reportedCoverage(reports.length);
+  const uniqueReports = uniqueResolvingReportCount(evidence);
+  const reportCoverage = reportedCoverage(uniqueReports);
   if (kind === CLAIM_KIND.EMPLOYER_POLICY) {
     return {
       employerStated: {
@@ -87,7 +137,7 @@ export function coverageBreakdownFor(
         contribution: employerPresent ? 1 : 0,
       },
       reportedExperience: {
-        count: reports.length,
+        count: uniqueReports,
         coverage: reportCoverage,
         contribution: 0,
       },
@@ -113,7 +163,7 @@ export function coverageBreakdownFor(
       contribution: employerContribution,
     },
     reportedExperience: {
-      count: reports.length,
+      count: uniqueReports,
       coverage: reportCoverage,
       contribution: reportedContribution,
     },
@@ -140,12 +190,7 @@ export function tensionFor(evidence: readonly Evidence[]): number {
       item.stance === "CHALLENGES",
   );
   if (hasChallengingAnswer) return 1;
-  const challengingReports = evidence.filter(
-    (item) =>
-      item.scope === AUTHORITY_SCOPE.REPORTED_EXPERIENCE &&
-      item.stance === "CHALLENGES",
-  ).length;
-  return reportedChallengeTension(challengingReports);
+  return reportedChallengeTension(uniqueChallengingReportCount(evidence));
 }
 
 export function claimStatus(input: {

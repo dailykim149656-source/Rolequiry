@@ -2,7 +2,7 @@
 
 Interview the job before it interviews you.
 
-Rolequiry is an agent-native candidate due-diligence app for the OpenAI WebMCP Challenge. Job postings are treated as claims, not facts. The candidate sets priorities. The agent can import claims, research the active uncertainty, and structure interview testimony. Rolequiry—not the model—owns evidence authority, coverage, state transitions, and what remains unresolved.
+Rolequiry is an agent-native candidate due-diligence app for the OpenAI WebMCP Challenge. Job postings are treated as claims, not facts. You decide what matters. Your agent investigates the active uncertainty. Rolequiry shows the next unresolved question on a live decision path, and owns evidence authority, coverage, and state.
 
 ## Live Demo URL
 
@@ -60,7 +60,7 @@ Open https://rolequiry.com/case in ChatGPT's built-in browser or Chrome with Web
 
 1. Ask only: `What should I investigate next?` Ownership is selected even though Travel has more negative signals.
 2. In the UI only, set Travel to CRITICAL. Do not tell the agent that Travel matters.
-3. Ask only: `Check again.` The current question flips to Travel.
+3. Ask only: `Check again.` The decision path flips from Ownership to Travel.
 4. Reset, ask again, then tell the agent: `The hiring manager said ownership is split with a central platform team after design review.` Ownership becomes CHALLENGED.
 5. Optional real-role path: paste a real job description and say `Put this role into Rolequiry.` Set at least one priority, then ask what to investigate.
 6. Optional research path: with a real role and an active probe, say `Research this active question using public employer-official or first-person sources. Record only what you can source.` Then inspect `View evidence` and ask `Check again.`

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useMemo, useSyncExternalStore } from "react";
 import { createCaseStore } from "@/lib/case-store";
 import { cannedInterviewAnswer } from "@/lib/demo/canned-answers";
+import { decisionPathNodes } from "@/lib/domain/decision-path";
 import { coverageBreakdownFor } from "@/lib/domain/policy";
 import {
   type DerivedClaim,
@@ -41,9 +42,9 @@ export function CaseApp() {
         Interview the job before it interviews you.
       </h1>
       <p className="mt-3 max-w-3xl text-zinc-600">
-        The biggest red flag isn&apos;t always the question you should ask.
-        Rolequiry keeps a live evidence case—not a chat transcript—of what
-        matters to you and what still needs an answer.
+        The biggest red flag isn&apos;t always the question you should ask. Turn
+        a job posting into a live evidence case that you and your agent update
+        together.
       </p>
       <p className="mt-2 max-w-3xl text-sm text-zinc-500">
         {snapshot.source.company} / {snapshot.source.role}. Change a priority
@@ -66,9 +67,10 @@ export function CaseApp() {
       <section className="mt-8 grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
         <div className="order-2 lg:order-1">
           <section>
-            <h2 className="text-lg font-medium">What the employer claims</h2>
+            <h2 className="text-lg font-medium">Claim board</h2>
             <p className="mt-1 text-sm text-zinc-500">
-              Set what matters to you. The agent reads this same live case.
+              What the employer claims, and what matters to you. The agent reads
+              this same live case.
             </p>
           </section>
 
@@ -124,23 +126,26 @@ export function CaseApp() {
           </section>
         </div>
         <section className="order-1 mt-8 rounded-2xl bg-zinc-950 p-5 text-zinc-50 lg:sticky lg:top-6 lg:order-2 lg:mt-0">
-          <h2 className="text-lg font-medium">Current question</h2>
-          {snapshot.selectionState === "ACTIVE" && selected ? (
-            <div className="mt-3 space-y-2 text-sm">
-              <p data-testid="active-probe">
-                Active probe: {selected.dimension}
-              </p>
-              <p>Unresolved variable: {selected.unresolvedVariable}</p>
-              <p>Measurable form: {selected.measurableForm}</p>
-              <p className="mt-3 text-zinc-300">
-                Ask your agent to research this active question, or bring back
-                what the interviewer said.
-              </p>
-            </div>
+          <h2 className="text-lg font-medium">Decision path</h2>
+          <p className="mt-1 text-sm text-zinc-400">
+            See why this is the question that matters next.
+          </p>
+          {snapshot.source.origin === "AGENT_IMPORTED" &&
+          !snapshot.prioritiesTouched ? (
+            <p
+              className="mt-3 text-sm text-zinc-300"
+              data-testid="priorities-required"
+            >
+              Set what matters to you first.
+            </p>
           ) : snapshot.selectionState === "NO_PROBE_NEEDED" ? (
             <p className="mt-3 text-sm text-zinc-300" data-testid="no-probe">
               No unresolved claims currently require another probe.
             </p>
+          ) : selected &&
+            (snapshot.selectionState === "ACTIVE" ||
+              snapshot.selectionState === "EVIDENCE_UPDATED") ? (
+            <DecisionPath claim={selected} mode={snapshot.selectionState} />
           ) : (
             <p className="mt-3 text-sm text-zinc-300">
               Ask your agent what to investigate next.
@@ -211,6 +216,50 @@ export function CaseApp() {
   );
 }
 
+function DecisionPath({
+  claim,
+  mode,
+}: {
+  claim: DerivedClaim;
+  mode: "ACTIVE" | "EVIDENCE_UPDATED";
+}) {
+  const nodes = decisionPathNodes(claim, mode);
+  return (
+    <ol className="mt-4 space-y-3 text-sm" data-testid="decision-path">
+      {nodes.map((node, index) => (
+        <li key={`${node.label}-${index}`}>
+          {index > 0 ? (
+            <p className="mb-2 text-center text-zinc-500" aria-hidden="true">
+              ↓
+            </p>
+          ) : null}
+          <div className="rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2">
+            <p className="text-xs uppercase tracking-[0.16em] text-zinc-400">
+              {node.label}
+            </p>
+            <p
+              className={index === 0 ? "font-medium" : "text-zinc-200"}
+              data-testid={index === 0 ? "active-probe" : undefined}
+            >
+              {index === 0 ? `Active probe: ${node.body}` : node.body}
+            </p>
+            {node.href ? (
+              <a
+                className="mt-1 inline-block text-xs text-zinc-300 underline"
+                href={node.href}
+                rel="noreferrer"
+                target="_blank"
+              >
+                View source ↗
+              </a>
+            ) : null}
+          </div>
+        </li>
+      ))}
+    </ol>
+  );
+}
+
 function EvidenceCoverage({ claim }: { claim: DerivedClaim }) {
   const coverage = coverageBreakdownFor(claim.kind, claim.evidence);
   const external = claim.evidence.filter(
@@ -220,27 +269,17 @@ function EvidenceCoverage({ claim }: { claim: DerivedClaim }) {
   const challenges = external.filter(
     (item) => item.stance === "CHALLENGES",
   ).length;
-  const interview = claim.evidence.find(
-    (item) => item.scope === "CANDIDATE_SPECIFIC_ANSWER",
-  );
-  const interviewLabel = coverage.candidateSpecificAnswer.resolving
-    ? `Candidate interview — resolving · ${interview?.stance ?? "SUPPORTS"}`
+  const interviewMark = coverage.candidateSpecificAnswer.resolving
+    ? "resolving"
     : coverage.candidateSpecificAnswer.present
-      ? `Candidate interview — non-resolving · ${interview?.stance ?? "NEUTRAL"}`
-      : "Candidate interview — missing";
+      ? "non-resolving"
+      : "—";
   return (
     <div className="mt-4 space-y-2 text-sm">
-      <p className="font-medium">Evidence coverage</p>
       <p>
-        {coverage.employerStated.present
-          ? "Employer statement · present"
-          : "Employer statement — missing"}
+        Employer {coverage.employerStated.present ? "✓" : "—"} · Public{" "}
+        {supports}/{challenges} · Interview {interviewMark}
       </p>
-      <p>
-        External signals: {supports} support{supports === 1 ? "" : "s"} ·{" "}
-        {challenges} challenge{challenges === 1 ? "" : "s"}
-      </p>
-      <p>{interviewLabel}</p>
       <details className="mt-2 text-zinc-600">
         <summary className="cursor-pointer">
           View evidence ({claim.evidence.length})
@@ -257,7 +296,8 @@ function EvidenceCoverage({ claim }: { claim: DerivedClaim }) {
                       ? "Reported experience"
                       : "Candidate interview"}{" "}
                   ·{" "}
-                  {item.synthetic || item.text.toLowerCase().includes("synthetic")
+                  {item.synthetic ||
+                  item.text.toLowerCase().includes("synthetic")
                     ? "synthetic · "
                     : ""}
                   {item.stance.toLowerCase()}

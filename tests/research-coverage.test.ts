@@ -45,4 +45,22 @@ describe("research coverage", () => {
     selectDecisionChanger(store);
     expect(() => record(store, "CHALLENGES")).toThrow(/duplicate/i);
   });
+
+  it("treats a hashed URL as the same research source", () => {
+    const store = createCaseStore();
+    selectDecisionChanger(store);
+    record(store, "CHALLENGES", "https://example.com/post#comments");
+    selectDecisionChanger(store);
+    expect(() => record(store, "SUPPORTS", "https://example.com/post")).toThrow(
+      /duplicate/i,
+    );
+  });
+
+  it("rejects a non-http research URL", () => {
+    const store = createCaseStore();
+    selectDecisionChanger(store);
+    expect(() => record(store, "CHALLENGES", "ftp://example.com/post")).toThrow(
+      /http/i,
+    );
+  });
 });

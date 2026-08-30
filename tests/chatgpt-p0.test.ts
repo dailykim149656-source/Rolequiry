@@ -36,15 +36,17 @@ describe("ChatGPT P0 contract", () => {
       text: "Hiring manager said ownership is split with a central platform team after design review.",
       speakerRole: SPEAKER_ROLE.HIRING_MANAGER,
     });
-    expect(store.getState().activeProbeId).toBeNull();
+    expect(store.getState().activeProbeId).toBe("technical-ownership");
+    expect(store.getState().selectionState).toBe("EVIDENCE_UPDATED");
     expect(store.getState().rankingVisible).toBe(false);
   });
 
-  it("invalidates the active probe when candidate importance changes", () => {
+  it("keeps the selected probe visible when candidate importance changes", () => {
     const store = createCaseStore();
     selectDecisionChanger(store);
     store.setImportance("travel", "CRITICAL");
-    expect(store.getState().activeProbeId).toBeNull();
+    expect(store.getState().activeProbeId).toBe("technical-ownership");
+    expect(store.getState().selectionState).toBe("ACTIVE");
     expect(store.getState().rankingVisible).toBe(false);
   });
 

@@ -104,7 +104,7 @@ describe("registered write loop", () => {
       speakerRole: SPEAKER_ROLE.HIRING_MANAGER,
     });
     const recorded = JSON.parse(recordedRaw?.content[0]?.text ?? "{}");
-    expect(recorded.selectionState).toBe("IDLE");
+    expect(recorded.selectionState).toBe("EVIDENCE_UPDATED");
     const ownership = store
       .getState()
       .source.claims.find((claim) => claim.id === "technical-ownership");

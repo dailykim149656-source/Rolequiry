@@ -26,6 +26,7 @@ export type FixtureId = keyof typeof FIXTURES;
 export const SELECTION_STATE = {
   IDLE: "IDLE",
   ACTIVE: "ACTIVE",
+  EVIDENCE_UPDATED: "EVIDENCE_UPDATED",
   NO_PROBE_NEEDED: "NO_PROBE_NEEDED",
 } as const;
 export type SelectionState =
@@ -87,13 +88,21 @@ export function createCaseStore(initial: RoleCase = ATLAS_FDE) {
       emit();
     },
     setImportance(claimId: string, importance: Importance) {
-      state = snapshotFrom(
-        setClaimImportance(state.source, claimId, importance),
-        null,
-        false,
-        SELECTION_STATE.IDLE,
-        true,
+      const source = setClaimImportance(state.source, claimId, importance);
+      const derived = deriveCase(source);
+      const selected = derived.claims.find(
+        (claim) => claim.id === state.activeProbeId,
       );
+      state = {
+        source,
+        derived,
+        activeProbeId: selected ? state.activeProbeId : null,
+        rankingVisible: false,
+        selectionState: selected
+          ? SELECTION_STATE.ACTIVE
+          : SELECTION_STATE.IDLE,
+        prioritiesTouched: true,
+      };
       emit();
     },
     peekDecision() {
@@ -125,24 +134,28 @@ export function createCaseStore(initial: RoleCase = ATLAS_FDE) {
     },
     recordAnswer(input: InterviewAnswerInput) {
       const source = recordInterviewAnswer(state.source, input);
-      state = snapshotFrom(
+      const derived = deriveCase(source);
+      state = {
         source,
-        null,
-        false,
-        SELECTION_STATE.IDLE,
-        state.prioritiesTouched,
-      );
+        derived,
+        activeProbeId: state.activeProbeId,
+        rankingVisible: false,
+        selectionState: SELECTION_STATE.EVIDENCE_UPDATED,
+        prioritiesTouched: state.prioritiesTouched,
+      };
       emit();
     },
     recordResearch(input: ResearchEvidenceInput) {
       const source = recordResearchEvidence(state.source, input);
-      state = snapshotFrom(
+      const derived = deriveCase(source);
+      state = {
         source,
-        null,
-        false,
-        SELECTION_STATE.IDLE,
-        state.prioritiesTouched,
-      );
+        derived,
+        activeProbeId: state.activeProbeId,
+        rankingVisible: false,
+        selectionState: SELECTION_STATE.EVIDENCE_UPDATED,
+        prioritiesTouched: state.prioritiesTouched,
+      };
       emit();
     },
     importRole(input: ImportedRoleInput) {

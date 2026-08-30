@@ -17,7 +17,8 @@ describe("selection state", () => {
       text: "Hiring manager said ownership is split with a central platform team after design review.",
       speakerRole: SPEAKER_ROLE.HIRING_MANAGER,
     });
-    expect(store.getState().selectionState).toBe("IDLE");
+    expect(store.getState().selectionState).toBe("EVIDENCE_UPDATED");
+    expect(store.getState().activeProbeId).toBe("technical-ownership");
     expect(selectDecisionChanger(store).claim_id).toBe("travel");
     recordInterviewAnswerTool(store, {
       stance: "CHALLENGES",
