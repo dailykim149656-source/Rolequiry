@@ -20,6 +20,11 @@ export const IMPORTANCE = {
 } as const;
 export type Importance = (typeof IMPORTANCE)[keyof typeof IMPORTANCE];
 
+export type CandidatePriorityInput = {
+  readonly claimId: string;
+  readonly importance: Importance;
+};
+
 export const EVIDENCE_STANCE = {
   SUPPORTS: "SUPPORTS",
   CHALLENGES: "CHALLENGES",

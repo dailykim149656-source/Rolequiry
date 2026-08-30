@@ -6,6 +6,7 @@ import {
   setClaimImportance,
 } from "@/lib/domain/derive-case";
 import type {
+  CandidatePriorityInput,
   DerivedCase,
   Importance,
   ImportedRoleInput,
@@ -77,6 +78,37 @@ export function createCaseStore(initial: RoleCase = ATLAS_FDE) {
     for (const listener of listeners) listener();
   }
 
+  function setPriorities(priorities: readonly CandidatePriorityInput[]) {
+    let source = state.source;
+    for (const priority of priorities) {
+      source = setClaimImportance(
+        source,
+        priority.claimId,
+        priority.importance,
+      );
+    }
+    const derived = deriveCase(source);
+    const selected = derived.claims.find(
+      (claim) => claim.id === state.activeProbeId,
+    );
+    const keepUpdated =
+      state.selectionState === SELECTION_STATE.EVIDENCE_UPDATED &&
+      Boolean(selected);
+    state = {
+      source,
+      derived,
+      activeProbeId: selected ? state.activeProbeId : null,
+      rankingVisible: false,
+      selectionState: keepUpdated
+        ? SELECTION_STATE.EVIDENCE_UPDATED
+        : selected?.probeEligible
+          ? SELECTION_STATE.ACTIVE
+          : SELECTION_STATE.IDLE,
+      prioritiesTouched: true,
+    };
+    emit();
+  }
+
   return {
     getState(): CaseSnapshot {
       return state;
@@ -118,28 +150,9 @@ export function createCaseStore(initial: RoleCase = ATLAS_FDE) {
       emit();
     },
     setImportance(claimId: string, importance: Importance) {
-      const source = setClaimImportance(state.source, claimId, importance);
-      const derived = deriveCase(source);
-      const selected = derived.claims.find(
-        (claim) => claim.id === state.activeProbeId,
-      );
-      const keepUpdated =
-        state.selectionState === SELECTION_STATE.EVIDENCE_UPDATED &&
-        Boolean(selected);
-      state = {
-        source,
-        derived,
-        activeProbeId: selected ? state.activeProbeId : null,
-        rankingVisible: false,
-        selectionState: keepUpdated
-          ? SELECTION_STATE.EVIDENCE_UPDATED
-          : selected?.probeEligible
-            ? SELECTION_STATE.ACTIVE
-            : SELECTION_STATE.IDLE,
-        prioritiesTouched: true,
-      };
-      emit();
+      setPriorities([{ claimId, importance }]);
     },
+    setPriorities,
     peekDecision() {
       return deriveCase(state.source);
     },

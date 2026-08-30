@@ -8,6 +8,60 @@ import {
 } from "@/lib/webmcp/tools";
 
 describe("selection state", () => {
+  it("applies a candidate-confirmed priority batch in one state emission", () => {
+    // Given
+    const store = createCaseStore();
+    importRoleFromClaimsTool(store, {
+      company: "Example Corp",
+      role: "Staff Engineer",
+      claims: [
+        {
+          dimension: "Technical ownership",
+          employerStatement: "Own delivery end to end",
+          unresolvedVariable: "Where does final architecture authority sit?",
+          measurableForm: "Last decision shipped without platform review",
+        },
+        {
+          dimension: "Travel",
+          employerStatement: "Travel is expected",
+          unresolvedVariable: "How concentrated is travel?",
+          measurableForm: "Median and maximum travel days per quarter",
+        },
+      ],
+    });
+    let emissions = 0;
+    store.subscribe(() => {
+      emissions += 1;
+    });
+
+    // When
+    store.setPriorities([
+      { claimId: "imported-1", importance: "HIGH" },
+      { claimId: "imported-2", importance: "CRITICAL" },
+    ]);
+
+    // Then
+    expect(emissions).toBe(1);
+    expect(
+      store.getState().derived.claims.map((claim) => ({
+        id: claim.id,
+        importance: claim.importance,
+        candidatePrioritySet: claim.candidatePrioritySet,
+      })),
+    ).toEqual([
+      {
+        id: "imported-1",
+        importance: "HIGH",
+        candidatePrioritySet: true,
+      },
+      {
+        id: "imported-2",
+        importance: "CRITICAL",
+        candidatePrioritySet: true,
+      },
+    ]);
+  });
+
   it("starts idle, becomes active after select, then no-probe-needed after every claim is resolved", () => {
     const store = createCaseStore();
     expect(store.getState().selectionState).toBe("IDLE");
