@@ -43,6 +43,14 @@ describe("case workspace status", () => {
     expect(screen.getByTestId("tool-status").textContent).toContain("7/7");
   });
 
+  it("keeps the employer claims link at the minimum touch-target height", () => {
+    renderWorkspace();
+
+    expect(
+      screen.getByRole("link", { name: "Employer claims" }).className,
+    ).toContain("min-h-11");
+  });
+
   it("puts the Decision Path before the Claim Board for narrow screens", () => {
     renderWorkspace();
 

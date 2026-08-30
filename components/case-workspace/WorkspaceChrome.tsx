@@ -91,7 +91,7 @@ export function DossierHeader({
             <Metric value={challenged} label="challenged" />
             {snapshot.source.id === "atlas-fde" ? (
               <Link
-                className="font-medium text-brand underline decoration-brand/30 underline-offset-4 hover:decoration-brand"
+                className="inline-flex min-h-11 items-center py-2 font-medium text-brand underline decoration-brand/30 underline-offset-4 hover:decoration-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/30"
                 href="/employer/atlas-fde"
               >
                 Employer claims
