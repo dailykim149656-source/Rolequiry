@@ -1,10 +1,8 @@
 # Rolequiry Design System
 
-Reference set: `docs/references/rolequiry-concept-01-main.png` through
-`rolequiry-concept-04-story.png`. The main case workspace follows concept 01;
-the imported-priority state follows concept 02; evidence grouping follows
-concept 03. Concept 04 is a presentation/story surface, not the application
-layout.
+This document is the canonical visual contract. Earlier generated concept art
+was used only during exploration and is intentionally not shipped or required to
+reproduce the interface.
 
 ## 1. Atmosphere & Identity
 
@@ -66,8 +64,9 @@ has no trusted company website, so the monogram is the correct shipped fallback.
   value labelled “Set priority”; selected values render Low through Critical.
 - `EvidenceSignals`: Employer, Public, and Interview symbols with counts and
   short accessible labels.
-- `ClaimCard`: quote-led dossier row. Unset imported cards are visually quieter
-  and explicitly say “Not in ranking yet”.
+- `ClaimCard`: quote-led dossier row. Unset imported cards use a dashed neutral
+  treatment without reducing text contrast. The active probe uses a black label
+  and stronger border, and unset cards explicitly say “Not in ranking yet”.
 - `DecisionPath`: ordered investigation spine. The selected claim is prominent;
   the final “Ask next” node is the action focal point.
 - `EvidenceList`: grouped source entries inside native `details` disclosure.
