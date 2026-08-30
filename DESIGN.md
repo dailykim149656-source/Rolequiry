@@ -63,7 +63,8 @@ has no trusted company website, so the monogram is the correct shipped fallback.
 - `PriorityControl`: native select. Imported/unset claims render a real empty
   value labelled “Set priority”; selected values render Low through Critical.
 - `EvidenceSignals`: Employer, Public, and Interview symbols with counts and
-  short accessible labels.
+  short accessible labels. Zero items are `empty`; present but non-resolving
+  evidence is `neutral`, using the same gray palette without implying absence.
 - `ClaimCard`: quote-led dossier row. Unset imported cards use a dashed neutral
   treatment without reducing text contrast. The active probe uses a black label
   and stronger border, and unset cards explicitly say “Not in ranking yet”.

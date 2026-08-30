@@ -2,6 +2,7 @@ import type { CaseStore } from "@/lib/case-store";
 import { coverageBreakdownFor } from "@/lib/domain/policy";
 import { noProbeDetails } from "@/lib/domain/probe-outcome";
 import {
+  AUTHORITY_SCOPE,
   type DerivedClaim,
   EVIDENCE_PROVENANCE,
   RESEARCH_SOURCE_KIND,
@@ -55,7 +56,12 @@ export function getRoleClaims(store: CaseStore) {
       dimension: claim.dimension,
       employerStatement: claim.employerStatement,
       sourceSnippets: claim.evidence
-        .filter((item) => item.scope === "EMPLOYER_STATED")
+        .filter(
+          (item) =>
+            item.scope === AUTHORITY_SCOPE.EMPLOYER_STATED &&
+            (item.provenance ?? EVIDENCE_PROVENANCE.CASE_INPUT) ===
+              EVIDENCE_PROVENANCE.CASE_INPUT,
+        )
         .map((item) => item.text),
     })),
   };

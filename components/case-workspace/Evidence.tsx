@@ -7,7 +7,7 @@ import {
 } from "@/lib/domain/types";
 import { Icon, type IconName } from "./Icon";
 
-type EvidenceTone = "challenged" | "empty" | "mixed" | "supported";
+type EvidenceTone = "challenged" | "empty" | "mixed" | "neutral" | "supported";
 
 function evidenceTone(items: readonly Evidence[]): EvidenceTone {
   const supports = items.some(
@@ -19,6 +19,7 @@ function evidenceTone(items: readonly Evidence[]): EvidenceTone {
   if (supports && challenges) return "mixed";
   if (supports) return "supported";
   if (challenges) return "challenged";
+  if (items.length > 0) return "neutral";
   return "empty";
 }
 
@@ -72,6 +73,7 @@ function EvidenceSignal({
     challenged: "bg-challenged-soft text-challenged",
     empty: "bg-unverified-soft text-unverified",
     mixed: "bg-amber-soft text-amber",
+    neutral: "bg-unverified-soft text-unverified",
     supported: "bg-supported-soft text-supported",
   }[tone];
   const summary = `${label}: ${count} evidence ${count === 1 ? "item" : "items"}, ${tone}`;

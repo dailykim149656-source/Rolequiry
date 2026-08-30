@@ -4,8 +4,10 @@ import { cleanup, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import { CaseWorkspace } from "@/components/CaseWorkspace";
 import { createCaseStore } from "@/lib/case-store";
+import { SPEAKER_ROLE } from "@/lib/domain/types";
 import {
   importRoleFromClaimsTool,
+  recordInterviewAnswerTool,
   selectDecisionChanger,
 } from "@/lib/webmcp/tools";
 
@@ -130,5 +132,27 @@ describe("case workspace status", () => {
         name: "Interview: 1 evidence item, supported",
       }).className,
     ).toContain("bg-supported-soft");
+  });
+
+  it("labels neutral-only evidence as neutral instead of empty", () => {
+    // Given
+    const store = createCaseStore();
+    selectDecisionChanger(store);
+
+    // When
+    recordInterviewAnswerTool(store, {
+      stance: "NEUTRAL",
+      text: "The interviewer could not quantify the ownership boundary.",
+      speakerRole: SPEAKER_ROLE.HIRING_MANAGER,
+    });
+    renderWorkspace(store);
+
+    // Then
+    const ownership = within(screen.getByTestId("claim-technical-ownership"));
+    expect(
+      ownership.getByRole("img", {
+        name: "Interview: 1 evidence item, neutral",
+      }).className,
+    ).toContain("bg-unverified-soft");
   });
 });

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createCaseStore } from "@/lib/case-store";
+import { RESEARCH_SOURCE_KIND } from "@/lib/domain/types";
 import {
   getCaseState,
   getRoleClaims,
@@ -61,6 +62,29 @@ describe("trust boundary", () => {
         .claims.find((claim) => claim.id === "technical-ownership")
         ?.evidenceSummary.at(-1),
     ).toMatchObject({ provenance: "AGENT_REPORTED" });
+  });
+
+  it("keeps agent-reported employer research out of raw source snippets", () => {
+    // Given
+    const store = createCaseStore();
+    selectDecisionChanger(store);
+
+    // When
+    recordResearchEvidenceTool(store, {
+      stance: "SUPPORTS",
+      summary: "An official engineering page describes end-to-end ownership.",
+      sourceUrl: "https://example.com/official-engineering",
+      sourceLabel: "Official engineering page",
+      sourceKind: RESEARCH_SOURCE_KIND.EMPLOYER_OFFICIAL,
+    });
+
+    // Then
+    const ownership = getRoleClaims(store).claims.find(
+      (claim) => claim.id === "technical-ownership",
+    );
+    expect(ownership?.sourceSnippets).toEqual([
+      "FDEs have high technical ownership from design through deployment.",
+    ]);
   });
 
   it("refuses to rank an imported case until a candidate sets a priority", () => {
