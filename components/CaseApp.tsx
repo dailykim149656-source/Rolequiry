@@ -41,9 +41,13 @@ export function CaseApp() {
         Interview the job before it interviews you.
       </h1>
       <p className="mt-3 max-w-3xl text-zinc-600">
-        {snapshot.source.company} / {snapshot.source.role}. Claims are not
-        facts. The app ranks the unresolved variable; you set priorities; the
-        agent asks; you bring the answer back.
+        The biggest red flag isn&apos;t always the question you should ask.
+        Rolequiry keeps a live evidence case—not a chat transcript—of what
+        matters to you and what still needs an answer.
+      </p>
+      <p className="mt-2 max-w-3xl text-sm text-zinc-500">
+        {snapshot.source.company} / {snapshot.source.role}. Change a priority
+        here, then tell the agent only &quot;Check again.&quot;
       </p>
 
       <p className="mt-2 text-sm text-zinc-500">
@@ -57,77 +61,89 @@ export function CaseApp() {
           : "Imported case"}
       </p>
 
-      <section className="mt-8">
-        <h2 className="text-lg font-medium">What the employer claims</h2>
-        <p className="mt-1 text-sm text-zinc-500">
-          Set what matters to you. The agent reads this same live case.
-        </p>
-      </section>
-
-      <section className="mt-8 grid gap-4 md:grid-cols-2">
-        {snapshot.derived.claims.map((claim) => (
-          <article
-            key={claim.id}
-            className="rounded-2xl border border-zinc-200 p-4"
-          >
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <h2 className="text-lg font-medium">{claim.dimension}</h2>
-                <p className="text-sm text-zinc-500">
-                  {claim.employerStatement}
-                </p>
-              </div>
-              <span className="rounded-full bg-zinc-100 px-2 py-1 text-xs">
-                {claim.status === "CHALLENGED"
-                  ? "CHALLENGED · conflicting evidence"
-                  : claim.status}
-              </span>
-            </div>
-            <label className="mt-4 block text-sm">
-              Candidate importance
-              <select
-                className="mt-1 w-full rounded-lg border border-zinc-300 px-2 py-1"
-                value={claim.importance}
-                onChange={(event) =>
-                  store.setImportance(
-                    claim.id,
-                    event.target.value as Importance,
-                  )
-                }
-              >
-                {IMPORTANCE_OPTIONS.map((value) => (
-                  <option key={value} value={value}>
-                    {value}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <EvidenceCoverage claim={claim} />
-          </article>
-        ))}
-      </section>
-
-      <section className="mt-8 rounded-2xl bg-zinc-950 p-5 text-zinc-50">
-        <h2 className="text-lg font-medium">What to ask next</h2>
-        {snapshot.selectionState === "ACTIVE" && selected ? (
-          <div className="mt-3 space-y-2 text-sm">
-            <p data-testid="active-probe">Active probe: {selected.dimension}</p>
-            <p>Unresolved variable: {selected.unresolvedVariable}</p>
-            <p>Measurable form: {selected.measurableForm}</p>
-            <p className="mt-3 text-zinc-300">
-              Waiting for interview evidence. Tell your agent what the
-              interviewer said.
+      <section className="mt-8 lg:grid lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start lg:gap-6">
+        <div>
+          <section>
+            <h2 className="text-lg font-medium">What the employer claims</h2>
+            <p className="mt-1 text-sm text-zinc-500">
+              Set what matters to you. The agent reads this same live case.
             </p>
-          </div>
-        ) : snapshot.selectionState === "NO_PROBE_NEEDED" ? (
-          <p className="mt-3 text-sm text-zinc-300" data-testid="no-probe">
-            No unresolved claims currently require another probe.
-          </p>
-        ) : (
-          <p className="mt-3 text-sm text-zinc-300">
-            Ask your agent what to investigate next.
-          </p>
-        )}
+          </section>
+
+          {snapshot.source.origin === "AGENT_IMPORTED" ? (
+            <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950">
+              Employer statements imported. Set what matters to you before
+              asking what to investigate.
+            </p>
+          ) : null}
+
+          <section className="mt-6 grid gap-4 md:grid-cols-2">
+            {snapshot.derived.claims.map((claim) => (
+              <article
+                key={claim.id}
+                className="rounded-2xl border border-zinc-200 p-4"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <h2 className="text-lg font-medium">{claim.dimension}</h2>
+                    <p className="text-sm text-zinc-500">
+                      {claim.employerStatement}
+                    </p>
+                  </div>
+                  <span className="rounded-full bg-zinc-100 px-2 py-1 text-xs">
+                    {claim.status === "CHALLENGED"
+                      ? "CHALLENGED · conflicting evidence"
+                      : claim.status}
+                  </span>
+                </div>
+                <label className="mt-4 block text-sm">
+                  Candidate importance
+                  <select
+                    className="mt-1 w-full rounded-lg border border-zinc-300 px-2 py-1"
+                    value={claim.importance}
+                    onChange={(event) =>
+                      store.setImportance(
+                        claim.id,
+                        event.target.value as Importance,
+                      )
+                    }
+                  >
+                    {IMPORTANCE_OPTIONS.map((value) => (
+                      <option key={value} value={value}>
+                        {value}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <EvidenceCoverage claim={claim} />
+              </article>
+            ))}
+          </section>
+        </div>
+        <section className="mt-8 rounded-2xl bg-zinc-950 p-5 text-zinc-50 lg:sticky lg:top-6 lg:mt-0">
+          <h2 className="text-lg font-medium">Current question</h2>
+          {snapshot.selectionState === "ACTIVE" && selected ? (
+            <div className="mt-3 space-y-2 text-sm">
+              <p data-testid="active-probe">
+                Active probe: {selected.dimension}
+              </p>
+              <p>Unresolved variable: {selected.unresolvedVariable}</p>
+              <p>Measurable form: {selected.measurableForm}</p>
+              <p className="mt-3 text-zinc-300">
+                Waiting for interview evidence. Tell your agent what the
+                interviewer said.
+              </p>
+            </div>
+          ) : snapshot.selectionState === "NO_PROBE_NEEDED" ? (
+            <p className="mt-3 text-sm text-zinc-300" data-testid="no-probe">
+              No unresolved claims currently require another probe.
+            </p>
+          ) : (
+            <p className="mt-3 text-sm text-zinc-300">
+              Ask your agent what to investigate next.
+            </p>
+          )}
+        </section>
       </section>
 
       <details className="mt-10 rounded-2xl border border-dashed border-zinc-300 p-4 text-sm text-zinc-600">
