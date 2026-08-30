@@ -38,11 +38,15 @@ export function CaseWorkspace({
         <ProductBar webmcpCount={webmcpCount} />
         <DossierHeader snapshot={snapshot} />
         <div className="mt-5 grid items-start gap-5 lg:grid-cols-[minmax(0,1.16fr)_minmax(23rem,0.84fr)]">
+          <DecisionPanel
+            className="lg:col-start-2 lg:row-start-1"
+            snapshot={snapshot}
+          />
           <ClaimBoard
+            className="lg:col-start-1 lg:row-start-1"
             onImportanceChange={onImportanceChange}
             snapshot={snapshot}
           />
-          <DecisionPanel snapshot={snapshot} />
         </div>
         <DemoControls
           activeFixture={snapshot.source.id}

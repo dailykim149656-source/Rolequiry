@@ -40,15 +40,15 @@ function publicClaim(claim: DerivedClaim, rankingVisible: boolean) {
   };
 }
 
-function normalizeResearchUrl(value: string): string {
+function normalizeHttpUrl(value: string, label: string): string {
   let parsed: URL;
   try {
     parsed = new URL(value.trim());
   } catch {
-    throw new Error("Research source URL must be a valid http(s) URL");
+    throw new Error(`${label} must be a valid http(s) URL`);
   }
   if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
-    throw new Error("Research source URL must be a valid http(s) URL");
+    throw new Error(`${label} must be a valid http(s) URL`);
   }
   parsed.hash = "";
   return parsed.toString();
@@ -60,6 +60,7 @@ export function getRoleClaims(store: CaseStore) {
     company: source.company,
     role: source.role,
     origin: source.origin,
+    sourceUrl: source.sourceUrl ?? null,
     untrustedContentHint: true,
     claims: source.claims.map((claim) => ({
       id: claim.id,
@@ -78,6 +79,7 @@ export function getCaseState(store: CaseStore) {
     company: snapshot.source.company,
     role: snapshot.source.role,
     origin: snapshot.source.origin,
+    sourceUrl: snapshot.source.sourceUrl ?? null,
     activeProbeId: snapshot.activeProbeId,
     rankingVisible: snapshot.rankingVisible,
     selectionState: snapshot.selectionState,
@@ -183,7 +185,7 @@ export function recordResearchEvidenceTool(
   ) {
     throw new Error("Unsupported research source");
   }
-  const sourceUrl = normalizeResearchUrl(input.sourceUrl);
+  const sourceUrl = normalizeHttpUrl(input.sourceUrl, "Research source URL");
   const duplicate = snapshot.source.claims
     .find((claim) => claim.id === snapshot.activeProbeId)
     ?.evidence.some((item) => item.sourceUrl === sourceUrl);
@@ -206,6 +208,7 @@ export function importRoleFromClaimsTool(
   input: {
     company: string;
     role: string;
+    sourceUrl?: string;
     claims: Array<{
       dimension: string;
       employerStatement: string;
@@ -220,6 +223,9 @@ export function importRoleFromClaimsTool(
     unresolvedVariable: claim.unresolvedVariable.trim(),
     measurableForm: claim.measurableForm.trim(),
   }));
+  const sourceUrl = input.sourceUrl?.trim()
+    ? normalizeHttpUrl(input.sourceUrl, "Job posting URL")
+    : undefined;
   if (
     !input.company.trim() ||
     !input.role.trim() ||
@@ -236,6 +242,7 @@ export function importRoleFromClaimsTool(
   store.importRole({
     company: input.company.trim(),
     role: input.role.trim(),
+    ...(sourceUrl ? { sourceUrl } : {}),
     claims,
   });
   const snapshot = store.getState();
@@ -244,6 +251,7 @@ export function importRoleFromClaimsTool(
     origin: snapshot.source.origin,
     company: snapshot.source.company,
     role: snapshot.source.role,
+    sourceUrl: snapshot.source.sourceUrl ?? null,
     claimCount: snapshot.source.claims.length,
   };
 }
@@ -276,7 +284,7 @@ export const CASE_TOOL_CONTRACTS = [
   {
     name: "import_role_from_claims",
     description:
-      "Create an in-memory case from extracted employer statements plus testable variables. Do not supply claim kind, coverage, status, unresolvedness, tension, or ranking. Rolequiry derives those fields.",
+      "Create a case from extracted employer statements plus testable variables and an optional job posting sourceUrl. Do not supply claim kind, coverage, status, unresolvedness, tension, or ranking. Rolequiry derives those fields.",
     annotations: { readOnlyHint: false },
   },
   {

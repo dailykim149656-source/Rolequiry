@@ -41,6 +41,15 @@ export type CaseSnapshot = {
   readonly prioritiesTouched: boolean;
 };
 
+export type RestorableCaseState = Pick<
+  CaseSnapshot,
+  | "source"
+  | "activeProbeId"
+  | "rankingVisible"
+  | "selectionState"
+  | "prioritiesTouched"
+>;
+
 type Listener = () => void;
 
 function snapshotFrom(
@@ -77,6 +86,27 @@ export function createCaseStore(initial: RoleCase = ATLAS_FDE) {
       return () => {
         listeners.delete(listener);
       };
+    },
+    restore(saved: RestorableCaseState) {
+      const derived = deriveCase(saved.source);
+      const activeProbeId = derived.claims.some(
+        (claim) => claim.id === saved.activeProbeId,
+      )
+        ? saved.activeProbeId
+        : null;
+      state = {
+        source: saved.source,
+        derived,
+        activeProbeId,
+        rankingVisible: Boolean(activeProbeId && saved.rankingVisible),
+        selectionState: activeProbeId
+          ? saved.selectionState
+          : saved.selectionState === SELECTION_STATE.NO_PROBE_NEEDED
+            ? saved.selectionState
+            : SELECTION_STATE.IDLE,
+        prioritiesTouched: saved.prioritiesTouched,
+      };
+      emit();
     },
     loadFixture(id: FixtureId) {
       state = snapshotFrom(FIXTURES[id], null, false);

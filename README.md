@@ -45,14 +45,14 @@ On `/case`:
 - `get_case_state` (read): live coverage, unresolvedness, tension, priorities; no ranking
 - `select_decision_changer` (write): compute ranking, set the active probe, return unresolved variable + measurable form
 - `record_interview_answer` (write): record a human-obtained answer against the active probe
-- `import_role_from_claims` (write): create an in-memory case from extracted employer statements
+- `import_role_from_claims` (write): create a browser-local case from extracted employer statements and an optional job-posting `sourceUrl`
 - `record_research_evidence` (write): record sourced public evidence the agent found for the active probe
 
 On `/employer/atlas-fde`: `get_employer_claims`, `get_employer_policy` (read-only). The employer page and `/case` share the Northwind fixture and link to each other; they do not require both tabs to stay open.
 
 ## Architecture
 
-Human UI and WebMCP tools share one in-memory `CaseStore`. `deriveCase` is a pure function: coverage, unresolvedness, tension, status, probe eligibility. The model does not decide whether a claim matters. State is per page; Reset Demo restores the fixture.
+Human UI and WebMCP tools share one in-memory `CaseStore`. `deriveCase` is a pure function: coverage, unresolvedness, tension, status, probe eligibility. The model does not decide whether a claim matters. A versioned snapshot is saved in browser `localStorage`, so imported cases and evidence survive reloads on that device; Reset Demo restores and saves the fixture.
 
 ## Try it in 60 seconds
 
@@ -69,6 +69,7 @@ Open https://rolequiry.com/case in ChatGPT's built-in browser or Chrome with Web
 
 - Employee/workplace signals in the fixtures are synthetic and labeled as such.
 - No server-side model calls. The user's existing agent does language work and external research.
+- Case data stays in the current browser's local storage; there is no account sync or server backup.
 - Imported cases start with employer testimony only. The agent may add sourced first-person or employer-official research; Rolequiry stores agent-reported provenance, it does not independently verify the page.
 - Rolequiry ranks lived-experience uncertainty, not written employer policy. Compensation bands and similar employer-owned statements are recorded, but they are not the next research probe.
 - Rolequiry deliberately does not ingest arbitrary news or analyst commentary into its current authority model.

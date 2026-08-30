@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useSyncExternalStore } from "react";
 import { CaseWorkspace } from "@/components/CaseWorkspace";
+import { loadPersistedCase, savePersistedCase } from "@/lib/case-persistence";
 import { createCaseStore } from "@/lib/case-store";
 import { cannedInterviewAnswer } from "@/lib/demo/canned-answers";
 import { useCaseWebMCPTools } from "@/lib/webmcp/use-case-tools";
@@ -14,6 +15,14 @@ export function CaseApp() {
     store.getState,
     store.getState,
   );
+  useEffect(() => {
+    const saved = loadPersistedCase(window.localStorage);
+    if (saved) store.restore(saved);
+    const persist = () =>
+      savePersistedCase(window.localStorage, store.getState());
+    persist();
+    return store.subscribe(persist);
+  }, [store]);
   const selected = snapshot.derived.claims.find(
     (claim) => claim.id === snapshot.activeProbeId,
   );

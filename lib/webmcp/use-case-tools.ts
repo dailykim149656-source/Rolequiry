@@ -53,6 +53,7 @@ const importSchema = {
   properties: {
     company: { type: "string", minLength: 1 },
     role: { type: "string", minLength: 1 },
+    sourceUrl: { type: "string", minLength: 1 },
     claims: {
       type: "array",
       minItems: 1,
@@ -128,6 +129,7 @@ export function useCaseWebMCPTools(store: CaseStore) {
     execute: (args: {
       company: string;
       role: string;
+      sourceUrl?: string;
       claims: Array<{
         dimension: string;
         employerStatement: string;

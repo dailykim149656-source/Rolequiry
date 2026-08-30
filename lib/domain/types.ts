@@ -110,6 +110,7 @@ export type RoleCase = {
   readonly id: string;
   readonly company: string;
   readonly role: string;
+  readonly sourceUrl?: string;
   readonly origin: CaseOrigin;
   readonly claims: readonly SourceClaim[];
 };
@@ -157,5 +158,6 @@ export type ImportedClaimInput = {
 export type ImportedRoleInput = {
   readonly company: string;
   readonly role: string;
+  readonly sourceUrl?: string;
   readonly claims: readonly ImportedClaimInput[];
 };

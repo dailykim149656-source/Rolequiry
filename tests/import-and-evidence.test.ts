@@ -71,6 +71,49 @@ describe("import_role_from_claims", () => {
     expect(store.getState().selectionState).toBe("IDLE");
   });
 
+  it("keeps an optional normalized job posting URL as case provenance", () => {
+    const store = createCaseStore();
+    const result = importRoleFromClaimsTool(store, {
+      company: "Example Corp",
+      role: "Staff Engineer",
+      sourceUrl: "https://jobs.example.com/staff-engineer#details",
+      claims: [
+        {
+          dimension: "On-call load",
+          employerStatement: "On-call is rare",
+          unresolvedVariable: "How often does this team get paged?",
+          measurableForm: "Pages per engineer last two quarters",
+        },
+      ],
+    });
+
+    expect(result.sourceUrl).toBe("https://jobs.example.com/staff-engineer");
+    expect(store.getState().source.sourceUrl).toBe(
+      "https://jobs.example.com/staff-engineer",
+    );
+    expect(getCaseState(store).sourceUrl).toBe(
+      "https://jobs.example.com/staff-engineer",
+    );
+  });
+
+  it("rejects a non-http job posting URL", () => {
+    expect(() =>
+      importRoleFromClaimsTool(createCaseStore(), {
+        company: "Example Corp",
+        role: "Staff Engineer",
+        sourceUrl: "javascript:alert(1)",
+        claims: [
+          {
+            dimension: "On-call load",
+            employerStatement: "On-call is rare",
+            unresolvedVariable: "How often does this team get paged?",
+            measurableForm: "Pages per engineer last two quarters",
+          },
+        ],
+      }),
+    ).toThrow(/job posting URL/i);
+  });
+
   it("does not treat incidental remote wording as employer policy", () => {
     expect(
       deriveClaimKind({

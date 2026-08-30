@@ -70,11 +70,13 @@ function EvidenceSignal({
   }[tone];
   return (
     <span
+      aria-label={`${label}: ${count} evidence ${count === 1 ? "item" : "items"}`}
       className={`inline-flex min-h-9 items-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold ${toneClass}`}
+      role="img"
       title={`${label}: ${count} evidence ${count === 1 ? "item" : "items"}`}
     >
       <Icon className="size-4" name={icon} />
-      <span>{label}</span>
+      <span className="hidden sm:inline">{label}</span>
       <span className="rounded-full bg-surface/70 px-1.5 py-0.5 tabular-nums">
         {count}
       </span>

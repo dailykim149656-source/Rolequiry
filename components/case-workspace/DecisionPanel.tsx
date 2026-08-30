@@ -8,8 +8,10 @@ import { Icon, type IconName } from "./Icon";
 
 export function DecisionPanel({
   snapshot,
+  className = "",
 }: {
   readonly snapshot: CaseSnapshot;
+  readonly className?: string;
 }) {
   const selected = snapshot.derived.claims.find(
     (claim) => claim.id === snapshot.activeProbeId,
@@ -17,7 +19,7 @@ export function DecisionPanel({
   return (
     <section
       aria-labelledby="decision-path-title"
-      className="surface-shadow rounded-[1.35rem] border border-line bg-surface p-4 lg:sticky lg:top-6 sm:p-5"
+      className={`surface-shadow rounded-[1.35rem] border border-line bg-surface p-4 lg:sticky lg:top-6 sm:p-5 ${className}`}
     >
       <div className="flex items-start justify-between gap-3 border-b border-line pb-4">
         <div>
@@ -54,8 +56,8 @@ export function DecisionPanel({
         <DecisionPath claim={selected} mode={snapshot.selectionState} />
       ) : (
         <DecisionNotice
-          body="Set your priorities, then tell your agent “Check again.”"
-          title="Ready when you are"
+          body="Tell your agent “Check again” to choose the next question from your priorities."
+          title="Priorities ready"
         />
       )}
     </section>

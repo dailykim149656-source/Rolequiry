@@ -162,6 +162,7 @@ export function importRoleFromClaims(input: ImportedRoleInput): RoleCase {
       .replace(/^-|-$/g, "")}`,
     company: input.company.trim(),
     role: input.role.trim(),
+    ...(input.sourceUrl ? { sourceUrl: input.sourceUrl } : {}),
     origin: CASE_ORIGIN.AGENT_IMPORTED,
     claims: input.claims.map((claim, index) => ({
       id: `imported-${index + 1}`,

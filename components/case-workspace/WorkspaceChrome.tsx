@@ -2,13 +2,17 @@ import Link from "next/link";
 import type { CaseSnapshot, FixtureId } from "@/lib/case-store";
 import { Icon } from "./Icon";
 
-export function ProductBar({ webmcpCount }: { readonly webmcpCount: number }) {
+export function ProductBar({
+  webmcpCount,
+  total = 6,
+}: {
+  readonly webmcpCount: number;
+  readonly total?: number;
+}) {
   const status =
-    webmcpCount === 6
-      ? "WebMCP 6/6 live"
-      : webmcpCount === 0
-        ? "WebMCP unavailable"
-        : `WebMCP ${webmcpCount}/6`;
+    webmcpCount === total
+      ? `WebMCP ${total}/${total} live`
+      : `WebMCP ${webmcpCount}/${total}`;
   return (
     <header className="mb-5 flex items-center justify-between gap-4 px-1">
       <div className="flex min-w-0 items-center gap-3">
@@ -26,9 +30,16 @@ export function ProductBar({ webmcpCount }: { readonly webmcpCount: number }) {
       </div>
       <span className="flex shrink-0 items-center gap-2 rounded-full border border-line bg-surface px-3 py-1.5 text-xs font-medium text-secondary">
         <span
-          className={`size-2 rounded-full ${webmcpCount === 6 ? "bg-supported" : "bg-unverified"}`}
+          className={`size-2 rounded-full ${webmcpCount === total ? "bg-supported" : "bg-unverified"}`}
         />
-        {status}
+        {webmcpCount === 0 ? (
+          <>
+            <span className="sm:hidden">WebMCP required</span>
+            <span className="hidden sm:inline">Open in a WebMCP browser</span>
+          </>
+        ) : (
+          status
+        )}
       </span>
     </header>
   );
@@ -86,25 +97,26 @@ export function DossierHeader({
                 Employer claims
               </Link>
             ) : null}
+            {snapshot.source.sourceUrl ? (
+              <a
+                aria-label="Open original job posting in a new tab"
+                className="inline-flex min-h-11 items-center gap-1.5 py-2 font-medium text-brand underline decoration-brand/30 underline-offset-4 hover:decoration-brand"
+                href={snapshot.source.sourceUrl}
+                rel="noreferrer"
+                target="_blank"
+              >
+                Original posting
+                <Icon className="size-3.5" name="arrow" />
+              </a>
+            ) : null}
           </div>
         </div>
-        {snapshot.source.origin === "AGENT_IMPORTED" &&
-        !snapshot.prioritiesTouched ? (
-          <div className="max-w-xs rounded-2xl border border-line bg-surface/80 p-4 text-sm text-secondary backdrop-blur-sm">
-            <div className="flex gap-3">
-              <Icon className="size-5 shrink-0 text-brand" name="scales" />
-              <p>
-                Set priority on the claims that matter to you before ranking.
-              </p>
-            </div>
-          </div>
-        ) : null}
       </div>
     </section>
   );
 }
 
-function CompanyMark({ company }: { readonly company: string }) {
+export function CompanyMark({ company }: { readonly company: string }) {
   const words = company
     .split(/\s+/)
     .map((word) => word.replace(/[^a-z0-9]/gi, ""))

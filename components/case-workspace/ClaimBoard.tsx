@@ -18,8 +18,10 @@ const IMPORTANCE_OPTIONS = [
 export function ClaimBoard({
   snapshot,
   onImportanceChange,
+  className = "",
 }: {
   readonly snapshot: CaseSnapshot;
+  readonly className?: string;
   readonly onImportanceChange: (
     claimId: string,
     importance: Importance,
@@ -28,7 +30,7 @@ export function ClaimBoard({
   return (
     <section
       aria-labelledby="claim-board-title"
-      className="surface-shadow rounded-[1.35rem] border border-line bg-surface p-3 sm:p-5"
+      className={`surface-shadow rounded-[1.35rem] border border-line bg-surface p-3 sm:p-5 ${className}`}
       id="claim-board"
     >
       <div className="flex flex-wrap items-start justify-between gap-3 border-b border-line px-1 pb-4">
@@ -53,20 +55,10 @@ export function ClaimBoard({
         </span>
       </div>
 
-      {snapshot.source.origin === "AGENT_IMPORTED" &&
-      !snapshot.prioritiesTouched ? (
-        <div className="mt-4 flex gap-3 rounded-xl border border-brand/20 bg-brand-soft/60 px-4 py-3 text-sm text-secondary">
-          <Icon className="mt-0.5 size-5 shrink-0 text-brand" name="scales" />
-          <p>
-            Ranking only includes claims you explicitly prioritize. Set the ones
-            that could change your decision.
-          </p>
-        </div>
-      ) : null}
-
       <div className="mt-4 grid gap-3">
         {snapshot.derived.claims.map((claim) => (
           <ClaimCard
+            active={claim.id === snapshot.activeProbeId}
             claim={claim}
             key={claim.id}
             onImportanceChange={onImportanceChange}
@@ -78,9 +70,11 @@ export function ClaimBoard({
 }
 
 function ClaimCard({
+  active,
   claim,
   onImportanceChange,
 }: {
+  readonly active: boolean;
   readonly claim: DerivedClaim;
   readonly onImportanceChange: (
     claimId: string,
@@ -98,16 +92,27 @@ function ClaimCard({
 
   return (
     <article
-      className={`group rounded-2xl border bg-surface p-4 transition-[border-color,box-shadow,opacity] duration-150 focus-within:border-brand/50 focus-within:opacity-100 focus-within:shadow-sm hover:border-strong hover:opacity-100 ${
-        isSet ? "border-line" : "border-dashed border-strong opacity-70"
+      className={`group rounded-2xl border p-4 transition-[border-color,box-shadow,background-color] duration-150 focus-within:border-brand/50 focus-within:shadow-sm hover:border-strong ${
+        active
+          ? "border-ink bg-quiet shadow-sm ring-1 ring-ink/10"
+          : isSet
+            ? "border-line bg-surface"
+            : "border-dashed border-strong bg-quiet/45"
       }`}
+      data-active={String(active)}
       data-priority-set={String(isSet)}
+      data-testid={`claim-${claim.id}`}
     >
       <div className="flex gap-3 sm:gap-4">
         <ClaimGlyph claim={claim} />
         <div className="min-w-0 flex-1">
           <div className="flex flex-col items-start gap-2 sm:flex-row sm:justify-between sm:gap-3">
             <div className="min-w-0 flex-1">
+              {active ? (
+                <p className="mb-1 inline-flex rounded-full bg-ink px-2 py-0.5 text-[0.7rem] font-semibold uppercase tracking-[0.1em] text-white">
+                  Active probe
+                </p>
+              ) : null}
               <h3 className="font-semibold text-ink">{claim.dimension}</h3>
               <blockquote className="mt-1 text-sm leading-6 text-secondary">
                 “{claim.employerStatement}”
