@@ -2,7 +2,7 @@
 
 Interview the job before it interviews you.
 
-Rolequiry is an agent-native candidate due-diligence app for the OpenAI WebMCP Challenge. Job postings are treated as claims, not facts. Deterministic application code ranks the unresolved variable worth probing. The candidate sets priorities. The agent phrases the question. The human brings the answer back.
+Rolequiry is an agent-native candidate due-diligence app for the OpenAI WebMCP Challenge. Job postings are treated as claims, not facts. The candidate sets priorities. The agent can import claims, research the active uncertainty, and structure interview testimony. Rolequiry—not the model—owns evidence authority, coverage, state transitions, and what remains unresolved.
 
 ## Live Demo URL
 
@@ -22,7 +22,20 @@ Supported test environment: ChatGPT built-in browser / Chrome with WebMCP. The p
 
 ## Why WebMCP
 
-Most agent demos operate on cooperative pages. A job posting is mixed-incentive: useful to the candidate, written by the employer. WebMCP lets the page expose typed reads and writes against live application state instead of scraping. The agent extracts employer claims and translates them into testable variables. Rolequiry—not the model—derives claim kind, evidence coverage, state, and ranking.
+Most agent demos operate on cooperative pages. A job posting is mixed-incentive: useful to the candidate, written by the employer. WebMCP lets the page expose typed reads and writes against live application state instead of scraping. The agent extracts employer claims, translates them into testable variables, and can research the currently active uncertainty with its own browsing capabilities. Rolequiry—not the model—derives claim kind, evidence authority, coverage, state, and ranking.
+
+### Decision-directed research
+
+Rolequiry is not a general deep-research engine. Comprehensive research systems search until they understand a topic; Rolequiry asks the agent to research only the uncertainty that can change this candidate's decision next.
+
+- `select_decision_changer` defines the active research target.
+- The agent can use its own browser, search, or deep-research capabilities outside Rolequiry.
+- `record_research_evidence` writes one sourced employer-official or first-person finding back into the active probe.
+- Provenance stays attached to the evidence and is visible in the UI.
+- Duplicate source URLs are rejected, and `NEUTRAL` research is stored without reducing uncertainty.
+- The research tool asks the agent to make a reasonable counterevidence check before assigning a strong `SUPPORTS` or `CHALLENGES` stance.
+
+Research changes application state; it does not let the model decide whether the job is good.
 
 ## WebMCP Tools
 
@@ -33,7 +46,7 @@ On `/case`:
 - `select_decision_changer` (write): compute ranking, set the active probe, return unresolved variable + measurable form
 - `record_interview_answer` (write): record a human-obtained answer against the active probe
 - `import_role_from_claims` (write): create an in-memory case from extracted employer statements
-- `record_research_evidence` (write): record public first-person or official evidence the agent found for the active probe
+- `record_research_evidence` (write): record sourced public evidence the agent found for the active probe
 
 On `/employer/atlas-fde`: `get_employer_claims`, `get_employer_policy` (read-only). The employer page and `/case` share the Northwind fixture and link to each other; they do not require both tabs to stay open.
 
@@ -49,13 +62,15 @@ Open https://rolequiry.com/case in ChatGPT's built-in browser or Chrome with Web
 2. In the UI only, set Travel to CRITICAL. Do not tell the agent that Travel matters.
 3. Ask only: `Check again.` The current question flips to Travel.
 4. Reset, ask again, then tell the agent: `The hiring manager said ownership is split with a central platform team after design review.` Ownership becomes CHALLENGED.
-5. Optional: paste a real job description and say `Put this role into Rolequiry.` Then set priorities before asking what to investigate.
+5. Optional real-role path: paste a real job description and say `Put this role into Rolequiry.` Set at least one priority, then ask what to investigate.
+6. Optional research path: with a real role and an active probe, say `Research this active question using public employer-official or first-person sources. Record only what you can source.` Then inspect `View evidence` and ask `Check again.`
 
 ## Known limitations
 
 - Employee/workplace signals in the fixtures are synthetic and labeled as such.
-- No server-side model calls. The user's existing agent does language work.
-- Imported cases start with employer evidence only until interview or reported evidence is added.
+- No server-side model calls. The user's existing agent does language work and external research.
+- Imported cases start with employer testimony only. The agent may add supported employer-official or first-person research evidence, and the human may later add interview evidence.
+- Rolequiry deliberately does not ingest arbitrary news or analyst commentary into its current authority model.
 - Closing the employer page cannot break `/case`.
 - GitHub repository: https://github.com/dailykim149656-source/Rolequiry
 
