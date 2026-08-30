@@ -63,7 +63,7 @@ export function CaseApp() {
           : "Imported case"}
       </p>
 
-      <section className="mt-8 lg:grid lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start lg:gap-6">
+      <section className="mt-8 grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
         <div className="order-2 lg:order-1">
           <section>
             <h2 className="text-lg font-medium">What the employer claims</h2>
