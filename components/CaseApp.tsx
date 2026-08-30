@@ -50,11 +50,13 @@ export function CaseApp() {
         here, then tell the agent only &quot;Check again.&quot;
       </p>
 
-      <p className="mt-2 text-sm text-zinc-500">
-        <Link className="underline" href="/employer/atlas-fde">
-          Employer-published claims
-        </Link>
-      </p>
+      {snapshot.source.id === "atlas-fde" ? (
+        <p className="mt-2 text-sm text-zinc-500">
+          <Link className="underline" href="/employer/atlas-fde">
+            Employer-published claims
+          </Link>
+        </p>
+      ) : null}
       <p className="mt-2 text-sm text-zinc-500" data-testid="case-origin">
         {snapshot.source.origin === "DEMO_FIXTURE"
           ? "Demo case"
@@ -62,7 +64,7 @@ export function CaseApp() {
       </p>
 
       <section className="mt-8 lg:grid lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start lg:gap-6">
-        <div>
+        <div className="order-2 lg:order-1">
           <section>
             <h2 className="text-lg font-medium">What the employer claims</h2>
             <p className="mt-1 text-sm text-zinc-500">
@@ -120,7 +122,7 @@ export function CaseApp() {
             ))}
           </section>
         </div>
-        <section className="mt-8 rounded-2xl bg-zinc-950 p-5 text-zinc-50 lg:sticky lg:top-6 lg:mt-0">
+        <section className="order-1 mt-8 rounded-2xl bg-zinc-950 p-5 text-zinc-50 lg:sticky lg:top-6 lg:order-2 lg:mt-0">
           <h2 className="text-lg font-medium">Current question</h2>
           {snapshot.selectionState === "ACTIVE" && selected ? (
             <div className="mt-3 space-y-2 text-sm">

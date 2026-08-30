@@ -117,7 +117,7 @@ export function importRoleFromClaims(input: ImportedRoleInput): RoleCase {
       employerStatement: claim.employerStatement.trim(),
       unresolvedVariable: claim.unresolvedVariable.trim(),
       measurableForm: claim.measurableForm.trim(),
-      importance: IMPORTANCE.HIGH,
+      importance: IMPORTANCE.MEDIUM,
       evidence: [
         {
           id: `imported-${index + 1}-employer`,

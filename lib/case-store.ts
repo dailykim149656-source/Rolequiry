@@ -35,6 +35,7 @@ export type CaseSnapshot = {
   readonly activeProbeId: string | null;
   readonly rankingVisible: boolean;
   readonly selectionState: SelectionState;
+  readonly prioritiesTouched: boolean;
 };
 
 type Listener = () => void;
@@ -44,6 +45,7 @@ function snapshotFrom(
   activeProbeId: string | null,
   rankingVisible: boolean,
   selectionState: SelectionState = SELECTION_STATE.IDLE,
+  prioritiesTouched = source.origin !== "AGENT_IMPORTED",
 ): CaseSnapshot {
   return {
     source,
@@ -51,6 +53,7 @@ function snapshotFrom(
     activeProbeId,
     rankingVisible,
     selectionState,
+    prioritiesTouched,
   };
 }
 
@@ -86,6 +89,8 @@ export function createCaseStore(initial: RoleCase = ATLAS_FDE) {
         setClaimImportance(state.source, claimId, importance),
         null,
         false,
+        SELECTION_STATE.IDLE,
+        true,
       );
       emit();
     },
@@ -111,6 +116,7 @@ export function createCaseStore(initial: RoleCase = ATLAS_FDE) {
         selectionState: derived.topProbeId
           ? SELECTION_STATE.ACTIVE
           : SELECTION_STATE.NO_PROBE_NEEDED,
+        prioritiesTouched: state.prioritiesTouched,
       };
       emit();
       return derived;

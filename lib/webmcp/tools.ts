@@ -18,7 +18,6 @@ function publicClaim(claim: DerivedClaim, rankingVisible: boolean) {
       scope: item.scope,
       stance: item.stance,
       speakerRole: item.speakerRole ?? null,
-      text: item.text,
       sourceKind: item.sourceKind ?? null,
       sourceLabel: item.sourceLabel ?? null,
       synthetic:
@@ -66,6 +65,19 @@ export function getCaseState(store: CaseStore) {
 }
 
 export function selectDecisionChanger(store: CaseStore) {
+  const snapshot = store.getState();
+  if (
+    snapshot.source.origin === "AGENT_IMPORTED" &&
+    !snapshot.prioritiesTouched
+  ) {
+    return {
+      ok: true as const,
+      outcome: "PRIORITIES_REQUIRED" as const,
+      claim_id: null,
+      unresolved_variable: null,
+      measurable_form: null,
+    };
+  }
   const derived = store.peekDecision();
   const selected = derived.claims.find(
     (claim) => claim.id === derived.topProbeId,
@@ -141,16 +153,20 @@ export function importRoleFromClaimsTool(
   if (
     !input.company.trim() ||
     !input.role.trim() ||
-    input.claims.length === 0
+    input.claims.length === 0 ||
+    input.claims.length > 8
   ) {
-    throw new Error(
-      "Imported role requires company, role, and at least one claim",
-    );
+    throw new Error("Imported role requires company, role, and 1 to 8 claims");
   }
   store.importRole({
-    company: input.company,
-    role: input.role,
-    claims: input.claims,
+    company: input.company.trim(),
+    role: input.role.trim(),
+    claims: input.claims.map((claim) => ({
+      dimension: claim.dimension.trim(),
+      employerStatement: claim.employerStatement.trim(),
+      unresolvedVariable: claim.unresolvedVariable.trim(),
+      measurableForm: claim.measurableForm.trim(),
+    })),
   });
   const snapshot = store.getState();
   return {
@@ -190,7 +206,7 @@ export const CASE_TOOL_CONTRACTS = [
   {
     name: "import_role_from_claims",
     description:
-      "Create an in-memory case from employer statements the agent extracted. Supply source fields only. Rolequiry derives kind, coverage, unresolvedness, tension, status and ranking.",
+      "Create an in-memory case from extracted employer statements plus testable variables. Do not supply claim kind, coverage, status, unresolvedness, tension, or ranking. Rolequiry derives those fields.",
     annotations: { readOnlyHint: false },
   },
 ] as const;

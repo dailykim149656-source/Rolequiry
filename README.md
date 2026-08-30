@@ -47,7 +47,7 @@ Open https://rolequiry.com/case in ChatGPT's built-in browser or Chrome with Web
 1. Ask only: `What should I investigate next?` Ownership is selected even though Travel has more negative signals.
 2. In the UI only, set Travel to CRITICAL. Do not tell the agent that Travel matters.
 3. Ask only: `Check again.` The current question flips to Travel.
-4. Reset, ask again, then tell the agent what the hiring manager said. Ownership becomes CHALLENGED.
+4. Reset, ask again, then tell the agent: `The hiring manager said ownership is split with a central platform team after design review.` Ownership becomes CHALLENGED.
 5. Optional: paste a real job description and say `Put this role into Rolequiry.` Then set priorities before asking what to investigate.
 
 ## Known limitations
