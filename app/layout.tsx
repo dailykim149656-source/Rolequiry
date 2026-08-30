@@ -6,7 +6,11 @@ export const metadata: Metadata = {
   description: "Interview the job before it interviews you.",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({
+  children,
+}: {
+  readonly children: React.ReactNode;
+}) {
   return (
     <html lang="en">
       <body className="min-h-screen bg-zinc-50 text-zinc-950 antialiased">
