@@ -25,7 +25,7 @@ export const LIVED_EXPERIENCE_WEIGHT = {
 } as const satisfies Record<AuthorityScope, number>;
 
 const POLICY_STATEMENT =
-  /(\$\d|visa sponsorship|remote-first|on-site required|paid time off)/i;
+  /(\$\d|\d{2,3},\d{3}|\d{3}k|\busd\b|visa sponsorship|remote-first|on-site required|hybrid work|paid time off|equity granted|relocation assistance|annual bonus)/i;
 
 export function deriveClaimKind(input: {
   readonly dimension: string;
@@ -261,7 +261,11 @@ export function probePriority(input: {
   readonly importance: Importance;
   readonly unresolvedness: number;
   readonly tension: number;
+  readonly requireCandidateImportance?: boolean;
 }): { readonly probeEligible: boolean; readonly probePriority: number } {
+  if (input.requireCandidateImportance) {
+    return { probeEligible: false, probePriority: 0 };
+  }
   const probeEligible = input.unresolvedness >= 0.35;
   if (!probeEligible) return { probeEligible, probePriority: 0 };
   return {

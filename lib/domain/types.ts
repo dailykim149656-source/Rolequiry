@@ -94,6 +94,7 @@ export type SourceClaim = {
   readonly measurableForm: string;
   readonly evidence: readonly Evidence[];
   readonly kind?: ClaimKind;
+  readonly importanceSetByCandidate?: boolean;
 };
 
 export type RoleCase = {

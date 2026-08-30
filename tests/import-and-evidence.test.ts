@@ -6,7 +6,10 @@ import { describe, expect, it } from "vitest";
 import { createCaseStore } from "@/lib/case-store";
 import { deriveClaimKind } from "@/lib/domain/policy";
 import { SPEAKER_ROLE } from "@/lib/domain/types";
-import { importRoleFromClaimsTool } from "@/lib/webmcp/tools";
+import {
+  importRoleFromClaimsTool,
+  selectDecisionChanger,
+} from "@/lib/webmcp/tools";
 import { useCaseWebMCPTools } from "@/lib/webmcp/use-case-tools";
 
 function installFakeModelContext() {
@@ -74,6 +77,83 @@ describe("import_role_from_claims", () => {
         employerStatement: "Engineers remotely debug customer systems.",
       }),
     ).toBe("LIVED_EXPERIENCE");
+  });
+
+  it("classifies written compensation and hybrid statements as employer policy", () => {
+    expect(
+      deriveClaimKind({
+        dimension: "Base pay",
+        employerStatement: "Base salary range: 190,000-220,000 USD",
+      }),
+    ).toBe("EMPLOYER_POLICY");
+    expect(
+      deriveClaimKind({
+        dimension: "Work arrangement",
+        employerStatement: "Hybrid work: three days per week in office",
+      }),
+    ).toBe("EMPLOYER_POLICY");
+    expect(
+      deriveClaimKind({
+        dimension: "Equity",
+        employerStatement: "Equity granted at hire",
+      }),
+    ).toBe("EMPLOYER_POLICY");
+  });
+
+  it("ranks only claims the candidate has set after import", () => {
+    const store = createCaseStore();
+    importRoleFromClaimsTool(store, {
+      company: "Example Corp",
+      role: "Staff Engineer",
+      claims: [
+        {
+          dimension: "On-call load",
+          employerStatement: "On-call is rare",
+          unresolvedVariable: "How often does this team get paged?",
+          measurableForm: "Pages per engineer last two quarters",
+        },
+        {
+          dimension: "Travel",
+          employerStatement: "Travel is limited",
+          unresolvedVariable: "How many nights on the road?",
+          measurableForm: "Nights away last two quarters",
+        },
+        {
+          dimension: "Base pay",
+          employerStatement: "Base salary range: 190,000-220,000 USD",
+          unresolvedVariable: "What is the written base band?",
+          measurableForm: "Offer letter range",
+        },
+      ],
+    });
+    const travel = store
+      .getState()
+      .source.claims.find((claim) => claim.dimension === "Travel");
+    if (!travel) throw new Error("travel missing");
+    store.setImportance(travel.id, "LOW");
+    const selected = selectDecisionChanger(store);
+    expect(selected.claim_id).not.toBe(
+      store
+        .getState()
+        .source.claims.find((claim) => claim.dimension === "On-call load")?.id,
+    );
+    expect(
+      store
+        .getState()
+        .derived.claims.find((claim) => claim.dimension === "On-call load")
+        ?.probeEligible,
+    ).toBe(false);
+    expect(
+      store
+        .getState()
+        .derived.claims.find((claim) => claim.dimension === "Base pay")?.kind,
+    ).toBe("EMPLOYER_POLICY");
+    expect(
+      store
+        .getState()
+        .derived.claims.find((claim) => claim.dimension === "Base pay")
+        ?.probeEligible,
+    ).toBe(false);
   });
 
   it("rejects whitespace-only imported claims", () => {

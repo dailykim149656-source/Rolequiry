@@ -79,4 +79,28 @@ describe("Fixture A deriveCase", () => {
     expect(ownership?.probeEligible).toBe(false);
     expect(ownership?.probePriority).toBe(0);
   });
+
+  it("breaks equal probe scores with an app-owned key instead of import order", () => {
+    const ownership = ATLAS_FDE.claims[0];
+    if (!ownership) throw new Error("ownership missing");
+    const first = {
+      ...ATLAS_FDE,
+      origin: "AGENT_IMPORTED" as const,
+      claims: [
+        {
+          ...ownership,
+          id: "zeta",
+          dimension: "Zeta ownership",
+          importance: IMPORTANCE.HIGH,
+        },
+        {
+          ...ownership,
+          id: "alpha",
+          dimension: "Alpha ownership",
+          importance: IMPORTANCE.HIGH,
+        },
+      ],
+    };
+    expect(deriveCase(first).topProbeId).toBe("alpha");
+  });
 });

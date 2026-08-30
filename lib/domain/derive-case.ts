@@ -31,6 +31,7 @@ function deriveClaim(claim: SourceClaim): DerivedClaim {
     importance: claim.importance,
     unresolvedness,
     tension,
+    requireCandidateImportance: claim.importanceSetByCandidate === false,
   });
   return {
     id: claim.id,
@@ -57,8 +58,10 @@ export function deriveCase(roleCase: RoleCase): DerivedCase {
   const claims = roleCase.claims.map(deriveClaim);
   const eligible = claims.filter((claim) => claim.probeEligible);
   const top = eligible.reduce<DerivedClaim | null>((best, claim) => {
-    if (!best || claim.probePriority > best.probePriority) return claim;
-    return best;
+    if (!best) return claim;
+    if (claim.probePriority > best.probePriority) return claim;
+    if (claim.probePriority < best.probePriority) return best;
+    return claim.dimension.localeCompare(best.dimension) < 0 ? claim : best;
   }, null);
   return {
     id: roleCase.id,
@@ -78,7 +81,9 @@ export function setClaimImportance(
   return {
     ...roleCase,
     claims: roleCase.claims.map((claim) =>
-      claim.id === claimId ? { ...claim, importance } : claim,
+      claim.id === claimId
+        ? { ...claim, importance, importanceSetByCandidate: true }
+        : claim,
     ),
   };
 }
@@ -161,6 +166,7 @@ export function importRoleFromClaims(input: ImportedRoleInput): RoleCase {
       unresolvedVariable: claim.unresolvedVariable.trim(),
       measurableForm: claim.measurableForm.trim(),
       importance: IMPORTANCE.MEDIUM,
+      importanceSetByCandidate: false,
       evidence: [
         {
           id: `imported-${index + 1}-employer`,
