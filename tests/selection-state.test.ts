@@ -13,7 +13,6 @@ describe("selection state", () => {
     expect(selectDecisionChanger(store).outcome).toBe("PROBE_SELECTED");
     expect(store.getState().selectionState).toBe("ACTIVE");
     recordInterviewAnswerTool(store, {
-      claimId: "technical-ownership",
       stance: "CHALLENGES",
       text: "Hiring manager said ownership is split with a central platform team after design review.",
       speakerRole: SPEAKER_ROLE.HIRING_MANAGER,
@@ -21,7 +20,6 @@ describe("selection state", () => {
     expect(store.getState().selectionState).toBe("IDLE");
     expect(selectDecisionChanger(store).claim_id).toBe("travel");
     recordInterviewAnswerTool(store, {
-      claimId: "travel",
       stance: "CHALLENGES",
       text: "Hiring manager said travel exceeded 50% during launch windows.",
       speakerRole: SPEAKER_ROLE.HIRING_MANAGER,

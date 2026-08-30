@@ -69,14 +69,13 @@ describe("WebMCP registration wrapper", () => {
       throw new Error("record_interview_answer was not registered");
     }
     const result = await record.execute({
-      claimId: "does-not-exist",
       stance: "CHALLENGES",
       text: "should not land",
       speakerRole: SPEAKER_ROLE.HIRING_MANAGER,
     });
 
     expect(result?.isError).toBe(true);
-    expect(result?.content[0]?.text).toContain("Unknown claim id");
+    expect(result?.content[0]?.text).toContain("No active probe");
     expect(
       store
         .getState()

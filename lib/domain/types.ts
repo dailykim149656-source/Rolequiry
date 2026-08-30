@@ -50,12 +50,23 @@ export const CASE_ORIGIN = {
 } as const;
 export type CaseOrigin = (typeof CASE_ORIGIN)[keyof typeof CASE_ORIGIN];
 
+export const SOURCE_KIND = {
+  EMPLOYER_POSTING: "EMPLOYER_POSTING",
+  REPORTED_EXPERIENCE: "REPORTED_EXPERIENCE",
+  INTERVIEW: "INTERVIEW",
+} as const;
+export type SourceKind = (typeof SOURCE_KIND)[keyof typeof SOURCE_KIND];
+
 export type Evidence = {
   readonly id: string;
   readonly scope: AuthorityScope;
   readonly stance: EvidenceStance;
   readonly text: string;
   readonly speakerRole?: SpeakerRole;
+  readonly sourceKind?: SourceKind;
+  readonly sourceLabel?: string;
+  readonly synthetic?: boolean;
+  readonly sourceUrl?: string;
 };
 
 export type SourceClaim = {
@@ -107,4 +118,17 @@ export type InterviewAnswerInput = {
   readonly stance: EvidenceStance;
   readonly text: string;
   readonly speakerRole: SpeakerRole;
+};
+
+export type ImportedClaimInput = {
+  readonly dimension: string;
+  readonly employerStatement: string;
+  readonly unresolvedVariable: string;
+  readonly measurableForm: string;
+};
+
+export type ImportedRoleInput = {
+  readonly company: string;
+  readonly role: string;
+  readonly claims: readonly ImportedClaimInput[];
 };

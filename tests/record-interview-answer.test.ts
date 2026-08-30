@@ -11,12 +11,11 @@ describe("record_interview_answer validation", () => {
       .source.claims.map((claim) => claim.evidence.length);
     expect(() =>
       recordInterviewAnswerTool(store, {
-        claimId: "does-not-exist",
         stance: "CHALLENGES",
         text: "should not land",
         speakerRole: SPEAKER_ROLE.HIRING_MANAGER,
       }),
-    ).toThrow("Unknown claim id");
+    ).toThrow("No active probe");
     const after = store
       .getState()
       .source.claims.map((claim) => claim.evidence.length);

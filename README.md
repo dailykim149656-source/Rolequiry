@@ -31,7 +31,8 @@ On `/case`:
 - `get_role_claims` (read): employer testimony, not verified facts
 - `get_case_state` (read): live coverage, unresolvedness, tension, priorities; no ranking
 - `select_decision_changer` (write): compute ranking, set the active probe, return unresolved variable + measurable form
-- `record_interview_answer` (write): record a human-obtained answer; unknown claim ids are rejected
+- `record_interview_answer` (write): record a human-obtained answer against the active probe
+- `import_role_from_claims` (write): create an in-memory case from extracted employer statements
 
 On `/employer/atlas-fde`: `get_employer_claims`, `get_employer_policy` (read-only). The employer page and `/case` share the Northwind fixture and link to each other; they do not require both tabs to stay open.
 
@@ -64,7 +65,7 @@ Loop 3 — generalization
 
 - Employee/workplace signals in the fixtures are synthetic and labeled as such.
 - No server-side model calls. The user's existing agent does language work.
-- `import_role_from_claims` is a swing feature and is not in this core submission.
+- Imported cases start with employer evidence only until interview or reported evidence is added.
 - Closing the employer page cannot break `/case`.
 - GitHub repository: https://github.com/dailykim149656-source/Rolequiry
 

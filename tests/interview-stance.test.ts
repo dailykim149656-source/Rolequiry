@@ -85,7 +85,6 @@ describe("select_decision_changer outcomes", () => {
     const store = createCaseStore();
     selectDecisionChanger(store);
     recordInterviewAnswerTool(store, {
-      claimId: "technical-ownership",
       stance: "CHALLENGES",
       text: "Hiring manager said ownership is split with a central platform team after design review.",
       speakerRole: SPEAKER_ROLE.HIRING_MANAGER,
@@ -98,7 +97,6 @@ describe("select_decision_changer outcomes", () => {
       claim_id: "travel",
     });
     recordInterviewAnswerTool(store, {
-      claimId: "travel",
       stance: "CHALLENGES",
       text: "Hiring manager said travel exceeded 50% during launch windows.",
       speakerRole: SPEAKER_ROLE.HIRING_MANAGER,

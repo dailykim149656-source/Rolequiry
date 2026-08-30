@@ -32,7 +32,6 @@ describe("ChatGPT P0 contract", () => {
     selectDecisionChanger(store);
     expect(store.getState().activeProbeId).toBe("technical-ownership");
     recordInterviewAnswerTool(store, {
-      claimId: "technical-ownership",
       stance: "CHALLENGES",
       text: "Hiring manager said ownership is split with a central platform team after design review.",
       speakerRole: SPEAKER_ROLE.HIRING_MANAGER,
@@ -54,7 +53,6 @@ describe("ChatGPT P0 contract", () => {
     selectDecisionChanger(store);
     expect(() =>
       recordInterviewAnswerTool(store, {
-        claimId: "technical-ownership",
         stance: "CHALLENGES",
         text: "   ",
         speakerRole: SPEAKER_ROLE.HIRING_MANAGER,

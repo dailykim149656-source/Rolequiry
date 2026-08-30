@@ -1,11 +1,13 @@
 import {
   deriveCase,
+  importRoleFromClaims,
   recordInterviewAnswer,
   setClaimImportance,
 } from "@/lib/domain/derive-case";
 import type {
   DerivedCase,
   Importance,
+  ImportedRoleInput,
   InterviewAnswerInput,
   RoleCase,
 } from "@/lib/domain/types";
@@ -116,6 +118,10 @@ export function createCaseStore(initial: RoleCase = ATLAS_FDE) {
     recordAnswer(input: InterviewAnswerInput) {
       const source = recordInterviewAnswer(state.source, input);
       state = snapshotFrom(source, null, false);
+      emit();
+    },
+    importRole(input: ImportedRoleInput) {
+      state = snapshotFrom(importRoleFromClaims(input), null, false);
       emit();
     },
   };

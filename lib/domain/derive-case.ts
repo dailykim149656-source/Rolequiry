@@ -9,11 +9,12 @@ import type {
   DerivedCase,
   DerivedClaim,
   Importance,
+  ImportedRoleInput,
   InterviewAnswerInput,
   RoleCase,
   SourceClaim,
 } from "./types";
-import { AUTHORITY_SCOPE } from "./types";
+import { AUTHORITY_SCOPE, CASE_ORIGIN, IMPORTANCE, SOURCE_KIND } from "./types";
 
 function deriveClaim(claim: SourceClaim): DerivedClaim {
   const kind = deriveClaimKind(claim);
@@ -91,9 +92,43 @@ export function recordInterviewAnswer(
           stance: input.stance,
           text: input.text,
           speakerRole: input.speakerRole,
+          sourceKind: SOURCE_KIND.INTERVIEW,
+          sourceLabel: input.speakerRole,
+          synthetic: false,
         },
       ];
       return { ...claim, evidence: nextEvidence };
     }),
+  };
+}
+
+export function importRoleFromClaims(input: ImportedRoleInput): RoleCase {
+  return {
+    id: `imported-${input.company
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "")}`,
+    company: input.company.trim(),
+    role: input.role.trim(),
+    origin: CASE_ORIGIN.AGENT_IMPORTED,
+    claims: input.claims.map((claim, index) => ({
+      id: `imported-${index + 1}`,
+      dimension: claim.dimension.trim(),
+      employerStatement: claim.employerStatement.trim(),
+      unresolvedVariable: claim.unresolvedVariable.trim(),
+      measurableForm: claim.measurableForm.trim(),
+      importance: IMPORTANCE.HIGH,
+      evidence: [
+        {
+          id: `imported-${index + 1}-employer`,
+          scope: AUTHORITY_SCOPE.EMPLOYER_STATED,
+          stance: "SUPPORTS",
+          text: claim.employerStatement.trim(),
+          sourceKind: SOURCE_KIND.EMPLOYER_POSTING,
+          sourceLabel: "Imported employer statement",
+          synthetic: false,
+        },
+      ],
+    })),
   };
 }

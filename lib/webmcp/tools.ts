@@ -18,6 +18,11 @@ function publicClaim(claim: DerivedClaim, rankingVisible: boolean) {
       scope: item.scope,
       stance: item.stance,
       speakerRole: item.speakerRole ?? null,
+      text: item.text,
+      sourceKind: item.sourceKind ?? null,
+      sourceLabel: item.sourceLabel ?? null,
+      synthetic:
+        item.synthetic ?? item.text.toLowerCase().includes("synthetic"),
     })),
     ...(rankingVisible
       ? {
@@ -94,27 +99,67 @@ export function selectDecisionChanger(store: CaseStore) {
 export function recordInterviewAnswerTool(
   store: CaseStore,
   input: {
-    claimId: string;
+    claimId?: string;
     stance: "SUPPORTS" | "CHALLENGES" | "NEUTRAL";
     text: string;
     speakerRole: SpeakerRole;
   },
 ) {
   const snapshot = store.getState();
-  if (!snapshot.source.claims.some((claim) => claim.id === input.claimId)) {
-    throw new Error("Unknown claim id");
-  }
   if (!snapshot.activeProbeId) {
     throw new Error("No active probe");
   }
-  if (input.claimId !== snapshot.activeProbeId) {
+  const claimId = snapshot.activeProbeId;
+  if (input.claimId && input.claimId !== claimId) {
     throw new Error("Answers can only be recorded against the active probe");
   }
   if (!input.text.trim()) {
     throw new Error("Interview answer text is empty");
   }
-  store.recordAnswer({ ...input, text: input.text.trim() });
+  store.recordAnswer({
+    claimId,
+    stance: input.stance,
+    text: input.text.trim(),
+    speakerRole: input.speakerRole,
+  });
   return { ok: true as const, ...getCaseState(store) };
+}
+
+export function importRoleFromClaimsTool(
+  store: CaseStore,
+  input: {
+    company: string;
+    role: string;
+    claims: Array<{
+      dimension: string;
+      employerStatement: string;
+      unresolvedVariable: string;
+      measurableForm: string;
+    }>;
+  },
+) {
+  if (
+    !input.company.trim() ||
+    !input.role.trim() ||
+    input.claims.length === 0
+  ) {
+    throw new Error(
+      "Imported role requires company, role, and at least one claim",
+    );
+  }
+  store.importRole({
+    company: input.company,
+    role: input.role,
+    claims: input.claims,
+  });
+  const snapshot = store.getState();
+  return {
+    ok: true as const,
+    origin: snapshot.source.origin,
+    company: snapshot.source.company,
+    role: snapshot.source.role,
+    claimCount: snapshot.source.claims.length,
+  };
 }
 
 export const CASE_TOOL_CONTRACTS = [
@@ -139,7 +184,13 @@ export const CASE_TOOL_CONTRACTS = [
   {
     name: "record_interview_answer",
     description:
-      "Record an answer the user personally obtained from an interviewer. Never fabricate an answer.",
+      "Record an answer the user personally obtained from an interviewer against the currently active probe. Do not send a claimId; the app binds the answer to the active probe. Never fabricate an answer.",
+    annotations: { readOnlyHint: false },
+  },
+  {
+    name: "import_role_from_claims",
+    description:
+      "Create an in-memory case from employer statements the agent extracted. Supply source fields only. Rolequiry derives kind, coverage, unresolvedness, tension, status and ranking.",
     annotations: { readOnlyHint: false },
   },
 ] as const;
