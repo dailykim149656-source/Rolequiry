@@ -20,7 +20,7 @@ const answerSchema = {
   properties: {
     claimId: { type: "string" },
     stance: { type: "string", enum: ["SUPPORTS", "CHALLENGES", "NEUTRAL"] },
-    text: { type: "string" },
+    text: { type: "string", minLength: 1 },
     speakerRole: {
       type: "string",
       enum: ["RECRUITER", "HIRING_MANAGER", "TEAM_MEMBER", "OTHER"],
@@ -42,7 +42,7 @@ export function useCaseWebMCPTools(store: CaseStore) {
   const state = useWebMCP({
     name: "get_case_state",
     description:
-      "Return current status, authority coverage, unresolvedness, tension, evidence summary and priorities. No ranking. Call this after page-state changes or when asked to check again.",
+      "Read the current normalized case state, including authority coverage, unresolvedness, tension, evidence summary and priorities. Do not use this tool to choose the next investigation.",
     inputSchema: emptySchema,
     annotations: { readOnlyHint: true },
     execute: () => getCaseState(store),
@@ -50,7 +50,7 @@ export function useCaseWebMCPTools(store: CaseStore) {
   const select = useWebMCP({
     name: "select_decision_changer",
     description:
-      "When asked what to verify next, what matters most, or to check again after page-state changes, compute deterministic ranking, set activeProbe and return structured rationale.",
+      "Call this when the user asks what to investigate next, including check again after priorities or evidence change. Compute ranking, set the active probe, and return structured rationale.",
     inputSchema: emptySchema,
     annotations: { readOnlyHint: false },
     execute: () => selectDecisionChanger(store),

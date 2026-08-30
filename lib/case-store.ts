@@ -71,8 +71,8 @@ export function createCaseStore(initial: RoleCase = ATLAS_FDE) {
     setImportance(claimId: string, importance: Importance) {
       state = snapshotFrom(
         setClaimImportance(state.source, claimId, importance),
-        state.activeProbeId,
-        state.rankingVisible,
+        null,
+        false,
       );
       emit();
     },
@@ -89,16 +89,7 @@ export function createCaseStore(initial: RoleCase = ATLAS_FDE) {
     },
     recordAnswer(input: InterviewAnswerInput) {
       const source = recordInterviewAnswer(state.source, input);
-      const derived = deriveCase(source);
-      const stillEligible =
-        derived.claims.find((claim) => claim.id === state.activeProbeId)
-          ?.probeEligible ?? false;
-      state = {
-        source,
-        derived,
-        activeProbeId: stillEligible ? state.activeProbeId : derived.topProbeId,
-        rankingVisible: state.rankingVisible,
-      };
+      state = snapshotFrom(source, null, false);
       emit();
     },
   };

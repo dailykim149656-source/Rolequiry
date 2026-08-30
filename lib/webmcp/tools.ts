@@ -5,13 +5,23 @@ function publicClaim(claim: DerivedClaim, rankingVisible: boolean) {
   return {
     id: claim.id,
     dimension: claim.dimension,
-    employerStatement: claim.employerStatement,
     importance: claim.importance,
     kind: claim.kind,
     status: claim.status,
     unresolvedness: Number(claim.unresolvedness.toFixed(3)),
     tension: Number(claim.tension.toFixed(3)),
     probeEligible: claim.probeEligible,
+    authorityCoverage: {
+      employerStated: claim.evidence.some(
+        (item) => item.scope === "EMPLOYER_STATED",
+      ),
+      reportedExperience: claim.evidence.some(
+        (item) => item.scope === "REPORTED_EXPERIENCE",
+      ),
+      candidateSpecificAnswer: claim.evidence.some(
+        (item) => item.scope === "CANDIDATE_SPECIFIC_ANSWER",
+      ),
+    },
     evidenceSummary: claim.evidence.map((item) => ({
       id: item.id,
       scope: item.scope,
@@ -95,13 +105,20 @@ export function recordInterviewAnswerTool(
     speakerRole: SpeakerRole;
   },
 ) {
-  const exists = store
-    .getState()
-    .source.claims.some((claim) => claim.id === input.claimId);
-  if (!exists) {
+  const snapshot = store.getState();
+  if (!snapshot.source.claims.some((claim) => claim.id === input.claimId)) {
     throw new Error("Unknown claim id");
   }
-  store.recordAnswer(input);
+  if (!snapshot.activeProbeId) {
+    throw new Error("No active probe");
+  }
+  if (input.claimId !== snapshot.activeProbeId) {
+    throw new Error("Answers can only be recorded against the active probe");
+  }
+  if (!input.text.trim()) {
+    throw new Error("Interview answer text is empty");
+  }
+  store.recordAnswer({ ...input, text: input.text.trim() });
   return { ok: true as const, ...getCaseState(store) };
 }
 
@@ -115,13 +132,13 @@ export const CASE_TOOL_CONTRACTS = [
   {
     name: "get_case_state",
     description:
-      "Return current status, authority coverage, unresolvedness, tension, evidence summary and priorities. No ranking. Call this after page-state changes or when asked to check again.",
+      "Read the current normalized case state, including authority coverage, unresolvedness, tension, evidence summary and priorities. Do not use this tool to choose the next investigation.",
     annotations: { readOnlyHint: true },
   },
   {
     name: "select_decision_changer",
     description:
-      "When asked what to verify next, what matters most, or to check again after page-state changes, compute deterministic ranking, set activeProbe and return structured rationale.",
+      "Call this when the user asks what to investigate next, including check again after priorities or evidence change. Compute ranking, set the active probe, and return structured rationale.",
     annotations: { readOnlyHint: false },
   },
   {
