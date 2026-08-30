@@ -1,5 +1,5 @@
 import type { CaseStore } from "@/lib/case-store";
-import type { CandidatePriorityInput } from "@/lib/domain/types";
+import { type CandidatePriorityInput, IMPORTANCE } from "@/lib/domain/types";
 import { getCaseState } from "@/lib/webmcp/case-state";
 
 export function setCandidatePrioritiesTool(
@@ -11,6 +11,12 @@ export function setCandidatePrioritiesTool(
   }
   if (input.priorities.length > 8) {
     throw new Error("At most eight candidate priorities are allowed");
+  }
+  const invalidImportance = input.priorities.find(
+    (priority) => !Object.values(IMPORTANCE).includes(priority.importance),
+  );
+  if (invalidImportance) {
+    throw new Error(`Invalid importance: ${invalidImportance.importance}`);
   }
   const claimIds = input.priorities.map((priority) => priority.claimId);
   if (new Set(claimIds).size !== claimIds.length) {

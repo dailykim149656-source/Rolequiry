@@ -349,6 +349,22 @@ describe("set_candidate_priorities", () => {
     ).toThrow(/unknown/i);
     expect(store.getState().source).toBe(before);
   });
+
+  it("rejects an invalid importance before mutation", () => {
+    const store = createCaseStore();
+    importPrioritizableRole(store);
+    const before = store.getState().source;
+
+    expect(() =>
+      Reflect.apply(setCandidatePrioritiesTool, undefined, [
+        store,
+        {
+          priorities: [{ claimId: "imported-2", importance: "INVALID" }],
+        },
+      ]),
+    ).toThrow(/importance/i);
+    expect(store.getState().source).toBe(before);
+  });
 });
 
 describe("registered write loop", () => {
