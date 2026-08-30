@@ -16,10 +16,10 @@ export function CaseApp() {
     store.getState,
   );
   useEffect(() => {
-    const saved = loadPersistedCase(window.localStorage);
+    const saved = loadPersistedCase(window.sessionStorage);
     if (saved) store.restore(saved);
     const persist = () =>
-      savePersistedCase(window.localStorage, store.getState());
+      savePersistedCase(window.sessionStorage, store.getState());
     persist();
     return store.subscribe(persist);
   }, [store]);
