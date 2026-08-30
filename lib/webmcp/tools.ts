@@ -1,6 +1,11 @@
 import type { CaseStore } from "@/lib/case-store";
 import { coverageBreakdownFor } from "@/lib/domain/policy";
-import type { DerivedClaim, SpeakerRole } from "@/lib/domain/types";
+import {
+  type DerivedClaim,
+  RESEARCH_SOURCE_KIND,
+  type ResearchSourceKind,
+  type SpeakerRole,
+} from "@/lib/domain/types";
 
 function publicClaim(claim: DerivedClaim, rankingVisible: boolean) {
   return {
@@ -137,6 +142,46 @@ export function recordInterviewAnswerTool(
   return { ok: true as const, ...getCaseState(store) };
 }
 
+export function recordResearchEvidenceTool(
+  store: CaseStore,
+  input: {
+    stance: "SUPPORTS" | "CHALLENGES" | "NEUTRAL";
+    summary: string;
+    sourceUrl: string;
+    sourceLabel: string;
+    sourceKind: string;
+  },
+) {
+  const snapshot = store.getState();
+  if (!snapshot.activeProbeId) {
+    throw new Error("No active probe");
+  }
+  if (
+    !input.summary.trim() ||
+    !input.sourceUrl.trim() ||
+    !input.sourceLabel.trim()
+  ) {
+    throw new Error(
+      "Research evidence requires summary, sourceUrl, and sourceLabel",
+    );
+  }
+  if (
+    input.sourceKind !== RESEARCH_SOURCE_KIND.EMPLOYER_OFFICIAL &&
+    input.sourceKind !== RESEARCH_SOURCE_KIND.FIRST_PERSON_EXPERIENCE
+  ) {
+    throw new Error("Unsupported research source");
+  }
+  store.recordResearch({
+    claimId: snapshot.activeProbeId,
+    stance: input.stance,
+    text: input.summary.trim(),
+    sourceKind: input.sourceKind as ResearchSourceKind,
+    sourceLabel: input.sourceLabel.trim(),
+    sourceUrl: input.sourceUrl.trim(),
+  });
+  return { ok: true as const, ...getCaseState(store) };
+}
+
 export function importRoleFromClaimsTool(
   store: CaseStore,
   input: {
@@ -207,6 +252,12 @@ export const CASE_TOOL_CONTRACTS = [
     name: "import_role_from_claims",
     description:
       "Create an in-memory case from extracted employer statements plus testable variables. Do not supply claim kind, coverage, status, unresolvedness, tension, or ranking. Rolequiry derives those fields.",
+    annotations: { readOnlyHint: false },
+  },
+  {
+    name: "record_research_evidence",
+    description:
+      "Record public evidence the agent found while researching the currently active probe. Supply stance, summary, sourceUrl, sourceLabel, and sourceKind EMPLOYER_OFFICIAL or FIRST_PERSON_EXPERIENCE. Do not choose authority scope or derived decision fields.",
     annotations: { readOnlyHint: false },
   },
 ] as const;

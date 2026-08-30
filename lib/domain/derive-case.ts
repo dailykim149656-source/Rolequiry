@@ -11,10 +11,17 @@ import type {
   Importance,
   ImportedRoleInput,
   InterviewAnswerInput,
+  ResearchEvidenceInput,
   RoleCase,
   SourceClaim,
 } from "./types";
-import { AUTHORITY_SCOPE, CASE_ORIGIN, IMPORTANCE, SOURCE_KIND } from "./types";
+import {
+  AUTHORITY_SCOPE,
+  CASE_ORIGIN,
+  IMPORTANCE,
+  RESEARCH_SOURCE_KIND,
+  SOURCE_KIND,
+} from "./types";
 
 function deriveClaim(claim: SourceClaim): DerivedClaim {
   const kind = deriveClaimKind(claim);
@@ -98,6 +105,42 @@ export function recordInterviewAnswer(
         },
       ];
       return { ...claim, evidence: nextEvidence };
+    }),
+  };
+}
+
+export function recordResearchEvidence(
+  roleCase: RoleCase,
+  input: ResearchEvidenceInput,
+): RoleCase {
+  const scope =
+    input.sourceKind === RESEARCH_SOURCE_KIND.EMPLOYER_OFFICIAL
+      ? AUTHORITY_SCOPE.EMPLOYER_STATED
+      : AUTHORITY_SCOPE.REPORTED_EXPERIENCE;
+  const sourceKind =
+    input.sourceKind === RESEARCH_SOURCE_KIND.EMPLOYER_OFFICIAL
+      ? SOURCE_KIND.EMPLOYER_POSTING
+      : SOURCE_KIND.REPORTED_EXPERIENCE;
+  return {
+    ...roleCase,
+    claims: roleCase.claims.map((claim) => {
+      if (claim.id !== input.claimId) return claim;
+      return {
+        ...claim,
+        evidence: [
+          ...claim.evidence,
+          {
+            id: `${claim.id}-research-${claim.evidence.length + 1}`,
+            scope,
+            stance: input.stance,
+            text: input.text,
+            sourceKind,
+            sourceLabel: input.sourceLabel,
+            sourceUrl: input.sourceUrl,
+            synthetic: false,
+          },
+        ],
+      };
     }),
   };
 }

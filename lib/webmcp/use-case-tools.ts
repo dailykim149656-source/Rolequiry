@@ -8,6 +8,7 @@ import {
   getRoleClaims,
   importRoleFromClaimsTool,
   recordInterviewAnswerTool,
+  recordResearchEvidenceTool,
   selectDecisionChanger,
 } from "@/lib/webmcp/tools";
 
@@ -28,6 +29,22 @@ const answerSchema = {
     },
   },
   required: ["stance", "text", "speakerRole"],
+  additionalProperties: false,
+} as const;
+
+const researchSchema = {
+  type: "object",
+  properties: {
+    stance: { type: "string", enum: ["SUPPORTS", "CHALLENGES", "NEUTRAL"] },
+    summary: { type: "string", minLength: 1 },
+    sourceUrl: { type: "string", minLength: 1 },
+    sourceLabel: { type: "string", minLength: 1 },
+    sourceKind: {
+      type: "string",
+      enum: ["EMPLOYER_OFFICIAL", "FIRST_PERSON_EXPERIENCE"],
+    },
+  },
+  required: ["stance", "summary", "sourceUrl", "sourceLabel", "sourceKind"],
   additionalProperties: false,
 } as const;
 
@@ -68,6 +85,7 @@ export function useCaseWebMCPTools(store: CaseStore) {
     selectContract,
     recordContract,
     importContract,
+    researchContract,
   ] = CASE_TOOL_CONTRACTS;
   const claims = useWebMCP({
     name: claimsContract.name,
@@ -117,6 +135,19 @@ export function useCaseWebMCPTools(store: CaseStore) {
       }>;
     }) => importRoleFromClaimsTool(store, args),
   });
+  const research = useWebMCP({
+    name: researchContract.name,
+    description: researchContract.description,
+    inputSchema: researchSchema,
+    annotations: researchContract.annotations,
+    execute: (args: {
+      stance: "SUPPORTS" | "CHALLENGES" | "NEUTRAL";
+      summary: string;
+      sourceUrl: string;
+      sourceLabel: string;
+      sourceKind: "EMPLOYER_OFFICIAL" | "FIRST_PERSON_EXPERIENCE";
+    }) => recordResearchEvidenceTool(store, args),
+  });
 
-  return { claims, state, select, record, imported };
+  return { claims, state, select, record, imported, research };
 }

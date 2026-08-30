@@ -33,6 +33,7 @@ On `/case`:
 - `select_decision_changer` (write): compute ranking, set the active probe, return unresolved variable + measurable form
 - `record_interview_answer` (write): record a human-obtained answer against the active probe
 - `import_role_from_claims` (write): create an in-memory case from extracted employer statements
+- `record_research_evidence` (write): record public first-person or official evidence the agent found for the active probe
 
 On `/employer/atlas-fde`: `get_employer_claims`, `get_employer_policy` (read-only). The employer page and `/case` share the Northwind fixture and link to each other; they do not require both tabs to stay open.
 

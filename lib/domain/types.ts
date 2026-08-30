@@ -57,6 +57,22 @@ export const SOURCE_KIND = {
 } as const;
 export type SourceKind = (typeof SOURCE_KIND)[keyof typeof SOURCE_KIND];
 
+export const RESEARCH_SOURCE_KIND = {
+  EMPLOYER_OFFICIAL: "EMPLOYER_OFFICIAL",
+  FIRST_PERSON_EXPERIENCE: "FIRST_PERSON_EXPERIENCE",
+} as const;
+export type ResearchSourceKind =
+  (typeof RESEARCH_SOURCE_KIND)[keyof typeof RESEARCH_SOURCE_KIND];
+
+export type ResearchEvidenceInput = {
+  readonly claimId: string;
+  readonly stance: EvidenceStance;
+  readonly text: string;
+  readonly sourceKind: ResearchSourceKind;
+  readonly sourceLabel: string;
+  readonly sourceUrl: string;
+};
+
 export type Evidence = {
   readonly id: string;
   readonly scope: AuthorityScope;

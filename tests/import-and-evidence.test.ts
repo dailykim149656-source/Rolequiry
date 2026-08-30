@@ -88,6 +88,7 @@ describe("registered write loop", () => {
         "get_role_claims",
         "import_role_from_claims",
         "record_interview_answer",
+        "record_research_evidence",
         "select_decision_changer",
       ].sort(),
     );

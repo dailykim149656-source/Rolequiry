@@ -72,7 +72,8 @@ export function CaseApp() {
             </p>
           </section>
 
-          {snapshot.source.origin === "AGENT_IMPORTED" ? (
+          {snapshot.source.origin === "AGENT_IMPORTED" &&
+          !snapshot.prioritiesTouched ? (
             <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950">
               Employer statements imported. Set what matters to you before
               asking what to investigate.
@@ -200,9 +201,10 @@ export function CaseApp() {
               webmcp.select,
               webmcp.record,
               webmcp.imported,
+              webmcp.research,
             ].filter((item) => item.registered).length,
           )}
-          /5
+          /6
         </p>
       </details>
     </main>

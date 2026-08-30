@@ -24,19 +24,8 @@ export const LIVED_EXPERIENCE_WEIGHT = {
   CANDIDATE_SPECIFIC_ANSWER: 0.5,
 } as const satisfies Record<AuthorityScope, number>;
 
-const POLICY_DIMENSIONS = [
-  "compensation",
-  "base pay",
-  "benefits",
-  "leave",
-  "location",
-  "visa",
-  "contract",
-  "policy",
-] as const;
-
 const POLICY_STATEMENT =
-  /(\$\d|base pay|benefits|visa sponsorship|remote-first|on-site required|paid time off)/i;
+  /(\$\d|visa sponsorship|remote-first|on-site required|paid time off)/i;
 
 export function deriveClaimKind(input: {
   readonly dimension: string;
@@ -44,10 +33,6 @@ export function deriveClaimKind(input: {
   readonly kind?: ClaimKind;
 }): ClaimKind {
   if (input.kind) return input.kind;
-  const dimension = input.dimension.toLowerCase();
-  if (POLICY_DIMENSIONS.some((keyword) => dimension.includes(keyword))) {
-    return CLAIM_KIND.EMPLOYER_POLICY;
-  }
   return POLICY_STATEMENT.test(input.employerStatement)
     ? CLAIM_KIND.EMPLOYER_POLICY
     : CLAIM_KIND.LIVED_EXPERIENCE;
