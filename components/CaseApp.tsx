@@ -4,8 +4,10 @@ import Link from "next/link";
 import { useMemo, useSyncExternalStore } from "react";
 import { createCaseStore } from "@/lib/case-store";
 import { cannedInterviewAnswer } from "@/lib/demo/canned-answers";
-import { decisionPathNodes } from "@/lib/domain/decision-path";
-import { coverageBreakdownFor } from "@/lib/domain/policy";
+import {
+  decisionPathNodes,
+  publicEvidenceLine,
+} from "@/lib/domain/decision-path";
 import {
   type DerivedClaim,
   IMPORTANCE,
@@ -261,25 +263,9 @@ function DecisionPath({
 }
 
 function EvidenceCoverage({ claim }: { claim: DerivedClaim }) {
-  const coverage = coverageBreakdownFor(claim.kind, claim.evidence);
-  const external = claim.evidence.filter(
-    (item) => item.scope === "REPORTED_EXPERIENCE",
-  );
-  const supports = external.filter((item) => item.stance === "SUPPORTS").length;
-  const challenges = external.filter(
-    (item) => item.stance === "CHALLENGES",
-  ).length;
-  const interviewMark = coverage.candidateSpecificAnswer.resolving
-    ? "resolving"
-    : coverage.candidateSpecificAnswer.present
-      ? "non-resolving"
-      : "—";
   return (
     <div className="mt-4 space-y-2 text-sm">
-      <p>
-        Employer {coverage.employerStated.present ? "✓" : "—"} · Public{" "}
-        {supports}/{challenges} · Interview {interviewMark}
-      </p>
+      <p>{publicEvidenceLine(claim)}</p>
       <details className="mt-2 text-zinc-600">
         <summary className="cursor-pointer">
           View evidence ({claim.evidence.length})

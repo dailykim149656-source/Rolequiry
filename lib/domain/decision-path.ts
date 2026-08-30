@@ -1,4 +1,8 @@
-import { coverageBreakdownFor } from "./policy";
+import {
+  coverageBreakdownFor,
+  uniqueChallengingReportCount,
+  uniqueSupportingReportCount,
+} from "./policy";
 import type { DerivedClaim, Evidence } from "./types";
 
 export type DecisionPathMode =
@@ -38,58 +42,58 @@ function latestSourcedEvidence(
   return [...evidence].reverse().find((item) => Boolean(item.sourceUrl));
 }
 
+export function publicEvidenceLine(claim: DerivedClaim): string {
+  const coverage = coverageBreakdownFor(claim.kind, claim.evidence);
+  const supports = uniqueSupportingReportCount(claim.evidence);
+  const challenges = uniqueChallengingReportCount(claim.evidence);
+  const interview = coverage.candidateSpecificAnswer.resolving
+    ? "resolving"
+    : coverage.candidateSpecificAnswer.present
+      ? "non-resolving"
+      : "—";
+  return `Employer ${coverage.employerStated.present ? "✓" : "—"} · Public ${counted(supports, "support", "supports")} / ${counted(challenges, "challenge", "challenges")} · Interview ${interview}`;
+}
+
 export function decisionPathNodes(
   claim: DerivedClaim,
   mode: DecisionPathMode = "ACTIVE",
 ): readonly DecisionPathNode[] {
-  const reports = claim.evidence.filter(
-    (item) => item.scope === "REPORTED_EXPERIENCE",
-  );
-  const supports = reports.filter((item) => item.stance === "SUPPORTS").length;
-  const challenges = reports.filter(
-    (item) => item.stance === "CHALLENGES",
-  ).length;
-  const coverage = coverageBreakdownFor(claim.kind, claim.evidence);
   const interview = [...claim.evidence]
     .reverse()
     .find((item) => item.scope === "CANDIDATE_SPECIFIC_ANSWER");
   const sourced = latestSourcedEvidence(claim.evidence);
-  const interviewBody = !coverage.candidateSpecificAnswer.present
-    ? "Missing"
-    : coverage.candidateSpecificAnswer.resolving
-      ? `${interview?.speakerRole ?? "Interviewer"}: ${interview?.text ?? "Recorded"}`
-      : `Non-resolving · ${interview?.stance ?? "NEUTRAL"}`;
-  const nodes: DecisionPathNode[] = [
-    { label: "Claim", body: claim.dimension },
-    {
-      label: "Candidate importance",
-      body: IMPORTANCE_REASON[claim.importance],
-    },
-    { label: "Employer claim", body: claim.employerStatement },
-    {
-      label: "Public evidence",
-      body: `${counted(supports, "support", "supports")} · ${counted(challenges, "challenge", "challenges")}`,
-    },
-  ];
-  if (sourced?.sourceUrl) {
-    nodes.push({
-      label: "Latest research",
-      body: sourced.sourceLabel ?? sourced.text,
-      href: sourced.sourceUrl,
-    });
+  if (mode === "EVIDENCE_UPDATED" && !claim.probeEligible) {
+    const changed = interview
+      ? `${interview.speakerRole ?? "Interviewer"}: ${interview.text}`
+      : (sourced?.sourceLabel ?? sourced?.text ?? "New evidence recorded");
+    const resolved: DecisionPathNode = {
+      label: "What changed",
+      body: changed,
+      ...(sourced?.sourceUrl ? { href: sourced.sourceUrl } : {}),
+    };
+    return [
+      { label: "Case state", body: "Evidence now resolves this probe" },
+      resolved,
+      { label: "Next", body: "Check again to find what still matters" },
+    ];
   }
-  nodes.push(
-    { label: "Candidate interview", body: interviewBody },
-    { label: "Why this is unresolved", body: STATUS_REASON[claim.status] },
-    { label: "Still unknown", body: claim.unresolvedVariable },
-    { label: "Measure", body: claim.measurableForm },
+  return [
     {
-      label: "Next step",
+      label: "Active claim",
+      body: `${claim.dimension} · ${IMPORTANCE_REASON[claim.importance]}`,
+    },
+    { label: "Evidence", body: publicEvidenceLine(claim) },
+    {
+      label: "Why unresolved",
+      body: STATUS_REASON[claim.status],
+    },
+    { label: "Need to know", body: claim.unresolvedVariable },
+    {
+      label: "Measure / next",
       body:
         mode === "EVIDENCE_UPDATED"
-          ? "Evidence updated — check again."
-          : "Research this or ask the interviewer",
+          ? `${claim.measurableForm} · Evidence updated — check again.`
+          : `${claim.measurableForm} · Research this or ask the interviewer`,
     },
-  );
-  return nodes;
+  ];
 }

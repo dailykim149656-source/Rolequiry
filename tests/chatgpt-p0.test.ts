@@ -27,7 +27,7 @@ describe("ChatGPT P0 contract", () => {
     expect(select?.description.toLowerCase()).toContain("check again");
   });
 
-  it("clears the active probe after an interview answer instead of auto-selecting the next one", () => {
+  it("keeps the active probe after an interview answer instead of auto-selecting the next one", () => {
     const store = createCaseStore();
     selectDecisionChanger(store);
     expect(store.getState().activeProbeId).toBe("technical-ownership");

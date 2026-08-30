@@ -75,6 +75,24 @@ describe("import_role_from_claims", () => {
       }),
     ).toBe("LIVED_EXPERIENCE");
   });
+
+  it("rejects whitespace-only imported claims", () => {
+    const store = createCaseStore();
+    expect(() =>
+      importRoleFromClaimsTool(store, {
+        company: "Example Corp",
+        role: "Staff Engineer",
+        claims: [
+          {
+            dimension: "   ",
+            employerStatement: "On-call is rare",
+            unresolvedVariable: "How often does this team get paged?",
+            measurableForm: "Pages per engineer last two quarters",
+          },
+        ],
+      }),
+    ).toThrow(/empty/i);
+  });
 });
 
 describe("registered write loop", () => {

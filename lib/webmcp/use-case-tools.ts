@@ -56,6 +56,7 @@ const importSchema = {
     claims: {
       type: "array",
       minItems: 1,
+      maxItems: 8,
       items: {
         type: "object",
         properties: {

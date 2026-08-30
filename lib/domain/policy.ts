@@ -48,26 +48,71 @@ export function requiredScopes(kind: ClaimKind): readonly AuthorityScope[] {
   ];
 }
 
+const MULTI_PART_SUFFIXES = [
+  "co.kr",
+  "or.kr",
+  "ac.kr",
+  "go.kr",
+  "ne.kr",
+  "co.uk",
+  "org.uk",
+  "ac.uk",
+  "gov.uk",
+  "co.jp",
+  "or.jp",
+  "ne.jp",
+  "ac.jp",
+  "go.jp",
+  "com.au",
+  "net.au",
+  "org.au",
+  "com.br",
+  "co.nz",
+  "com.sg",
+] as const;
+
+const HOSTED_PLATFORMS = [
+  "github.io",
+  "substack.com",
+  "medium.com",
+  "wordpress.com",
+  "blogspot.com",
+] as const;
+
 export function sourceOrganization(url?: string): string {
   if (!url) return "";
   try {
     const host = new URL(url).hostname.toLowerCase().replace(/^www\./, "");
     const parts = host.split(".").filter(Boolean);
     if (parts.length <= 2) return host;
+    for (const platform of HOSTED_PLATFORMS) {
+      if (host === platform) return host;
+      if (host.endsWith(`.${platform}`)) {
+        const extra = platform.split(".").length + 1;
+        return parts.slice(-extra).join(".");
+      }
+    }
+    for (const suffix of MULTI_PART_SUFFIXES) {
+      if (host === suffix || host.endsWith(`.${suffix}`)) {
+        const extra = suffix.split(".").length + 1;
+        return parts.slice(-extra).join(".");
+      }
+    }
     return parts.slice(-2).join(".");
   } catch {
     return url.toLowerCase();
   }
 }
 
-export function uniqueResolvingReportCount(
+function uniqueReportedCount(
   evidence: readonly Evidence[],
+  stance?: "SUPPORTS" | "CHALLENGES",
 ): number {
-  const reports = evidence.filter(
-    (item) =>
-      item.scope === AUTHORITY_SCOPE.REPORTED_EXPERIENCE &&
-      item.stance !== "NEUTRAL",
-  );
+  const reports = evidence.filter((item) => {
+    if (item.scope !== AUTHORITY_SCOPE.REPORTED_EXPERIENCE) return false;
+    if (!stance) return item.stance !== "NEUTRAL";
+    return item.stance === stance;
+  });
   const seen = new Set<string>();
   let unlabeled = 0;
   for (const item of reports) {
@@ -81,25 +126,22 @@ export function uniqueResolvingReportCount(
   return seen.size + unlabeled;
 }
 
+export function uniqueResolvingReportCount(
+  evidence: readonly Evidence[],
+): number {
+  return uniqueReportedCount(evidence);
+}
+
+export function uniqueSupportingReportCount(
+  evidence: readonly Evidence[],
+): number {
+  return uniqueReportedCount(evidence, "SUPPORTS");
+}
+
 export function uniqueChallengingReportCount(
   evidence: readonly Evidence[],
 ): number {
-  const reports = evidence.filter(
-    (item) =>
-      item.scope === AUTHORITY_SCOPE.REPORTED_EXPERIENCE &&
-      item.stance === "CHALLENGES",
-  );
-  const seen = new Set<string>();
-  let unlabeled = 0;
-  for (const item of reports) {
-    const org = sourceOrganization(item.sourceUrl);
-    if (!org) {
-      unlabeled += 1;
-      continue;
-    }
-    seen.add(org);
-  }
-  return seen.size + unlabeled;
+  return uniqueReportedCount(evidence, "CHALLENGES");
 }
 
 export function reportedCoverage(reportCount: number): number {

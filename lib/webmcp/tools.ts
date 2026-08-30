@@ -212,23 +212,29 @@ export function importRoleFromClaimsTool(
     }>;
   },
 ) {
+  const claims = input.claims.map((claim) => ({
+    dimension: claim.dimension.trim(),
+    employerStatement: claim.employerStatement.trim(),
+    unresolvedVariable: claim.unresolvedVariable.trim(),
+    measurableForm: claim.measurableForm.trim(),
+  }));
   if (
     !input.company.trim() ||
     !input.role.trim() ||
-    input.claims.length === 0 ||
-    input.claims.length > 8
+    claims.length === 0 ||
+    claims.length > 8 ||
+    claims.some((claim) =>
+      Object.values(claim).some((value) => value.length === 0),
+    )
   ) {
-    throw new Error("Imported role requires company, role, and 1 to 8 claims");
+    throw new Error(
+      "Imported role requires company, role, and 1 to 8 non-empty claims",
+    );
   }
   store.importRole({
     company: input.company.trim(),
     role: input.role.trim(),
-    claims: input.claims.map((claim) => ({
-      dimension: claim.dimension.trim(),
-      employerStatement: claim.employerStatement.trim(),
-      unresolvedVariable: claim.unresolvedVariable.trim(),
-      measurableForm: claim.measurableForm.trim(),
-    })),
+    claims,
   });
   const snapshot = store.getState();
   return {

@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { createCaseStore } from "@/lib/case-store";
-import { coverageBreakdownFor } from "@/lib/domain/policy";
+import { decisionPathNodes } from "@/lib/domain/decision-path";
+import {
+  coverageBreakdownFor,
+  sourceOrganization,
+  uniqueChallengingReportCount,
+  uniqueSupportingReportCount,
+} from "@/lib/domain/policy";
 import { ATLAS_FDE } from "@/lib/fixtures/atlas-fde";
 import {
   recordResearchEvidenceTool,
@@ -48,5 +54,26 @@ describe("independent research orgs", () => {
         .reportedExperience.count,
     ).toBe(3);
     expect(after?.tension).toBeCloseTo(0.7, 3);
+    expect(uniqueSupportingReportCount(after?.evidence ?? [])).toBe(1);
+    expect(uniqueChallengingReportCount(after?.evidence ?? [])).toBe(2);
+    const path = after ? decisionPathNodes(after) : [];
+    expect(path.find((node) => node.label === "Evidence")?.body).toBe(
+      "Employer ✓ · Public 1 support / 2 challenges · Interview —",
+    );
+  });
+
+  it("keeps distinct co.kr companies and hosted blogs as distinct sources", () => {
+    expect(sourceOrganization("https://company-a.co.kr/a")).toBe(
+      "company-a.co.kr",
+    );
+    expect(sourceOrganization("https://company-b.co.kr/b")).toBe(
+      "company-b.co.kr",
+    );
+    expect(sourceOrganization("https://a.substack.com/p/1")).toBe(
+      "a.substack.com",
+    );
+    expect(sourceOrganization("https://b.substack.com/p/2")).toBe(
+      "b.substack.com",
+    );
   });
 });
