@@ -1,8 +1,8 @@
-# RoleProbe
+# AskTheJob
 
 Interview the job before it interviews you.
 
-RoleProbe is an agent-native candidate due-diligence app for the OpenAI WebMCP Challenge. Job postings are treated as claims, not facts. Deterministic application code ranks the unresolved variable worth probing. The candidate sets priorities. The agent phrases the question. The human brings the answer back.
+AskTheJob is an agent-native candidate due-diligence app for the OpenAI WebMCP Challenge. Job postings are treated as claims, not facts. Deterministic application code ranks the unresolved variable worth probing. The candidate sets priorities. The agent phrases the question. The human brings the answer back.
 
 ## Live Demo URL
 
@@ -20,7 +20,7 @@ Supported test environment: ChatGPT built-in browser / Chrome with WebMCP. The p
 
 ## Why WebMCP
 
-Most agent demos operate on cooperative pages. A job posting is mixed-incentive: useful to the candidate, written by the employer. WebMCP lets the page expose typed reads and writes against live application state instead of scraping. RoleProbe keeps provenance and decision authority in the app; the agent only phrases questions.
+Most agent demos operate on cooperative pages. A job posting is mixed-incentive: useful to the candidate, written by the employer. WebMCP lets the page expose typed reads and writes against live application state instead of scraping. AskTheJob keeps provenance and decision authority in the app; the agent only phrases questions.
 
 ## WebMCP Tools
 
@@ -31,7 +31,7 @@ On `/case`:
 - `select_decision_changer` (write): compute ranking, set the active probe, return unresolved variable + measurable form
 - `record_interview_answer` (write): record a human-obtained answer; unknown claim ids are rejected
 
-On `/employer/atlas-fde`: `get_employer_claims`, `get_employer_policy` (read-only).
+On `/employer/atlas-fde`: `get_employer_claims`, `get_employer_policy` (read-only). The employer page and `/case` share the Atlas fixture and link to each other; they do not require both tabs to stay open.
 
 ## Architecture
 
@@ -39,21 +39,24 @@ Human UI and WebMCP tools share one in-memory `CaseStore`. `deriveCase` is a pur
 
 ## Testing in ChatGPT/Chrome
 
-1. Open the live `/case` URL in ChatGPT's browser.
-2. Ask what to verify next. `select_decision_changer` should pick technical ownership on Atlas.
-3. Change Travel to CRITICAL in the UI, then say "Check again".
-4. Record a hiring-manager answer. Ownership can become CHALLENGED and leave the probe queue.
-5. Open Demo controls and switch to Kestrel. HIGH hands-on coding outranks CRITICAL on-call.
+Run two short loops. Do not record an ownership answer while Travel is selected.
 
-## What a judge can do
+Loop 1 — shared state
 
-1. Open Fixture A (Atlas Robotics / Forward Deployed Engineer).
-2. Ask the agent what to verify next. `select_decision_changer` should pick technical ownership, not the louder travel red flag.
-3. Change Travel from LOW to CRITICAL in the UI, then say "Check again".
-4. Record a hiring-manager answer. Coverage updates; the claim can become CHALLENGED and leave the probe queue.
-5. Switch to Fixture B. The same policy makes HIGH hands-on coding outrank CRITICAL on-call.
+1. Open `/case` (Atlas). Optionally open employer-published claims, then return.
+2. Ask what to verify next. `select_decision_changer` picks technical ownership.
+3. Change Travel to CRITICAL, then say "Check again". Selection flips to Travel.
+4. Stop. Reset demo.
 
-Reset Demo restores the known fixture. State is in-memory per page; reload does not leak between judges.
+Loop 2 — interview evidence
+
+1. Ask what to verify next again. Ownership is selected.
+2. Record the ownership hiring-manager answer. Ownership becomes CHALLENGED and leaves the probe queue.
+
+Loop 3 — generalization
+
+1. Open Demo controls and switch to Kestrel.
+2. Say "Same question here." `select_decision_changer` picks hands-on coding, not CRITICAL on-call.
 
 ## Known limitations
 
@@ -61,6 +64,7 @@ Reset Demo restores the known fixture. State is in-memory per page; reload does 
 - No server-side model calls. The user's existing agent does language work.
 - `import_role_from_claims` is a swing feature and is not in this core submission.
 - Closing the employer page cannot break `/case`.
+- GitHub repository name remains RoleProbe for now; the product name is AskTheJob.
 
 ## Tests
 

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useWebMCP } from "use-webmcp-tool";
 import { ATLAS_FDE } from "@/lib/fixtures/atlas-fde";
 
@@ -47,11 +48,16 @@ export function EmployerApp() {
 
   return (
     <main className="mx-auto max-w-3xl px-6 py-10">
-      <p className="text-sm tracking-[0.2em] text-zinc-500">EMPLOYER SURFACE</p>
+      <p className="text-sm tracking-[0.2em] text-zinc-500">
+        ASKTHEJOB · EMPLOYER
+      </p>
       <h1 className="mt-2 text-3xl font-semibold">{ATLAS_FDE.company}</h1>
       <p className="mt-2 text-zinc-600">
         {ATLAS_FDE.role}. This is what the employer officially publishes to the
-        agent.
+        agent.{" "}
+        <Link className="underline" href="/case">
+          Open candidate case
+        </Link>
       </p>
       <ul className="mt-8 space-y-4">
         {ATLAS_FDE.claims.map((claim) => (

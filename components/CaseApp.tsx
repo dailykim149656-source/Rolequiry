@@ -1,8 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useSyncExternalStore } from "react";
 import { createCaseStore } from "@/lib/case-store";
-import { IMPORTANCE, type Importance, SPEAKER_ROLE } from "@/lib/domain/types";
+import { cannedInterviewAnswer } from "@/lib/demo/canned-answers";
+import { IMPORTANCE, type Importance } from "@/lib/domain/types";
 import { useCaseWebMCPTools } from "@/lib/webmcp/use-case-tools";
 
 const IMPORTANCE_OPTIONS = [
@@ -23,10 +25,11 @@ export function CaseApp() {
   const selected = snapshot.derived.claims.find(
     (claim) => claim.id === snapshot.activeProbeId,
   );
+  const canned = selected ? cannedInterviewAnswer(selected.id) : null;
 
   return (
     <main className="mx-auto max-w-5xl px-6 py-8">
-      <p className="text-sm tracking-[0.2em] text-zinc-500">ROLEPROBE</p>
+      <p className="text-sm tracking-[0.2em] text-zinc-500">ASKTHEJOB</p>
       <h1 className="mt-2 text-3xl font-semibold">
         Interview the job before it interviews you.
       </h1>
@@ -36,6 +39,11 @@ export function CaseApp() {
         agent asks; you bring the answer back.
       </p>
 
+      <p className="mt-2 text-sm text-zinc-500">
+        <Link className="underline" href="/employer/atlas-fde">
+          Employer-published claims
+        </Link>
+      </p>
       <p className="mt-2 text-sm text-zinc-500" data-testid="case-origin">
         {snapshot.source.origin === "DEMO_FIXTURE"
           ? "Demo case"
@@ -109,20 +117,20 @@ export function CaseApp() {
             <p data-testid="active-probe">Active probe: {selected.dimension}</p>
             <p>Unresolved variable: {selected.unresolvedVariable}</p>
             <p>Measurable form: {selected.measurableForm}</p>
-            <button
-              type="button"
-              className="mt-3 rounded-lg bg-white px-3 py-2 text-zinc-950"
-              onClick={() =>
-                store.recordAnswer({
-                  claimId: selected.id,
-                  stance: "CHALLENGES",
-                  text: "Hiring manager said ownership is split with a central platform team after design review.",
-                  speakerRole: SPEAKER_ROLE.HIRING_MANAGER,
-                })
-              }
-            >
-              Record hiring-manager answer
-            </button>
+            {canned ? (
+              <button
+                type="button"
+                className="mt-3 rounded-lg bg-white px-3 py-2 text-zinc-950"
+                onClick={() => store.recordAnswer(canned)}
+              >
+                {canned.buttonLabel}
+              </button>
+            ) : (
+              <p className="mt-3 text-zinc-300">
+                No scripted answer for this claim. Reset and record the
+                ownership answer only after ownership is selected.
+              </p>
+            )}
           </div>
         ) : (
           <p className="mt-3 text-sm text-zinc-300">
