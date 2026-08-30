@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { createCaseStore } from "@/lib/case-store";
 import { deriveClaimKind } from "@/lib/domain/policy";
 import {
+  CASE_TOOL_CONTRACTS,
   importRoleFromClaimsTool,
   recordResearchEvidenceTool,
   selectDecisionChanger,
@@ -51,6 +52,7 @@ describe("record_research_evidence", () => {
     expect(ownership?.evidence.length).toBe((before ?? 0) + 1);
     expect(added?.scope).toBe("REPORTED_EXPERIENCE");
     expect(added?.sourceKind).toBe("REPORTED_EXPERIENCE");
+    expect(added?.sourceUrl).toBe("https://example.com/post");
     expect(store.getState().selectionState).toBe("IDLE");
   });
 
@@ -66,6 +68,29 @@ describe("record_research_evidence", () => {
         sourceKind: "NEWS_ARTICLE",
       }),
     ).toThrow(/source/i);
+  });
+
+  it("rejects non-http research URLs", () => {
+    const store = createCaseStore();
+    selectDecisionChanger(store);
+    expect(() =>
+      recordResearchEvidenceTool(store, {
+        stance: "SUPPORTS",
+        summary: "A first-person post describes broad ownership.",
+        sourceUrl: "javascript:alert(1)",
+        sourceLabel: "Engineering post",
+        sourceKind: "FIRST_PERSON_EXPERIENCE",
+      }),
+    ).toThrow(/http/i);
+  });
+
+  it("keeps research scoped to the current decision-changing probe", () => {
+    const research = CASE_TOOL_CONTRACTS.find(
+      (tool) => tool.name === "record_research_evidence",
+    );
+    expect(research?.description).toMatch(/currently active probe/i);
+    expect(research?.description).toMatch(/counterevidence/i);
+    expect(research?.description).toMatch(/decision-directed/i);
   });
 });
 
