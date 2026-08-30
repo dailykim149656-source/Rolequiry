@@ -16,7 +16,7 @@ export function setCandidatePrioritiesTool(
     (priority) => !Object.values(IMPORTANCE).includes(priority.importance),
   );
   if (invalidImportance) {
-    throw new Error(`Invalid importance: ${invalidImportance.importance}`);
+    throw new Error("Invalid importance value");
   }
   const claimIds = input.priorities.map((priority) => priority.claimId);
   if (new Set(claimIds).size !== claimIds.length) {
@@ -29,7 +29,7 @@ export function setCandidatePrioritiesTool(
     (claimId) => !knownClaimIds.has(claimId),
   );
   if (unknownClaimId) {
-    throw new Error(`Unknown claim ID: ${unknownClaimId}`);
+    throw new Error("Unknown claim ID in priorities");
   }
 
   store.setPriorities(input.priorities);

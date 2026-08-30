@@ -347,6 +347,11 @@ describe("set_candidate_priorities", () => {
         priorities: [{ claimId: "missing", importance: "CRITICAL" }],
       }),
     ).toThrow(/unknown/i);
+    expect(() =>
+      setCandidatePrioritiesTool(store, {
+        priorities: [{ claimId: "missing", importance: "CRITICAL" }],
+      }),
+    ).toThrow("Unknown claim ID in priorities");
     expect(store.getState().source).toBe(before);
   });
 
@@ -363,6 +368,14 @@ describe("set_candidate_priorities", () => {
         },
       ]),
     ).toThrow(/importance/i);
+    expect(() =>
+      Reflect.apply(setCandidatePrioritiesTool, undefined, [
+        store,
+        {
+          priorities: [{ claimId: "imported-2", importance: "INVALID" }],
+        },
+      ]),
+    ).toThrow("Invalid importance value");
     expect(store.getState().source).toBe(before);
   });
 });
