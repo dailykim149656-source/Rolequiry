@@ -36,6 +36,13 @@ describe("case workspace status", () => {
     expect(screen.queryByText("WebMCP live")).toBeNull();
   });
 
+  it("reports all seven case tools when they are registered", () => {
+    renderWorkspace(createCaseStore(), 7);
+
+    expect(screen.getByText("WebMCP 7/7 live")).toBeTruthy();
+    expect(screen.getByTestId("tool-status").textContent).toContain("7/7");
+  });
+
   it("puts the Decision Path before the Claim Board for narrow screens", () => {
     renderWorkspace();
 

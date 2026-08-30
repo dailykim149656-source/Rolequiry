@@ -1,47 +1,14 @@
 import type { CaseStore } from "@/lib/case-store";
-import { coverageBreakdownFor } from "@/lib/domain/policy";
 import { noProbeDetails } from "@/lib/domain/probe-outcome";
 import {
   AUTHORITY_SCOPE,
-  type DerivedClaim,
   EVIDENCE_PROVENANCE,
   RESEARCH_SOURCE_KIND,
   type ResearchSourceKind,
   type SpeakerRole,
 } from "@/lib/domain/types";
+import { getCaseState } from "@/lib/webmcp/case-state";
 import { normalizeHttpUrl } from "@/lib/webmcp/http-url";
-
-function publicClaim(claim: DerivedClaim, rankingVisible: boolean) {
-  return {
-    id: claim.id,
-    dimension: claim.dimension,
-    importance: claim.importance,
-    candidatePrioritySet: claim.candidatePrioritySet,
-    kind: claim.kind,
-    status: claim.status,
-    unresolvedness: Number(claim.unresolvedness.toFixed(3)),
-    tension: Number(claim.tension.toFixed(3)),
-    probeEligible: claim.probeEligible,
-    authorityCoverage: coverageBreakdownFor(claim.kind, claim.evidence),
-    evidenceSummary: claim.evidence.map((item) => ({
-      id: item.id,
-      scope: item.scope,
-      stance: item.stance,
-      speakerRole: item.speakerRole ?? null,
-      sourceKind: item.sourceKind ?? null,
-      provenance: item.provenance ?? EVIDENCE_PROVENANCE.CASE_INPUT,
-      synthetic:
-        item.synthetic ?? item.text.toLowerCase().includes("synthetic"),
-    })),
-    ...(rankingVisible
-      ? {
-          probePriority: Number(claim.probePriority.toFixed(3)),
-          unresolvedVariable: claim.unresolvedVariable,
-          measurableForm: claim.measurableForm,
-        }
-      : {}),
-  };
-}
 
 export function getRoleClaims(store: CaseStore) {
   const { source } = store.getState();
@@ -64,20 +31,6 @@ export function getRoleClaims(store: CaseStore) {
         )
         .map((item) => item.text),
     })),
-  };
-}
-
-export function getCaseState(store: CaseStore) {
-  const snapshot = store.getState();
-  return {
-    company: snapshot.source.company,
-    role: snapshot.source.role,
-    origin: snapshot.source.origin,
-    sourceUrl: snapshot.source.sourceUrl ?? null,
-    activeProbeId: snapshot.activeProbeId,
-    rankingVisible: snapshot.rankingVisible,
-    selectionState: snapshot.selectionState,
-    claims: snapshot.derived.claims.map((claim) => publicClaim(claim, false)),
   };
 }
 
@@ -253,4 +206,6 @@ export function importRoleFromClaimsTool(
   };
 }
 
+export { setCandidatePrioritiesTool } from "@/lib/webmcp/candidate-priorities";
+export { getCaseState } from "@/lib/webmcp/case-state";
 export { CASE_TOOL_CONTRACTS } from "@/lib/webmcp/contracts";

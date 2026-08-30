@@ -35,4 +35,10 @@ export const CASE_TOOL_CONTRACTS = [
       "Decision-directed research only: research the currently active probe, not the whole company. Record one agent-reported public employer-published or first-person source with provenance. Before choosing a strong SUPPORTS or CHALLENGES stance, make a reasonable attempt to find credible counterevidence; use NEUTRAL when the source is genuinely non-resolving or mixed. Do not choose authority scope or derived decision fields.",
     annotations: { readOnlyHint: false },
   },
+  {
+    name: "set_candidate_priorities",
+    description:
+      "Record claim importance values only after the candidate explicitly confirms the agent's proposed mapping from their career context. Never write inferred priorities from a resume alone. This updates shared case state but does not choose the next probe.",
+    annotations: { readOnlyHint: false },
+  },
 ] as const;

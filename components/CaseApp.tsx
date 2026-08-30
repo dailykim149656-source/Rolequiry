@@ -34,6 +34,7 @@ export function CaseApp() {
     webmcp.record,
     webmcp.imported,
     webmcp.research,
+    webmcp.priorities,
   ].filter((item) => item.registered).length;
 
   return (

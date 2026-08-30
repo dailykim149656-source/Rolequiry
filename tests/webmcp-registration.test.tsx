@@ -12,6 +12,7 @@ import { useCaseWebMCPTools } from "@/lib/webmcp/use-case-tools";
 
 type RegisteredTool = {
   name: string;
+  inputSchema?: object;
   execute?: (args?: Record<string, unknown>) => Promise<{
     isError?: boolean;
     content: Array<{ text: string }>;
@@ -85,6 +86,27 @@ describe("WebMCP registration wrapper", () => {
           ),
         ),
     ).toBe(true);
+  });
+
+  it("publishes a closed one-to-eight priority schema", () => {
+    const registered = installFakeModelContext();
+    renderHook(() => useCaseWebMCPTools(createCaseStore()), {
+      wrapper: React.StrictMode,
+    });
+
+    expect(
+      registered.get("set_candidate_priorities")?.inputSchema,
+    ).toMatchObject({
+      additionalProperties: false,
+      required: ["priorities"],
+      properties: {
+        priorities: {
+          minItems: 1,
+          maxItems: 8,
+          items: { additionalProperties: false },
+        },
+      },
+    });
   });
 });
 

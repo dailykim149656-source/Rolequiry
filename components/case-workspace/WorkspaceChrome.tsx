@@ -4,7 +4,7 @@ import { Icon } from "./Icon";
 
 export function ProductBar({
   webmcpCount,
-  total = 6,
+  total = 7,
 }: {
   readonly webmcpCount: number;
   readonly total?: number;
@@ -209,7 +209,7 @@ export function DemoControls({
         ) : null}
       </div>
       <p className="mt-3 text-xs text-muted" data-testid="tool-status">
-        WebMCP registered: {webmcpCount}/6
+        WebMCP registered: {webmcpCount}/7
       </p>
     </details>
   );

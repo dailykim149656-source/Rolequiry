@@ -10,6 +10,7 @@ import {
   getCaseState,
   importRoleFromClaimsTool,
   selectDecisionChanger,
+  setCandidatePrioritiesTool,
 } from "@/lib/webmcp/tools";
 import { useCaseWebMCPTools } from "@/lib/webmcp/use-case-tools";
 
@@ -268,6 +269,88 @@ describe("import_role_from_claims", () => {
   });
 });
 
+describe("set_candidate_priorities", () => {
+  function importPrioritizableRole(store: ReturnType<typeof createCaseStore>) {
+    importRoleFromClaimsTool(store, {
+      company: "Example Corp",
+      role: "Staff Engineer",
+      claims: [
+        {
+          dimension: "Technical ownership",
+          employerStatement: "Own delivery end to end",
+          unresolvedVariable: "Where does final architecture authority sit?",
+          measurableForm: "Last decision shipped without platform review",
+        },
+        {
+          dimension: "Travel",
+          employerStatement: "Travel is expected",
+          unresolvedVariable: "How concentrated is travel?",
+          measurableForm: "Median and maximum travel days per quarter",
+        },
+      ],
+    });
+  }
+
+  it("records only the priorities the candidate confirmed", () => {
+    const store = createCaseStore();
+    importPrioritizableRole(store);
+
+    const result = setCandidatePrioritiesTool(store, {
+      priorities: [{ claimId: "imported-2", importance: "CRITICAL" }],
+    });
+
+    expect(result.updated_priorities).toEqual([
+      { claim_id: "imported-2", importance: "CRITICAL" },
+    ]);
+    expect(result.claims[0]?.candidatePrioritySet).toBe(false);
+    expect(result.claims[1]).toMatchObject({
+      importance: "CRITICAL",
+      candidatePrioritySet: true,
+    });
+    expect(store.getState().activeProbeId).toBeNull();
+  });
+
+  it("rejects an empty priority batch before mutation", () => {
+    const store = createCaseStore();
+    importPrioritizableRole(store);
+    const before = store.getState().source;
+
+    expect(() => setCandidatePrioritiesTool(store, { priorities: [] })).toThrow(
+      /at least one/i,
+    );
+    expect(store.getState().source).toBe(before);
+  });
+
+  it("rejects duplicate claim IDs before mutation", () => {
+    const store = createCaseStore();
+    importPrioritizableRole(store);
+    const before = store.getState().source;
+
+    expect(() =>
+      setCandidatePrioritiesTool(store, {
+        priorities: [
+          { claimId: "imported-2", importance: "HIGH" },
+          { claimId: "imported-2", importance: "CRITICAL" },
+        ],
+      }),
+    ).toThrow(/duplicate/i);
+    expect(store.getState().source).toBe(before);
+  });
+
+  it("rejects an unknown claim ID before mutation", () => {
+    const store = createCaseStore();
+    importPrioritizableRole(store);
+    const before = store.getState().source;
+
+    expect(() =>
+      setCandidatePrioritiesTool(store, {
+        priorities: [{ claimId: "missing", importance: "CRITICAL" }],
+      }),
+    ).toThrow(/unknown/i);
+    expect(store.getState().source).toBe(before);
+  });
+});
+
 describe("registered write loop", () => {
   it("selects then records through the live WebMCP execute closures", async () => {
     const registered = installFakeModelContext();
@@ -281,6 +364,7 @@ describe("registered write loop", () => {
         "record_interview_answer",
         "record_research_evidence",
         "select_decision_changer",
+        "set_candidate_priorities",
       ].sort(),
     );
     const select = registered.get("select_decision_changer");
@@ -304,5 +388,50 @@ describe("registered write loop", () => {
         (item) => item.scope === "CANDIDATE_SPECIFIC_ANSWER",
       ),
     ).toBe(true);
+  });
+
+  it("imports, confirms priorities, then selects through live closures", async () => {
+    const registered = installFakeModelContext();
+    const store = createCaseStore();
+    renderHook(() => useCaseWebMCPTools(store), { wrapper: React.StrictMode });
+    const imported = registered.get("import_role_from_claims");
+    const priorities = registered.get("set_candidate_priorities");
+    const select = registered.get("select_decision_changer");
+    if (!imported?.execute || !priorities?.execute || !select?.execute) {
+      throw new Error("conversation-to-case tools missing");
+    }
+
+    await imported.execute({
+      company: "Example Corp",
+      role: "Staff Engineer",
+      claims: [
+        {
+          dimension: "Technical ownership",
+          employerStatement: "Own delivery end to end",
+          unresolvedVariable: "Where does final architecture authority sit?",
+          measurableForm: "Last decision shipped without platform review",
+        },
+        {
+          dimension: "Travel",
+          employerStatement: "Travel is expected",
+          unresolvedVariable: "How concentrated is travel?",
+          measurableForm: "Median and maximum travel days per quarter",
+        },
+      ],
+    });
+    const prioritizedRaw = await priorities.execute({
+      priorities: [{ claimId: "imported-2", importance: "CRITICAL" }],
+    });
+    const prioritized = JSON.parse(prioritizedRaw.content[0]?.text ?? "{}");
+
+    expect(prioritized.claims[1]).toMatchObject({
+      importance: "CRITICAL",
+      candidatePrioritySet: true,
+    });
+    expect(store.getState().activeProbeId).toBeNull();
+
+    const selectedRaw = await select.execute({});
+    const selected = JSON.parse(selectedRaw.content[0]?.text ?? "{}");
+    expect(selected.claim_id).toBe("imported-2");
   });
 });

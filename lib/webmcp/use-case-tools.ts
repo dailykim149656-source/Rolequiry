@@ -10,6 +10,7 @@ import {
   recordInterviewAnswerTool,
   recordResearchEvidenceTool,
   selectDecisionChanger,
+  setCandidatePrioritiesTool,
 } from "@/lib/webmcp/tools";
 
 const emptySchema = {
@@ -80,6 +81,31 @@ const importSchema = {
   additionalProperties: false,
 } as const;
 
+const prioritiesSchema = {
+  type: "object",
+  properties: {
+    priorities: {
+      type: "array",
+      minItems: 1,
+      maxItems: 8,
+      items: {
+        type: "object",
+        properties: {
+          claimId: { type: "string", minLength: 1 },
+          importance: {
+            type: "string",
+            enum: ["LOW", "MEDIUM", "HIGH", "CRITICAL"],
+          },
+        },
+        required: ["claimId", "importance"],
+        additionalProperties: false,
+      },
+    },
+  },
+  required: ["priorities"],
+  additionalProperties: false,
+} as const;
+
 export function useCaseWebMCPTools(store: CaseStore) {
   const [
     claimsContract,
@@ -88,6 +114,7 @@ export function useCaseWebMCPTools(store: CaseStore) {
     recordContract,
     importContract,
     researchContract,
+    prioritiesContract,
   ] = CASE_TOOL_CONTRACTS;
   const claims = useWebMCP({
     name: claimsContract.name,
@@ -151,6 +178,18 @@ export function useCaseWebMCPTools(store: CaseStore) {
       sourceKind: "EMPLOYER_OFFICIAL" | "FIRST_PERSON_EXPERIENCE";
     }) => recordResearchEvidenceTool(store, args),
   });
+  const priorities = useWebMCP({
+    name: prioritiesContract.name,
+    description: prioritiesContract.description,
+    inputSchema: prioritiesSchema,
+    annotations: prioritiesContract.annotations,
+    execute: (args: {
+      priorities: Array<{
+        claimId: string;
+        importance: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+      }>;
+    }) => setCandidatePrioritiesTool(store, args),
+  });
 
-  return { claims, state, select, record, imported, research };
+  return { claims, state, select, record, imported, research, priorities };
 }
