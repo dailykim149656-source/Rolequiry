@@ -63,7 +63,7 @@ Open https://rolequiry.com/case in ChatGPT's built-in browser or Chrome with Web
 
 ```bash
 bun install
-bun test
+bun run test
 bun run typecheck
 bun run build
 bun run dev -- --port 3100

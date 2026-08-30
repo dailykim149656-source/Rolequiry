@@ -71,7 +71,9 @@ export function coverageBreakdownFor(
     (item) => item.scope === AUTHORITY_SCOPE.EMPLOYER_STATED,
   );
   const reports = evidence.filter(
-    (item) => item.scope === AUTHORITY_SCOPE.REPORTED_EXPERIENCE,
+    (item) =>
+      item.scope === AUTHORITY_SCOPE.REPORTED_EXPERIENCE &&
+      item.stance !== "NEUTRAL",
   );
   const answers = evidence.filter(
     (item) => item.scope === AUTHORITY_SCOPE.CANDIDATE_SPECIFIC_ANSWER,

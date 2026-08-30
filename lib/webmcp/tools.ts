@@ -171,6 +171,12 @@ export function recordResearchEvidenceTool(
   ) {
     throw new Error("Unsupported research source");
   }
+  const duplicate = snapshot.source.claims
+    .find((claim) => claim.id === snapshot.activeProbeId)
+    ?.evidence.some((item) => item.sourceUrl === input.sourceUrl.trim());
+  if (duplicate) {
+    throw new Error("Duplicate research source URL");
+  }
   store.recordResearch({
     claimId: snapshot.activeProbeId,
     stance: input.stance,
