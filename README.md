@@ -10,7 +10,7 @@ Public judging URL: https://roleprobe-five.vercel.app/case
 
 Employer reference surface: https://roleprobe-five.vercel.app/employer/atlas-fde
 
-Project aliases: `rolequiry.vercel.app` exists, but Vercel SSO currently gates it. Use `roleprobe-five.vercel.app` until SSO is disabled.
+Custom domain `rolequiry.com` is attached on Vercel. Cloudflare nameservers stay in place; add DNS-only records `A @ 76.76.21.21` and `CNAME www cname.vercel-dns.com`, then https://rolequiry.com/case becomes the public URL. Until those records propagate, use https://roleprobe-five.vercel.app/case. `rolequiry.vercel.app` remains SSO-gated.
 
 ## One URL to test
 
