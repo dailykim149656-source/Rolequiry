@@ -29,7 +29,9 @@ export function CaseApp() {
 
   return (
     <main className="mx-auto max-w-5xl px-6 py-8">
-      <p className="text-sm font-medium tracking-[0.18em] text-zinc-500">Rolequiry</p>
+      <p className="text-sm font-medium tracking-[0.18em] text-zinc-500">
+        Rolequiry
+      </p>
       <h1 className="mt-2 text-3xl font-semibold">
         Interview the job before it interviews you.
       </h1>
@@ -150,14 +152,14 @@ export function CaseApp() {
             className={chip(snapshot.source.id === "atlas-fde")}
             onClick={() => store.loadFixture("atlas-fde")}
           >
-            Atlas FDE
+            Northwind FDE
           </button>
           <button
             type="button"
             className={chip(snapshot.source.id === "kestrel-solutions")}
             onClick={() => store.loadFixture("kestrel-solutions")}
           >
-            Kestrel Solutions
+            Harborline SE
           </button>
           <button
             type="button"

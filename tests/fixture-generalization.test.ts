@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { deriveCase } from "@/lib/domain/derive-case";
+import { ATLAS_FDE } from "@/lib/fixtures/atlas-fde";
 import { KESTREL_SOLUTIONS } from "@/lib/fixtures/kestrel-solutions";
 
 describe("Fixture B generalization", () => {
@@ -20,5 +21,10 @@ describe("Fixture B generalization", () => {
     expect((coding?.probePriority ?? 0) > (onCall?.probePriority ?? 1)).toBe(
       true,
     );
+  });
+
+  it("uses obviously fictional employer names", () => {
+    expect(ATLAS_FDE.company).not.toBe("Atlas Robotics");
+    expect(KESTREL_SOLUTIONS.company).not.toBe("Kestrel Cloud");
   });
 });

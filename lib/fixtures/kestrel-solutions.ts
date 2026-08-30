@@ -8,7 +8,7 @@ import {
 
 export const KESTREL_SOLUTIONS: RoleCase = {
   id: "kestrel-solutions",
-  company: "Kestrel Cloud",
+  company: "Harborline Systems (synthetic demo)",
   role: "Solutions Engineer",
   origin: CASE_ORIGIN.DEMO_FIXTURE,
   claims: [

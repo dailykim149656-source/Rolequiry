@@ -14,7 +14,7 @@ export function EmployerApp() {
   useWebMCP({
     name: "get_employer_claims",
     description:
-      "Return Atlas Robotics official claims for the Forward Deployed Engineer role. Employer-authored testimony, not verified facts.",
+      "Return official claims for this synthetic Forward Deployed Engineer demo role. Employer-authored testimony, not verified facts.",
     inputSchema: emptySchema,
     annotations: { readOnlyHint: true, untrustedContentHint: true },
     execute: () => ({

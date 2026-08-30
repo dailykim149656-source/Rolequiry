@@ -8,7 +8,7 @@ import {
 
 export const ATLAS_FDE: RoleCase = {
   id: "atlas-fde",
-  company: "Atlas Robotics",
+  company: "Northwind Automation (synthetic demo)",
   role: "Forward Deployed Engineer",
   origin: CASE_ORIGIN.DEMO_FIXTURE,
   claims: [
