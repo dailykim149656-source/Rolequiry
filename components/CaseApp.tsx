@@ -176,11 +176,15 @@ export function CaseApp() {
         <p className="mt-3" data-testid="tool-status">
           WebMCP registered:{" "}
           {String(
-            [webmcp.claims, webmcp.state, webmcp.select, webmcp.record].filter(
-              (item) => item.registered,
-            ).length,
+            [
+              webmcp.claims,
+              webmcp.state,
+              webmcp.select,
+              webmcp.record,
+              webmcp.imported,
+            ].filter((item) => item.registered).length,
           )}
-          /4
+          /5
         </p>
       </details>
     </main>
@@ -190,16 +194,19 @@ export function CaseApp() {
 function EvidenceCoverage({ claim }: { claim: DerivedClaim }) {
   const coverage = coverageBreakdownFor(claim.kind, claim.evidence);
   const external = claim.evidence.filter(
-    (item) => item.scope !== "EMPLOYER_STATED",
+    (item) => item.scope === "REPORTED_EXPERIENCE",
   );
   const supports = external.filter((item) => item.stance === "SUPPORTS").length;
   const challenges = external.filter(
     (item) => item.stance === "CHALLENGES",
   ).length;
+  const interview = claim.evidence.find(
+    (item) => item.scope === "CANDIDATE_SPECIFIC_ANSWER",
+  );
   const interviewLabel = coverage.candidateSpecificAnswer.resolving
-    ? "Candidate interview — resolving"
+    ? `Candidate interview — resolving · ${interview?.stance ?? "SUPPORTS"}`
     : coverage.candidateSpecificAnswer.present
-      ? "Candidate interview — non-resolving"
+      ? `Candidate interview — non-resolving · ${interview?.stance ?? "NEUTRAL"}`
       : "Candidate interview — missing";
   return (
     <div className="mt-4 space-y-2 text-sm">
@@ -214,6 +221,30 @@ function EvidenceCoverage({ claim }: { claim: DerivedClaim }) {
         {challenges} challenge{challenges === 1 ? "" : "s"}
       </p>
       <p>{interviewLabel}</p>
+      <details className="mt-2 text-zinc-600">
+        <summary className="cursor-pointer">
+          View evidence ({claim.evidence.length})
+        </summary>
+        <ul className="mt-2 space-y-2">
+          {claim.evidence.map((item) => (
+            <li key={item.id}>
+              <p>
+                {item.scope === "EMPLOYER_STATED"
+                  ? "Employer statement"
+                  : item.scope === "REPORTED_EXPERIENCE"
+                    ? "Reported experience"
+                    : "Candidate interview"}{" "}
+                ·{" "}
+                {item.synthetic || item.text.toLowerCase().includes("synthetic")
+                  ? "synthetic · "
+                  : ""}
+                {item.stance.toLowerCase()}
+              </p>
+              <p>{item.text}</p>
+            </li>
+          ))}
+        </ul>
+      </details>
     </div>
   );
 }
