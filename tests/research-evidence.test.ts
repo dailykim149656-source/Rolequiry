@@ -1,7 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { createCaseStore } from "@/lib/case-store";
-import { deriveCase, recordResearchEvidence } from "@/lib/domain/derive-case";
+import {
+  deriveCase,
+  importRoleFromClaims,
+  recordInterviewAnswer,
+  recordResearchEvidence,
+} from "@/lib/domain/derive-case";
 import { deriveClaimKind } from "@/lib/domain/policy";
+import { SPEAKER_ROLE } from "@/lib/domain/types";
 import { ATLAS_FDE } from "@/lib/fixtures/atlas-fde";
 import {
   CASE_TOOL_CONTRACTS,
@@ -55,6 +61,7 @@ describe("record_research_evidence", () => {
     expect(added?.scope).toBe("REPORTED_EXPERIENCE");
     expect(added?.sourceKind).toBe("REPORTED_EXPERIENCE");
     expect(added?.sourceUrl).toBe("https://example.com/post");
+    expect(added).toMatchObject({ provenance: "AGENT_REPORTED" });
     expect(store.getState().selectionState).toBe("EVIDENCE_UPDATED");
   });
 
@@ -109,6 +116,48 @@ describe("record_research_evidence", () => {
     expect(research?.description).toMatch(/currently active probe/i);
     expect(research?.description).toMatch(/counterevidence/i);
     expect(research?.description).toMatch(/decision-directed/i);
+  });
+});
+
+describe("evidence provenance", () => {
+  it("records who supplied each evidence item without trusting source prose", () => {
+    const imported = importRoleFromClaims({
+      company: "Example Corp",
+      role: "Staff Engineer",
+      claims: [
+        {
+          dimension: "On-call load",
+          employerStatement: "On-call is rare",
+          unresolvedVariable: "How often does this team get paged?",
+          measurableForm: "Pages per engineer last two quarters",
+        },
+      ],
+    });
+    expect(imported.claims[0]?.evidence[0]).toMatchObject({
+      provenance: "CASE_INPUT",
+    });
+
+    const interviewed = recordInterviewAnswer(ATLAS_FDE, {
+      claimId: "technical-ownership",
+      stance: "SUPPORTS",
+      text: "The hiring manager described a recent independently shipped change.",
+      speakerRole: SPEAKER_ROLE.HIRING_MANAGER,
+    });
+    expect(interviewed.claims[0]?.evidence.at(-1)).toMatchObject({
+      provenance: "CANDIDATE_REPORTED",
+    });
+
+    const researched = recordResearchEvidence(ATLAS_FDE, {
+      claimId: "technical-ownership",
+      stance: "SUPPORTS",
+      text: "An employer page describes end-to-end ownership.",
+      sourceKind: "EMPLOYER_OFFICIAL",
+      sourceLabel: "Engineering page",
+      sourceUrl: "https://northwind.example.com/engineering",
+    });
+    expect(researched.claims[0]?.evidence.at(-1)).toMatchObject({
+      provenance: "AGENT_REPORTED",
+    });
   });
 });
 

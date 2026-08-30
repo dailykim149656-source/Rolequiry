@@ -58,7 +58,7 @@ describe("independent research orgs", () => {
     expect(uniqueChallengingReportCount(after?.evidence ?? [])).toBe(2);
     const path = after ? decisionPathNodes(after) : [];
     expect(path.find((node) => node.label === "Evidence")?.body).toBe(
-      "Employer ✓ · Public 1 support / 2 challenges · Interview —",
+      "Employer claim present · Public 1 support / 2 challenges · Interview —",
     );
   });
 

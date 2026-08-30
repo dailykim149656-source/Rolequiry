@@ -7,6 +7,7 @@ import { createCaseStore } from "@/lib/case-store";
 import { deriveClaimKind } from "@/lib/domain/policy";
 import { SPEAKER_ROLE } from "@/lib/domain/types";
 import {
+  getCaseState,
   importRoleFromClaimsTool,
   selectDecisionChanger,
 } from "@/lib/webmcp/tools";
@@ -79,6 +80,21 @@ describe("import_role_from_claims", () => {
     ).toBe("LIVED_EXPERIENCE");
   });
 
+  it("does not treat operational throughput numbers as employer policy", () => {
+    expect(
+      deriveClaimKind({
+        dimension: "System scale",
+        employerStatement: "Processes 150k events per second",
+      }),
+    ).toBe("LIVED_EXPERIENCE");
+    expect(
+      deriveClaimKind({
+        dimension: "System scale",
+        employerStatement: "Processes 100,000 requests daily",
+      }),
+    ).toBe("LIVED_EXPERIENCE");
+  });
+
   it("classifies written compensation and hybrid statements as employer policy", () => {
     expect(
       deriveClaimKind({
@@ -96,6 +112,12 @@ describe("import_role_from_claims", () => {
       deriveClaimKind({
         dimension: "Equity",
         employerStatement: "Equity granted at hire",
+      }),
+    ).toBe("EMPLOYER_POLICY");
+    expect(
+      deriveClaimKind({
+        dimension: "Bonus",
+        employerStatement: "Annual bonus of up to 15%",
       }),
     ).toBe("EMPLOYER_POLICY");
   });
@@ -154,6 +176,34 @@ describe("import_role_from_claims", () => {
         .derived.claims.find((claim) => claim.dimension === "Base pay")
         ?.probeEligible,
     ).toBe(false);
+  });
+
+  it("exposes whether the candidate explicitly set an imported priority", () => {
+    const store = createCaseStore();
+    importRoleFromClaimsTool(store, {
+      company: "Example Corp",
+      role: "Staff Engineer",
+      claims: [
+        {
+          dimension: "On-call load",
+          employerStatement: "On-call is rare",
+          unresolvedVariable: "How often does this team get paged?",
+          measurableForm: "Pages per engineer last two quarters",
+        },
+      ],
+    });
+
+    const imported = store.getState().derived.claims[0];
+    expect(imported?.candidatePrioritySet).toBe(false);
+    expect(getCaseState(store).claims[0]?.candidatePrioritySet).toBe(false);
+
+    store.setImportance("imported-1", "MEDIUM");
+
+    const prioritized = store.getState().derived.claims[0];
+    expect(prioritized?.importance).toBe("MEDIUM");
+    expect(prioritized?.candidatePrioritySet).toBe(true);
+    expect(prioritized?.probeEligible).toBe(true);
+    expect(getCaseState(store).claims[0]?.candidatePrioritySet).toBe(true);
   });
 
   it("rejects whitespace-only imported claims", () => {

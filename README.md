@@ -2,7 +2,7 @@
 
 Interview the job before it interviews you.
 
-Rolequiry is an agent-native candidate due-diligence app for the OpenAI WebMCP Challenge. Job postings are treated as claims, not facts. You set which imported claims matter. Your agent investigates the active uncertainty. Rolequiry shows the next unresolved question on a live decision path, and owns evidence authority, coverage, and state.
+Rolequiry is an agent-native candidate due-diligence app for the OpenAI WebMCP Challenge. Job postings are treated as claims, not facts. You set which imported claims matter. Your agent investigates the active uncertainty. Rolequiry shows the next unresolved question on a live decision path and deterministically maps typed source categories to authority weight, coverage, and state. It does not independently verify source identity or page contents.
 
 ## Live Demo URL
 
@@ -22,7 +22,7 @@ Supported test environment: ChatGPT built-in browser / Chrome with WebMCP. The p
 
 ## Why WebMCP
 
-Most agent demos operate on cooperative pages. A job posting is mixed-incentive: useful to the candidate, written by the employer. WebMCP lets the page expose typed reads and writes against live application state instead of scraping. The agent extracts employer claims, translates them into testable variables, and can research the currently active uncertainty with its own browsing capabilities. Rolequiry—not the model—derives claim kind, evidence authority, coverage, state, and ranking.
+Most agent demos operate on cooperative pages. A job posting is mixed-incentive: useful to the candidate, written by the employer. WebMCP lets the page expose typed reads and writes against live application state instead of scraping. The agent extracts employer claims, translates them into testable variables, and can research the currently active uncertainty with its own browsing capabilities. Rolequiry—not the model—derives claim kind, maps declared source categories to authority weight, and computes coverage, state, and ranking. It does not authenticate agent-reported URLs.
 
 ### Decision-directed research
 
@@ -30,8 +30,8 @@ Rolequiry is not a general deep-research engine. Comprehensive research systems 
 
 - `select_decision_changer` defines the active research target.
 - The agent can use its own browser, search, or deep-research capabilities outside Rolequiry.
-- `record_research_evidence` writes one sourced employer-official or first-person finding back into the active probe.
-- Provenance stays attached to the evidence and is visible in the UI.
+- `record_research_evidence` writes one agent-reported employer-published or first-person finding back into the active probe.
+- App-owned capture provenance stays attached to the evidence and is visible in the UI; it identifies who supplied the record, not who independently verified it.
 - Duplicate source URLs are rejected, and `NEUTRAL` research is stored without reducing uncertainty.
 - The research tool asks the agent to make a reasonable counterevidence check before assigning a strong `SUPPORTS` or `CHALLENGES` stance.
 

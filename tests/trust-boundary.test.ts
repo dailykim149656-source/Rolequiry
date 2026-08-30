@@ -56,6 +56,11 @@ describe("trust boundary", () => {
         .claims.find((claim) => claim.id === "technical-ownership")
         ?.evidenceSummary.at(-1),
     ).not.toHaveProperty("sourceLabel");
+    expect(
+      getCaseState(store)
+        .claims.find((claim) => claim.id === "technical-ownership")
+        ?.evidenceSummary.at(-1),
+    ).toMatchObject({ provenance: "AGENT_REPORTED" });
   });
 
   it("refuses to rank an imported case until a candidate sets a priority", () => {

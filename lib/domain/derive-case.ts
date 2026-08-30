@@ -18,6 +18,7 @@ import type {
 import {
   AUTHORITY_SCOPE,
   CASE_ORIGIN,
+  EVIDENCE_PROVENANCE,
   IMPORTANCE,
   RESEARCH_SOURCE_KIND,
   SOURCE_KIND,
@@ -38,6 +39,7 @@ function deriveClaim(claim: SourceClaim): DerivedClaim {
     dimension: claim.dimension,
     employerStatement: claim.employerStatement,
     importance: claim.importance,
+    candidatePrioritySet: claim.importanceSetByCandidate !== false,
     kind,
     unresolvedVariable: claim.unresolvedVariable,
     measurableForm: claim.measurableForm,
@@ -107,6 +109,7 @@ export function recordInterviewAnswer(
           sourceKind: SOURCE_KIND.INTERVIEW,
           sourceLabel: input.speakerRole,
           synthetic: false,
+          provenance: EVIDENCE_PROVENANCE.CANDIDATE_REPORTED,
         },
       ];
       return { ...claim, evidence: nextEvidence };
@@ -143,6 +146,7 @@ export function recordResearchEvidence(
             sourceLabel: input.sourceLabel,
             sourceUrl: input.sourceUrl,
             synthetic: false,
+            provenance: EVIDENCE_PROVENANCE.AGENT_REPORTED,
           },
         ],
       };
@@ -176,6 +180,7 @@ export function importRoleFromClaims(input: ImportedRoleInput): RoleCase {
           sourceKind: SOURCE_KIND.EMPLOYER_POSTING,
           sourceLabel: "Imported employer statement",
           synthetic: false,
+          provenance: EVIDENCE_PROVENANCE.CASE_INPUT,
         },
       ],
     })),

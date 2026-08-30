@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { createCaseStore } from "@/lib/case-store";
 import { SPEAKER_ROLE } from "@/lib/domain/types";
 import {
+  importRoleFromClaimsTool,
   recordInterviewAnswerTool,
   selectDecisionChanger,
 } from "@/lib/webmcp/tools";
@@ -45,5 +46,26 @@ describe("selection state", () => {
     expect(store.getState().selectionState).toBe("EVIDENCE_UPDATED");
     expect(store.getState().activeProbeId).toBe("technical-ownership");
     expect(store.getState().rankingVisible).toBe(false);
+  });
+
+  it("keeps imported priorities marked as touched when no probe is eligible", () => {
+    const store = createCaseStore();
+    importRoleFromClaimsTool(store, {
+      company: "Example Corp",
+      role: "Staff Engineer",
+      claims: [
+        {
+          dimension: "Base pay",
+          employerStatement: "Base salary range: 190,000-220,000 USD",
+          unresolvedVariable: "What is the written base band?",
+          measurableForm: "Offer letter range",
+        },
+      ],
+    });
+    store.setImportance("imported-1", "MEDIUM");
+
+    expect(selectDecisionChanger(store).outcome).toBe("NO_PROBE_NEEDED");
+    expect(store.getState().prioritiesTouched).toBe(true);
+    expect(store.getState().selectionState).toBe("NO_PROBE_NEEDED");
   });
 });

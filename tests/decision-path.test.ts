@@ -29,7 +29,7 @@ describe("decision path projection", () => {
     ]);
     expect(nodes[0]?.body).toBe("Technical ownership · Critical to you");
     expect(nodes[1]?.body).toBe(
-      "Employer ✓ · Public 1 support / 1 challenge · Interview —",
+      "Employer claim present · Public 1 support / 1 challenge · Interview —",
     );
     expect(nodes[2]?.body).toBe("Material ambiguity remains");
     expect(nodes.map((node) => node.body).join(" ")).not.toMatch(/0\.\d{2,}/);
@@ -113,7 +113,7 @@ describe("decision path projection", () => {
     expect(evidence?.href).toBe("https://example.com/ownership-post");
   });
 
-  it("labels employer-official challenges as employer conflict", () => {
+  it("labels employer-official challenges without implying verification", () => {
     const updated = recordResearchEvidence(ATLAS_FDE, {
       claimId: "technical-ownership",
       stance: "CHALLENGES",
@@ -126,6 +126,7 @@ describe("decision path projection", () => {
       (claim) => claim.id === "technical-ownership",
     );
     if (!ownership) throw new Error("ownership missing");
-    expect(publicEvidenceLine(ownership)).toContain("Employer conflict");
+    expect(publicEvidenceLine(ownership)).toContain("Employer-source conflict");
+    expect(publicEvidenceLine(ownership)).not.toContain("✓");
   });
 });

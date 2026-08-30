@@ -45,10 +45,10 @@ function employerLine(claim: DerivedClaim): string {
     (item) => item.scope === "EMPLOYER_STATED",
   );
   if (employer.some((item) => item.stance === "CHALLENGES"))
-    return "Employer conflict";
+    return "Employer-source conflict";
   return coverageBreakdownFor(claim.kind, claim.evidence).employerStated.present
-    ? "Employer ✓"
-    : "Employer —";
+    ? "Employer claim present"
+    : "Employer claim —";
 }
 
 function stanceWord(stance: Evidence["stance"]): string {

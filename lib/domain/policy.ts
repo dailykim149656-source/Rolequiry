@@ -24,8 +24,12 @@ export const LIVED_EXPERIENCE_WEIGHT = {
   CANDIDATE_SPECIFIC_ANSWER: 0.5,
 } as const satisfies Record<AuthorityScope, number>;
 
-const POLICY_STATEMENT =
-  /(\$\d|\d{2,3},\d{3}|\d{3}k|\busd\b|visa sponsorship|remote-first|on-site required|hybrid work|paid time off|equity granted|relocation assistance|annual bonus)/i;
+const EXPLICIT_POLICY_STATEMENT =
+  /(visa sponsorship|remote-first|on-site required|hybrid work|paid time off|equity granted|relocation assistance)/i;
+const COMPENSATION_CONTEXT =
+  /\b(base pay|base salary|salary|compensation|pay band|pay range|bonus|equity|commission|hourly rate|ote|rsu)\b/i;
+const COMPENSATION_AMOUNT =
+  /(\$\s?\d|\b\d{1,3}(,\d{3})+\b|\b\d{2,3}k\b|\b\d+(\.\d+)?\s*%|\b\d[\d,.]*\s*usd\b)/i;
 
 export function deriveClaimKind(input: {
   readonly dimension: string;
@@ -33,9 +37,12 @@ export function deriveClaimKind(input: {
   readonly kind?: ClaimKind;
 }): ClaimKind {
   if (input.kind) return input.kind;
-  return POLICY_STATEMENT.test(input.employerStatement)
-    ? CLAIM_KIND.EMPLOYER_POLICY
-    : CLAIM_KIND.LIVED_EXPERIENCE;
+  const claimText = `${input.dimension} ${input.employerStatement}`;
+  const isPolicy =
+    EXPLICIT_POLICY_STATEMENT.test(input.employerStatement) ||
+    (COMPENSATION_CONTEXT.test(claimText) &&
+      COMPENSATION_AMOUNT.test(input.employerStatement));
+  return isPolicy ? CLAIM_KIND.EMPLOYER_POLICY : CLAIM_KIND.LIVED_EXPERIENCE;
 }
 
 export function requiredScopes(kind: ClaimKind): readonly AuthorityScope[] {

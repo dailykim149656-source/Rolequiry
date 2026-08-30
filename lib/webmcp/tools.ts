@@ -2,6 +2,7 @@ import type { CaseStore } from "@/lib/case-store";
 import { coverageBreakdownFor } from "@/lib/domain/policy";
 import {
   type DerivedClaim,
+  EVIDENCE_PROVENANCE,
   RESEARCH_SOURCE_KIND,
   type ResearchSourceKind,
   type SpeakerRole,
@@ -12,6 +13,7 @@ function publicClaim(claim: DerivedClaim, rankingVisible: boolean) {
     id: claim.id,
     dimension: claim.dimension,
     importance: claim.importance,
+    candidatePrioritySet: claim.candidatePrioritySet,
     kind: claim.kind,
     status: claim.status,
     unresolvedness: Number(claim.unresolvedness.toFixed(3)),
@@ -24,6 +26,7 @@ function publicClaim(claim: DerivedClaim, rankingVisible: boolean) {
       stance: item.stance,
       speakerRole: item.speakerRole ?? null,
       sourceKind: item.sourceKind ?? null,
+      provenance: item.provenance ?? EVIDENCE_PROVENANCE.CASE_INPUT,
       synthetic:
         item.synthetic ?? item.text.toLowerCase().includes("synthetic"),
     })),
@@ -279,7 +282,7 @@ export const CASE_TOOL_CONTRACTS = [
   {
     name: "record_research_evidence",
     description:
-      "Decision-directed research only: research the currently active probe, not the whole company. Record one public employer-official or first-person source with provenance. Before choosing a strong SUPPORTS or CHALLENGES stance, make a reasonable attempt to find credible counterevidence; use NEUTRAL when the source is genuinely non-resolving or mixed. Do not choose authority scope or derived decision fields.",
+      "Decision-directed research only: research the currently active probe, not the whole company. Record one agent-reported public employer-published or first-person source with provenance. Before choosing a strong SUPPORTS or CHALLENGES stance, make a reasonable attempt to find credible counterevidence; use NEUTRAL when the source is genuinely non-resolving or mixed. Do not choose authority scope or derived decision fields.",
     annotations: { readOnlyHint: false },
   },
 ] as const;

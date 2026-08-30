@@ -119,6 +119,7 @@ export function createCaseStore(initial: RoleCase = ATLAS_FDE) {
         null,
         false,
         SELECTION_STATE.NO_PROBE_NEEDED,
+        state.prioritiesTouched,
       );
       emit();
     },

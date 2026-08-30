@@ -28,6 +28,14 @@ export const EVIDENCE_STANCE = {
 export type EvidenceStance =
   (typeof EVIDENCE_STANCE)[keyof typeof EVIDENCE_STANCE];
 
+export const EVIDENCE_PROVENANCE = {
+  CASE_INPUT: "CASE_INPUT",
+  CANDIDATE_REPORTED: "CANDIDATE_REPORTED",
+  AGENT_REPORTED: "AGENT_REPORTED",
+} as const;
+export type EvidenceProvenance =
+  (typeof EVIDENCE_PROVENANCE)[keyof typeof EVIDENCE_PROVENANCE];
+
 export const SPEAKER_ROLE = {
   RECRUITER: "RECRUITER",
   HIRING_MANAGER: "HIRING_MANAGER",
@@ -83,6 +91,7 @@ export type Evidence = {
   readonly sourceLabel?: string;
   readonly synthetic?: boolean;
   readonly sourceUrl?: string;
+  readonly provenance?: EvidenceProvenance;
 };
 
 export type SourceClaim = {
@@ -110,6 +119,7 @@ export type DerivedClaim = {
   readonly dimension: string;
   readonly employerStatement: string;
   readonly importance: Importance;
+  readonly candidatePrioritySet: boolean;
   readonly kind: ClaimKind;
   readonly unresolvedVariable: string;
   readonly measurableForm: string;
