@@ -38,6 +38,20 @@ function publicClaim(claim: DerivedClaim, rankingVisible: boolean) {
   };
 }
 
+function normalizeResearchUrl(value: string): string {
+  let parsed: URL;
+  try {
+    parsed = new URL(value.trim());
+  } catch {
+    throw new Error("Research source URL must be a valid http(s) URL");
+  }
+  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+    throw new Error("Research source URL must be a valid http(s) URL");
+  }
+  parsed.hash = "";
+  return parsed.toString();
+}
+
 export function getRoleClaims(store: CaseStore) {
   const { source } = store.getState();
   return {
@@ -156,11 +170,7 @@ export function recordResearchEvidenceTool(
   if (!snapshot.activeProbeId) {
     throw new Error("No active probe");
   }
-  if (
-    !input.summary.trim() ||
-    !input.sourceUrl.trim() ||
-    !input.sourceLabel.trim()
-  ) {
+  if (!input.summary.trim() || !input.sourceLabel.trim()) {
     throw new Error(
       "Research evidence requires summary, sourceUrl, and sourceLabel",
     );
@@ -171,9 +181,10 @@ export function recordResearchEvidenceTool(
   ) {
     throw new Error("Unsupported research source");
   }
+  const sourceUrl = normalizeResearchUrl(input.sourceUrl);
   const duplicate = snapshot.source.claims
     .find((claim) => claim.id === snapshot.activeProbeId)
-    ?.evidence.some((item) => item.sourceUrl === input.sourceUrl.trim());
+    ?.evidence.some((item) => item.sourceUrl === sourceUrl);
   if (duplicate) {
     throw new Error("Duplicate research source URL");
   }
@@ -183,7 +194,7 @@ export function recordResearchEvidenceTool(
     text: input.summary.trim(),
     sourceKind: input.sourceKind as ResearchSourceKind,
     sourceLabel: input.sourceLabel.trim(),
-    sourceUrl: input.sourceUrl.trim(),
+    sourceUrl,
   });
   return { ok: true as const, ...getCaseState(store) };
 }
@@ -263,7 +274,7 @@ export const CASE_TOOL_CONTRACTS = [
   {
     name: "record_research_evidence",
     description:
-      "Record public evidence the agent found while researching the currently active probe. Supply stance, summary, sourceUrl, sourceLabel, and sourceKind EMPLOYER_OFFICIAL or FIRST_PERSON_EXPERIENCE. Do not choose authority scope or derived decision fields.",
+      "Decision-directed research only: research the currently active probe, not the whole company. Record one public employer-official or first-person source with provenance. Before choosing a strong SUPPORTS or CHALLENGES stance, make a reasonable attempt to find credible counterevidence; use NEUTRAL when the source is genuinely non-resolving or mixed. Do not choose authority scope or derived decision fields.",
     annotations: { readOnlyHint: false },
   },
 ] as const;
