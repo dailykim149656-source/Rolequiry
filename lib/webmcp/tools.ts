@@ -64,7 +64,7 @@ export function selectDecisionChanger(store: CaseStore) {
     (claim) => claim.id === derived.topProbeId,
   );
   if (!selected) {
-    return { ok: false as const, error: "No probe-eligible claim" };
+    throw new Error("No probe-eligible claim");
   }
   return {
     ok: true as const,
@@ -99,7 +99,7 @@ export function recordInterviewAnswerTool(
     .getState()
     .source.claims.some((claim) => claim.id === input.claimId);
   if (!exists) {
-    return { ok: false as const, error: "Unknown claim id" };
+    throw new Error("Unknown claim id");
   }
   store.recordAnswer(input);
   return { ok: true as const, ...getCaseState(store) };

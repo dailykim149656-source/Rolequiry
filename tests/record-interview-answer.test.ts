@@ -9,17 +9,17 @@ describe("record_interview_answer validation", () => {
     const before = store
       .getState()
       .source.claims.map((claim) => claim.evidence.length);
-    const result = recordInterviewAnswerTool(store, {
-      claimId: "does-not-exist",
-      stance: "CHALLENGES",
-      text: "should not land",
-      speakerRole: SPEAKER_ROLE.HIRING_MANAGER,
-    });
+    expect(() =>
+      recordInterviewAnswerTool(store, {
+        claimId: "does-not-exist",
+        stance: "CHALLENGES",
+        text: "should not land",
+        speakerRole: SPEAKER_ROLE.HIRING_MANAGER,
+      }),
+    ).toThrow("Unknown claim id");
     const after = store
       .getState()
       .source.claims.map((claim) => claim.evidence.length);
-
-    expect(result).toEqual({ ok: false, error: "Unknown claim id" });
     expect(after).toEqual(before);
   });
 });
