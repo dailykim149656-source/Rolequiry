@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   decisionPathHint,
   decisionPathNodes,
+  publicEvidenceLine,
 } from "@/lib/domain/decision-path";
 import {
   deriveCase,
@@ -108,7 +109,23 @@ describe("decision path projection", () => {
       (node) => node.label === "Evidence",
     );
     expect(ownership.probeEligible).toBe(true);
-    expect(evidence?.body).toContain("Latest: Engineering blog");
+    expect(evidence?.body).toContain("Latest: Engineering blog · challenges");
     expect(evidence?.href).toBe("https://example.com/ownership-post");
+  });
+
+  it("labels employer-official challenges as employer conflict", () => {
+    const updated = recordResearchEvidence(ATLAS_FDE, {
+      claimId: "technical-ownership",
+      stance: "CHALLENGES",
+      text: "Official engineering page says platform review is required.",
+      sourceKind: "EMPLOYER_OFFICIAL",
+      sourceLabel: "Engineering page",
+      sourceUrl: "https://northwind.example.com/eng",
+    });
+    const ownership = deriveCase(updated).claims.find(
+      (claim) => claim.id === "technical-ownership",
+    );
+    if (!ownership) throw new Error("ownership missing");
+    expect(publicEvidenceLine(ownership)).toContain("Employer conflict");
   });
 });

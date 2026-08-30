@@ -63,13 +63,14 @@ Open https://rolequiry.com/case in ChatGPT's built-in browser or Chrome with Web
 3. Ask only: `Check again.` The decision path flips from Ownership to Travel.
 4. Reset, ask again, then tell the agent: `The hiring manager said ownership is split with a central platform team after design review.` Ownership becomes CHALLENGED.
 5. Optional real-role path: paste a real job description and say `Put this role into Rolequiry.` Set at least one priority, then ask what to investigate.
-6. Optional research path: with a real role and an active probe, say `Research this active question using public employer-official or first-person sources. Record only what you can source.` Then inspect `View evidence` and ask `Check again.`
+6. Optional research path: with a real role and an active probe, say `Research this active question using public first-person sources. Record only what you can source.` Then inspect `View evidence` and ask `Check again.`
 
 ## Known limitations
 
 - Employee/workplace signals in the fixtures are synthetic and labeled as such.
 - No server-side model calls. The user's existing agent does language work and external research.
 - Imported cases start with employer testimony only. The agent may add supported employer-official or first-person research evidence, and the human may later add interview evidence.
+- Rolequiry ranks lived-experience uncertainty, not written employer policy. Compensation bands and similar employer-owned statements are recorded, but they are not the next research probe.
 - Rolequiry deliberately does not ingest arbitrary news or analyst commentary into its current authority model.
 - Closing the employer page cannot break `/case`.
 - GitHub repository: https://github.com/dailykim149656-source/Rolequiry
