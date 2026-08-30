@@ -2,9 +2,25 @@ import {
   AUTHORITY_SCOPE,
   type DerivedClaim,
   EVIDENCE_PROVENANCE,
+  EVIDENCE_STANCE,
   type Evidence,
 } from "@/lib/domain/types";
 import { Icon, type IconName } from "./Icon";
+
+type EvidenceTone = "challenged" | "empty" | "mixed" | "supported";
+
+function evidenceTone(items: readonly Evidence[]): EvidenceTone {
+  const supports = items.some(
+    (item) => item.stance === EVIDENCE_STANCE.SUPPORTS,
+  );
+  const challenges = items.some(
+    (item) => item.stance === EVIDENCE_STANCE.CHALLENGES,
+  );
+  if (supports && challenges) return "mixed";
+  if (supports) return "supported";
+  if (challenges) return "challenged";
+  return "empty";
+}
 
 export function EvidenceSignals({ claim }: { readonly claim: DerivedClaim }) {
   const employer = claim.evidence.filter(
@@ -23,29 +39,19 @@ export function EvidenceSignals({ claim }: { readonly claim: DerivedClaim }) {
         count={employer.length}
         icon="building"
         label="Employer source"
-        tone={
-          employer.some((item) => item.stance === "CHALLENGES")
-            ? "challenged"
-            : "supported"
-        }
+        tone={evidenceTone(employer)}
       />
       <EvidenceSignal
         count={reports.length}
         icon="people"
         label="Public"
-        tone={
-          reports.some((item) => item.stance === "CHALLENGES")
-            ? "challenged"
-            : reports.length > 0
-              ? "mixed"
-              : "empty"
-        }
+        tone={evidenceTone(reports)}
       />
       <EvidenceSignal
         count={interview.length}
         icon="message"
         label="Interview"
-        tone={interview.length > 0 ? "mixed" : "empty"}
+        tone={evidenceTone(interview)}
       />
     </div>
   );
@@ -60,7 +66,7 @@ function EvidenceSignal({
   readonly count: number;
   readonly icon: IconName;
   readonly label: string;
-  readonly tone: "challenged" | "empty" | "mixed" | "supported";
+  readonly tone: EvidenceTone;
 }) {
   const toneClass = {
     challenged: "bg-challenged-soft text-challenged",
@@ -68,12 +74,13 @@ function EvidenceSignal({
     mixed: "bg-amber-soft text-amber",
     supported: "bg-supported-soft text-supported",
   }[tone];
+  const summary = `${label}: ${count} evidence ${count === 1 ? "item" : "items"}, ${tone}`;
   return (
     <span
-      aria-label={`${label}: ${count} evidence ${count === 1 ? "item" : "items"}`}
+      aria-label={summary}
       className={`inline-flex min-h-9 items-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold ${toneClass}`}
       role="img"
-      title={`${label}: ${count} evidence ${count === 1 ? "item" : "items"}`}
+      title={summary}
     >
       <Icon className="size-4" name={icon} />
       <span className="hidden sm:inline">{label}</span>

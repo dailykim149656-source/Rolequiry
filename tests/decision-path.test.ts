@@ -25,7 +25,7 @@ describe("decision path projection", () => {
       "Evidence",
       "Why unresolved",
       "Need to know",
-      "Measure / next",
+      "Next question",
     ]);
     expect(nodes[0]?.body).toBe("Technical ownership · Critical to you");
     expect(nodes[1]?.body).toBe(
@@ -111,6 +111,9 @@ describe("decision path projection", () => {
     expect(ownership.probeEligible).toBe(true);
     expect(evidence?.body).toContain("Latest: Engineering blog · challenges");
     expect(evidence?.href).toBe("https://example.com/ownership-post");
+    expect(decisionPathNodes(ownership, "EVIDENCE_UPDATED").at(-1)?.label).toBe(
+      "Check again",
+    );
   });
 
   it("labels employer-official challenges without implying verification", () => {

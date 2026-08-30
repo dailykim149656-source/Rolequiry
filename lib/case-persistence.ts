@@ -99,17 +99,22 @@ export function parsePersistedCase(
 
 export function loadPersistedCase(storage: Pick<Storage, "getItem">) {
   try {
-    return parsePersistedCase(storage.getItem(CASE_STORAGE_KEY));
+    const saved = parsePersistedCase(storage.getItem(CASE_STORAGE_KEY));
+    return saved?.source.origin === CASE_ORIGIN.AGENT_IMPORTED ? saved : null;
   } catch {
     return null;
   }
 }
 
 export function savePersistedCase(
-  storage: Pick<Storage, "setItem">,
+  storage: Pick<Storage, "removeItem" | "setItem">,
   snapshot: CaseSnapshot,
 ) {
   try {
+    if (snapshot.source.origin === CASE_ORIGIN.DEMO_FIXTURE) {
+      storage.removeItem(CASE_STORAGE_KEY);
+      return;
+    }
     storage.setItem(CASE_STORAGE_KEY, serializePersistedCase(snapshot));
   } catch {
     // Storage can be unavailable or full; the live in-memory case still works.

@@ -3,6 +3,7 @@ import {
   decisionPathHint,
   decisionPathNodes,
 } from "@/lib/domain/decision-path";
+import { noProbeDetails } from "@/lib/domain/probe-outcome";
 import type { DerivedClaim } from "@/lib/domain/types";
 import { Icon, type IconName } from "./Icon";
 
@@ -16,6 +17,7 @@ export function DecisionPanel({
   const selected = snapshot.derived.claims.find(
     (claim) => claim.id === snapshot.activeProbeId,
   );
+  const noProbe = noProbeDetails(snapshot.derived);
   return (
     <section
       aria-labelledby="decision-path-title"
@@ -46,9 +48,17 @@ export function DecisionPanel({
         <PrioritiesRequired />
       ) : snapshot.selectionState === "NO_PROBE_NEEDED" ? (
         <DecisionNotice
-          body="No unresolved candidate-priority claim currently needs another probe."
+          body={
+            noProbe.unprioritizedLivedClaimCount > 0
+              ? `No prioritized claim needs another probe. ${noProbe.unprioritizedLivedClaimCount} lived-experience ${noProbe.unprioritizedLivedClaimCount === 1 ? "claim remains" : "claims remain"} outside the ranking.`
+              : "No unresolved candidate-priority claim currently needs another probe."
+          }
           testId="no-probe"
-          title="No probe needed"
+          title={
+            noProbe.unprioritizedLivedClaimCount > 0
+              ? "Unprioritized claims remain"
+              : "No probe needed"
+          }
         />
       ) : selected &&
         (snapshot.selectionState === "ACTIVE" ||
@@ -56,7 +66,7 @@ export function DecisionPanel({
         <DecisionPath claim={selected} mode={snapshot.selectionState} />
       ) : (
         <DecisionNotice
-          body="Tell your agent “Check again” to choose the next question from your priorities."
+          body="Ask your agent “What should I investigate next?” to choose the first question from your priorities."
           title="Priorities ready"
         />
       )}
@@ -68,7 +78,7 @@ function PrioritiesRequired() {
   const steps = [
     ["briefcase", "Import job"],
     ["flag", "Set priorities"],
-    ["spark", "Check again"],
+    ["spark", "Choose next"],
     ["message", "Ask next"],
   ] as const satisfies ReadonlyArray<readonly [IconName, string]>;
   return (
@@ -156,7 +166,6 @@ function DecisionPath({
       {nodes.map((node, index) => {
         const isFirst = index === 0;
         const isLast = index === nodes.length - 1;
-        const label = isLast && node.label !== "Next" ? "Ask next" : node.label;
         return (
           <li className="relative flex gap-3" key={`${node.label}-${index}`}>
             <span
@@ -179,11 +188,8 @@ function DecisionPath({
             >
               <div className="flex items-center justify-between gap-2">
                 <p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand">
-                  {label}
+                  {node.label}
                 </p>
-                {isLast ? (
-                  <Icon className="size-4 text-brand" name="arrow" />
-                ) : null}
               </div>
               <p
                 className={`mt-1 leading-6 ${isFirst || isLast ? "font-semibold text-ink" : "text-sm text-secondary"}`}

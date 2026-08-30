@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import { CaseWorkspace } from "@/components/CaseWorkspace";
 import { createCaseStore } from "@/lib/case-store";
@@ -84,5 +84,51 @@ describe("case workspace status", () => {
     expect(
       screen.getAllByText(/Your judgment activates the ranking/),
     ).toHaveLength(1);
+  });
+
+  it("defers imported claim status until candidate priority is set", () => {
+    const store = createCaseStore();
+    importRoleFromClaimsTool(store, {
+      company: "Example Corp",
+      role: "Staff Engineer",
+      claims: [
+        {
+          dimension: "On-call load",
+          employerStatement: "On-call is rare",
+          unresolvedVariable: "How often does this team get paged?",
+          measurableForm: "Pages per engineer last two quarters",
+        },
+      ],
+    });
+    renderWorkspace(store);
+
+    expect(
+      screen
+        .getByTestId("claim-imported-1")
+        .querySelector("[data-status]")
+        ?.getAttribute("data-status"),
+    ).toBe("PRIORITY_NOT_SET");
+  });
+
+  it("maps evidence stance composition to semantic signal tones", () => {
+    renderWorkspace();
+    const ownership = within(screen.getByTestId("claim-technical-ownership"));
+    const customer = within(screen.getByTestId("claim-customer-interaction"));
+
+    expect(
+      ownership.getByRole("img", {
+        name: "Public: 2 evidence items, mixed",
+      }).className,
+    ).toContain("bg-amber-soft");
+    expect(
+      customer.getByRole("img", {
+        name: "Public: 2 evidence items, supported",
+      }).className,
+    ).toContain("bg-supported-soft");
+    expect(
+      customer.getByRole("img", {
+        name: "Interview: 1 evidence item, supported",
+      }).className,
+    ).toContain("bg-supported-soft");
   });
 });

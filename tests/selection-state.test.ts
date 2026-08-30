@@ -68,4 +68,33 @@ describe("selection state", () => {
     expect(store.getState().prioritiesTouched).toBe(true);
     expect(store.getState().selectionState).toBe("NO_PROBE_NEEDED");
   });
+
+  it("reports unprioritized lived claims when no prioritized probe is eligible", () => {
+    const store = createCaseStore();
+    importRoleFromClaimsTool(store, {
+      company: "Example Corp",
+      role: "Staff Engineer",
+      claims: [
+        {
+          dimension: "Base pay",
+          employerStatement: "Base salary range: 190,000-220,000 USD",
+          unresolvedVariable: "What is the written base band?",
+          measurableForm: "Offer letter range",
+        },
+        {
+          dimension: "On-call load",
+          employerStatement: "On-call is rare",
+          unresolvedVariable: "How often does this team get paged?",
+          measurableForm: "Pages per engineer last two quarters",
+        },
+      ],
+    });
+    store.setImportance("imported-1", "CRITICAL");
+
+    expect(selectDecisionChanger(store)).toMatchObject({
+      outcome: "NO_PROBE_NEEDED",
+      reason: "UNPRIORITIZED_LIVED_CLAIMS_REMAIN",
+      unprioritized_lived_claims: 1,
+    });
+  });
 });

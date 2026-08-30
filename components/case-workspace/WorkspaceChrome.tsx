@@ -99,13 +99,13 @@ export function DossierHeader({
             ) : null}
             {snapshot.source.sourceUrl ? (
               <a
-                aria-label="Open original job posting in a new tab"
+                aria-label="Open agent-reported job source in a new tab"
                 className="inline-flex min-h-11 items-center gap-1.5 py-2 font-medium text-brand underline decoration-brand/30 underline-offset-4 hover:decoration-brand"
                 href={snapshot.source.sourceUrl}
                 rel="noreferrer"
                 target="_blank"
               >
-                Original posting
+                Job source · agent-reported
                 <Icon className="size-3.5" name="arrow" />
               </a>
             ) : null}

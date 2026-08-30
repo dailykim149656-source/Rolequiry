@@ -42,4 +42,27 @@ describe("CaseApp persistence", () => {
 
     expect(await screen.findByText("Session Corp")).toBeTruthy();
   });
+
+  it("starts from the canonical fixture when a modified demo was saved", () => {
+    const demo = createCaseStore();
+    demo.setImportance("travel", "CRITICAL");
+    window.sessionStorage.setItem(
+      CASE_STORAGE_KEY,
+      serializePersistedCase(demo.getState()),
+    );
+
+    render(<CaseApp />);
+
+    expect(
+      screen.getByRole<HTMLSelectElement>("combobox", {
+        name: "Candidate priority for Travel",
+      }).value,
+    ).toBe("LOW");
+  });
+
+  it("does not retain the demo fixture in tab storage", () => {
+    render(<CaseApp />);
+
+    expect(window.sessionStorage.getItem(CASE_STORAGE_KEY)).toBeNull();
+  });
 });

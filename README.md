@@ -52,7 +52,7 @@ On `/employer/atlas-fde`: `get_employer_claims`, `get_employer_policy` (read-onl
 
 ## Architecture
 
-Human UI and WebMCP tools share one in-memory `CaseStore`. `deriveCase` is a pure function: coverage, unresolvedness, tension, status, probe eligibility. The model does not decide whether a claim matters. A versioned snapshot is saved in browser `sessionStorage`, so imported cases and evidence survive reloads in the current tab without carrying into a new tab; Reset Demo restores and saves the fixture.
+Human UI and WebMCP tools share one in-memory `CaseStore`. `deriveCase` is a pure function: coverage, unresolvedness, tension, status, probe eligibility. The model does not decide whether a claim matters. A versioned snapshot is saved in browser `sessionStorage` only for agent-imported cases, so real-role evidence survives reloads in the current tab without carrying into a new tab. Demo fixtures always reload from their canonical state.
 
 ## Try it in 60 seconds
 
@@ -69,7 +69,7 @@ Open https://rolequiry.com/case in ChatGPT's built-in browser or Chrome with Web
 
 - Employee/workplace signals in the fixtures are synthetic and labeled as such.
 - No server-side model calls. The user's existing agent does language work and external research.
-- Case data stays in the current tab's session storage; there is no cross-tab sync, account sync, or server backup.
+- Imported case data stays in the current tab's session storage; demo fixtures reset on reload, and there is no cross-tab sync, account sync, or server backup.
 - Imported cases start with employer testimony only. The agent may add sourced first-person or employer-official research; Rolequiry stores agent-reported provenance, it does not independently verify the page.
 - Rolequiry ranks lived-experience uncertainty, not written employer policy. Compensation bands and similar employer-owned statements are recorded, but they are not the next research probe.
 - Rolequiry deliberately does not ingest arbitrary news or analyst commentary into its current authority model.

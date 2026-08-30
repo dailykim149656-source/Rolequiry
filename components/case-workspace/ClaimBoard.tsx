@@ -118,7 +118,7 @@ function ClaimCard({
                 “{claim.employerStatement}”
               </blockquote>
             </div>
-            <StatusBadge status={claim.status} />
+            <StatusBadge status={isSet ? claim.status : "PRIORITY_NOT_SET"} />
           </div>
           <div className="mt-4 flex flex-wrap items-end justify-between gap-3 border-t border-line/80 pt-3">
             <PriorityControl
@@ -176,11 +176,10 @@ function PriorityControl({
   );
 }
 
-function StatusBadge({ status }: { readonly status: DerivedClaim["status"] }) {
-  const configs: Record<
-    DerivedClaim["status"],
-    readonly [IconName, string, string]
-  > = {
+type DisplayStatus = DerivedClaim["status"] | "PRIORITY_NOT_SET";
+
+function StatusBadge({ status }: { readonly status: DisplayStatus }) {
+  const configs: Record<DisplayStatus, readonly [IconName, string, string]> = {
     SUPPORTED: ["check", "Supported", "bg-supported-soft text-supported"],
     CHALLENGED: ["tension", "Challenged", "bg-challenged-soft text-challenged"],
     MATERIAL_AMBIGUITY: [
@@ -193,12 +192,18 @@ function StatusBadge({ status }: { readonly status: DerivedClaim["status"] }) {
       "Unverified",
       "bg-unverified-soft text-unverified",
     ],
+    PRIORITY_NOT_SET: [
+      "flag",
+      "Priority not set",
+      "bg-unverified-soft text-unverified",
+    ],
   };
   const config = configs[status];
 
   return (
     <span
       className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${config[2]}`}
+      data-status={status}
     >
       <Icon className="size-3.5" name={config[0]} />
       {config[1]}

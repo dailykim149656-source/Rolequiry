@@ -125,10 +125,10 @@ export function decisionPathNodes(
     },
     { label: "Need to know", body: claim.unresolvedVariable },
     {
-      label: "Measure / next",
+      label: mode === "EVIDENCE_UPDATED" ? "Check again" : "Next question",
       body:
         mode === "EVIDENCE_UPDATED"
-          ? `${claim.measurableForm} · Evidence updated — check again.`
+          ? `${claim.measurableForm} · Ask your agent to re-rank the case.`
           : `${claim.measurableForm} · Research this or ask the interviewer`,
     },
   ];
