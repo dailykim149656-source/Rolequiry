@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { decisionPathNodes } from "@/lib/domain/decision-path";
-import { deriveCase, recordInterviewAnswer } from "@/lib/domain/derive-case";
+import {
+  decisionPathHint,
+  decisionPathNodes,
+} from "@/lib/domain/decision-path";
+import {
+  deriveCase,
+  recordInterviewAnswer,
+  recordResearchEvidence,
+} from "@/lib/domain/derive-case";
 import { SPEAKER_ROLE } from "@/lib/domain/types";
 import { ATLAS_FDE } from "@/lib/fixtures/atlas-fde";
 
@@ -49,5 +56,38 @@ describe("decision path projection", () => {
     expect(
       nodes.map((node) => `${node.label} ${node.body}`).join(" "),
     ).not.toMatch(/Why unresolved/i);
+  });
+
+  it("points What changed at the last evidence item", () => {
+    const afterInterview = recordInterviewAnswer(ATLAS_FDE, {
+      claimId: "technical-ownership",
+      stance: "SUPPORTS",
+      text: "Hiring manager said FDEs ship customer-site changes themselves.",
+      speakerRole: SPEAKER_ROLE.HIRING_MANAGER,
+    });
+    const afterResearch = recordResearchEvidence(afterInterview, {
+      claimId: "technical-ownership",
+      stance: "SUPPORTS",
+      text: "Official engineering page confirms on-site owners ship changes.",
+      sourceKind: "FIRST_PERSON_EXPERIENCE",
+      sourceLabel: "Engineering page",
+      sourceUrl: "https://example.com/ownership",
+    });
+    const ownership = deriveCase(afterResearch).claims.find(
+      (claim) => claim.id === "technical-ownership",
+    );
+    if (!ownership) throw new Error("ownership missing");
+    const nodes = decisionPathNodes(ownership, "EVIDENCE_UPDATED");
+    expect(nodes.find((node) => node.label === "What changed")?.body).toContain(
+      "Engineering page",
+    );
+    expect(
+      nodes.find((node) => node.label === "What changed")?.body,
+    ).not.toMatch(/Hiring manager/i);
+  });
+
+  it("asks to check again after priorities change without re-ranking", () => {
+    expect(decisionPathHint("ACTIVE", false)).toMatch(/check again/i);
+    expect(decisionPathHint("ACTIVE", true)).toBeNull();
   });
 });

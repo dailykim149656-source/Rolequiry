@@ -232,6 +232,12 @@ export function tensionFor(evidence: readonly Evidence[]): number {
       item.stance === "CHALLENGES",
   );
   if (hasChallengingAnswer) return 1;
+  const hasOfficialChallenge = evidence.some(
+    (item) =>
+      item.scope === AUTHORITY_SCOPE.EMPLOYER_STATED &&
+      item.stance === "CHALLENGES",
+  );
+  if (hasOfficialChallenge) return 1;
   return reportedChallengeTension(uniqueChallengingReportCount(evidence));
 }
 

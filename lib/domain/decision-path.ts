@@ -36,10 +36,8 @@ function counted(n: number, singular: string, plural: string): string {
   return `${n} ${n === 1 ? singular : plural}`;
 }
 
-function latestSourcedEvidence(
-  evidence: readonly Evidence[],
-): Evidence | undefined {
-  return [...evidence].reverse().find((item) => Boolean(item.sourceUrl));
+function latestEvidence(evidence: readonly Evidence[]): Evidence | undefined {
+  return evidence.at(-1);
 }
 
 export function publicEvidenceLine(claim: DerivedClaim): string {
@@ -54,22 +52,34 @@ export function publicEvidenceLine(claim: DerivedClaim): string {
   return `Employer ${coverage.employerStated.present ? "✓" : "—"} · Public ${counted(supports, "support", "supports")} / ${counted(challenges, "challenge", "challenges")} · Interview ${interview}`;
 }
 
+export function decisionPathHint(
+  selectionState: DecisionPathMode,
+  rankingVisible: boolean,
+): string | null {
+  if (selectionState === "ACTIVE" && !rankingVisible) {
+    return "Priorities changed — ask your agent to check again.";
+  }
+  return null;
+}
+
+function changedBody(item: Evidence | undefined): string {
+  if (!item) return "New evidence recorded";
+  if (item.scope === "CANDIDATE_SPECIFIC_ANSWER") {
+    return `${item.speakerRole ?? "Interviewer"}: ${item.text}`;
+  }
+  return item.sourceLabel ?? item.text;
+}
+
 export function decisionPathNodes(
   claim: DerivedClaim,
   mode: DecisionPathMode = "ACTIVE",
 ): readonly DecisionPathNode[] {
-  const interview = [...claim.evidence]
-    .reverse()
-    .find((item) => item.scope === "CANDIDATE_SPECIFIC_ANSWER");
-  const sourced = latestSourcedEvidence(claim.evidence);
+  const latest = latestEvidence(claim.evidence);
   if (mode === "EVIDENCE_UPDATED" && !claim.probeEligible) {
-    const changed = interview
-      ? `${interview.speakerRole ?? "Interviewer"}: ${interview.text}`
-      : (sourced?.sourceLabel ?? sourced?.text ?? "New evidence recorded");
     const resolved: DecisionPathNode = {
       label: "What changed",
-      body: changed,
-      ...(sourced?.sourceUrl ? { href: sourced.sourceUrl } : {}),
+      body: changedBody(latest),
+      ...(latest?.sourceUrl ? { href: latest.sourceUrl } : {}),
     };
     return [
       { label: "Case state", body: "Evidence now resolves this probe" },

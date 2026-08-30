@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { createCaseStore } from "@/lib/case-store";
+import { deriveCase, recordResearchEvidence } from "@/lib/domain/derive-case";
 import { deriveClaimKind } from "@/lib/domain/policy";
+import { ATLAS_FDE } from "@/lib/fixtures/atlas-fde";
 import {
   CASE_TOOL_CONTRACTS,
   importRoleFromClaimsTool,
@@ -82,6 +84,22 @@ describe("record_research_evidence", () => {
         sourceKind: "FIRST_PERSON_EXPERIENCE",
       }),
     ).toThrow(/http/i);
+  });
+
+  it("marks official employer contradictions as challenged", () => {
+    const updated = recordResearchEvidence(ATLAS_FDE, {
+      claimId: "compensation",
+      stance: "CHALLENGES",
+      text: "Official compensation page lists $150k-$180k for this level.",
+      sourceKind: "EMPLOYER_OFFICIAL",
+      sourceLabel: "Compensation page",
+      sourceUrl: "https://northwind.example.com/comp",
+    });
+    const compensation = deriveCase(updated).claims.find(
+      (claim) => claim.id === "compensation",
+    );
+    expect(compensation?.tension).toBe(1);
+    expect(compensation?.status).toBe("CHALLENGED");
   });
 
   it("keeps research scoped to the current decision-changing probe", () => {

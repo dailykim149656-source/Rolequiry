@@ -5,6 +5,7 @@ import { useMemo, useSyncExternalStore } from "react";
 import { createCaseStore } from "@/lib/case-store";
 import { cannedInterviewAnswer } from "@/lib/demo/canned-answers";
 import {
+  decisionPathHint,
   decisionPathNodes,
   publicEvidenceLine,
 } from "@/lib/domain/decision-path";
@@ -130,7 +131,10 @@ export function CaseApp() {
         <section className="order-1 mt-8 rounded-2xl bg-zinc-950 p-5 text-zinc-50 lg:sticky lg:top-6 lg:order-2 lg:mt-0">
           <h2 className="text-lg font-medium">Decision path</h2>
           <p className="mt-1 text-sm text-zinc-400">
-            See why this is the question that matters next.
+            {decisionPathHint(
+              snapshot.selectionState,
+              snapshot.rankingVisible,
+            ) ?? "See why this is the question that matters next."}
           </p>
           {snapshot.source.origin === "AGENT_IMPORTED" &&
           !snapshot.prioritiesTouched ? (
