@@ -22,7 +22,7 @@ Supported test environment: ChatGPT built-in browser / Chrome with WebMCP. The p
 
 ## Why WebMCP
 
-Most agent demos operate on cooperative pages. A job posting is mixed-incentive: useful to the candidate, written by the employer. WebMCP lets the page expose typed reads and writes against live application state instead of scraping. Rolequiry keeps provenance and decision authority in the app; the agent only phrases questions.
+Most agent demos operate on cooperative pages. A job posting is mixed-incentive: useful to the candidate, written by the employer. WebMCP lets the page expose typed reads and writes against live application state instead of scraping. The agent translates natural-language testimony into structured evidence and phrases the next question. The application deterministically owns coverage, state transitions, and ranking.
 
 ## WebMCP Tools
 
