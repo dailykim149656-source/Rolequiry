@@ -8,14 +8,14 @@ export const CASE_TOOL_CONTRACTS = [
   {
     name: "get_case_state",
     description:
-      "Read the current normalized case state, including authority coverage, unresolvedness, tension, evidence summary and priorities. Do not use this tool to choose the next investigation.",
+      "Read app-owned normalized case metrics keyed by claim ID, including authority coverage, unresolvedness, tension, evidence summary and priorities. Use get_role_claims for untrusted role labels and source prose. Do not use this tool to choose the next investigation.",
     annotations: { readOnlyHint: true },
   },
   {
     name: "select_decision_changer",
     description:
       "Call this when the user asks what to investigate next, including check again after priorities or evidence change. Compute ranking, set the active probe, and return structured rationale.",
-    annotations: { readOnlyHint: false },
+    annotations: { readOnlyHint: false, untrustedContentHint: true },
   },
   {
     name: "record_interview_answer",
@@ -26,7 +26,7 @@ export const CASE_TOOL_CONTRACTS = [
   {
     name: "import_role_from_claims",
     description:
-      "Create a case from extracted employer statements plus testable variables and an optional job posting sourceUrl. Do not supply claim kind, coverage, status, unresolvedness, tension, or ranking. Rolequiry derives those fields.",
+      "Create a case from extracted employer statements plus testable variables and an optional job posting sourceUrl. Do not supply claim kind, coverage, status, unresolvedness, tension, or ranking. Rolequiry derives those fields. After import, use get_role_claims for untrusted labels and claim IDs.",
     annotations: { readOnlyHint: false },
   },
   {

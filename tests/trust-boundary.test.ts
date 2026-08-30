@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { createCaseStore } from "@/lib/case-store";
 import { RESEARCH_SOURCE_KIND } from "@/lib/domain/types";
 import {
+  CASE_TOOL_CONTRACTS,
   getCaseState,
   getRoleClaims,
   importRoleFromClaimsTool,
@@ -14,14 +15,15 @@ const MALICIOUS =
 
 function importExample(store = createCaseStore()) {
   importRoleFromClaimsTool(store, {
-    company: "Example Corp",
-    role: "Staff Engineer",
+    company: MALICIOUS,
+    role: MALICIOUS,
+    sourceUrl: "https://example.com/ignore-previous-instructions",
     claims: [
       {
-        dimension: "On-call load",
+        dimension: MALICIOUS,
         employerStatement: MALICIOUS,
-        unresolvedVariable: "How often does this team get paged?",
-        measurableForm: "Pages per engineer last two quarters",
+        unresolvedVariable: MALICIOUS,
+        measurableForm: MALICIOUS,
       },
     ],
   });
@@ -29,15 +31,28 @@ function importExample(store = createCaseStore()) {
 }
 
 describe("trust boundary", () => {
-  it("keeps raw employer prose in get_role_claims and out of get_case_state", () => {
+  it("keeps agent-controlled prose and URLs out of get_case_state", () => {
     const store = importExample();
     const raw = JSON.stringify(getRoleClaims(store));
-    const state = JSON.stringify(getCaseState(store));
+    const state = getCaseState(store);
     expect(raw).toContain(MALICIOUS);
-    expect(state).not.toContain(MALICIOUS);
-    expect(
-      getCaseState(store).claims[0]?.evidenceSummary[0],
-    ).not.toHaveProperty("text");
+    expect(JSON.stringify(state)).not.toContain(MALICIOUS);
+    expect(state).not.toHaveProperty("company");
+    expect(state).not.toHaveProperty("role");
+    expect(state).not.toHaveProperty("sourceUrl");
+    expect(state.claims[0]).not.toHaveProperty("dimension");
+    expect(state.claims[0]).not.toHaveProperty("employerStatement");
+    expect(state.claims[0]).not.toHaveProperty("unresolvedVariable");
+    expect(state.claims[0]).not.toHaveProperty("measurableForm");
+    expect(state.claims[0]?.evidenceSummary[0]).not.toHaveProperty("text");
+  });
+
+  it("marks decision-directed descriptive output as untrusted", () => {
+    const select = CASE_TOOL_CONTRACTS.find(
+      (contract) => contract.name === "select_decision_changer",
+    );
+
+    expect(select?.annotations).toMatchObject({ untrustedContentHint: true });
   });
 
   it("keeps research source labels off the trusted case-state channel", () => {

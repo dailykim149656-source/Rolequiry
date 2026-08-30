@@ -88,13 +88,13 @@ describe("import_role_from_claims", () => {
       ],
     });
 
-    expect(result.sourceUrl).toBe("https://jobs.example.com/staff-engineer");
+    expect(result).not.toHaveProperty("company");
+    expect(result).not.toHaveProperty("role");
+    expect(result).not.toHaveProperty("sourceUrl");
     expect(store.getState().source.sourceUrl).toBe(
       "https://jobs.example.com/staff-engineer",
     );
-    expect(getCaseState(store).sourceUrl).toBe(
-      "https://jobs.example.com/staff-engineer",
-    );
+    expect(getCaseState(store)).not.toHaveProperty("sourceUrl");
   });
 
   it("rejects a non-http job posting URL", () => {

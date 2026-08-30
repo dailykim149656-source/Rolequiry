@@ -44,8 +44,8 @@ Research changes application state; it does not let the model decide whether the
 On `/case`:
 
 - `get_role_claims` (read): employer testimony, not verified facts
-- `get_case_state` (read): live coverage, unresolvedness, tension, priorities; no ranking
-- `select_decision_changer` (write): compute ranking, set the active probe, return unresolved variable + measurable form
+- `get_case_state` (read): app-owned coverage, unresolvedness, tension and priorities keyed by claim ID; no role prose or ranking
+- `select_decision_changer` (write): compute ranking, set the active probe, return an untrusted agent-authored unresolved variable + measurable form
 - `record_interview_answer` (write): record a human-obtained answer against the active probe
 - `import_role_from_claims` (write): create a tab-local case from extracted employer statements and an optional job-posting `sourceUrl`
 - `record_research_evidence` (write): record sourced public evidence the agent found for the active probe
@@ -64,7 +64,7 @@ Open https://rolequiry.com/case in ChatGPT's built-in browser or Chrome with Web
 1. Give the agent a career summary, values and constraints, plus a real JD URL.
 2. Ask it to import the employer's claims and propose which decision variables matter specifically to you.
 3. Confirm or revise those priorities in conversation. The agent must not infer confirmation from the resume alone.
-4. The agent calls `set_candidate_priorities`; the shared UI updates, but no probe is selected yet.
+4. The agent calls `get_role_claims` for untrusted labels and claim IDs, then `set_candidate_priorities`; the shared UI updates, but no probe is selected yet.
 5. Ask what to investigate. `select_decision_changer` deterministically activates the highest-priority unresolved lived-experience claim.
 6. Ask the agent to research only that active question and record one sourced finding. Inspect its provenance and what remains unknown in the Decision Path.
 7. Use the measurable form as a falsifiable interview question, then record the answer against the same claim.

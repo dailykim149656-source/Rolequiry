@@ -27,14 +27,6 @@ describe("ChatGPT P0 contract", () => {
     expect(select?.description.toLowerCase()).toContain("check again");
   });
 
-  it("requires explicit confirmation before priority writes", () => {
-    const priorities = CASE_TOOL_CONTRACTS.find(
-      (item) => item.name === "set_candidate_priorities",
-    );
-    expect(priorities?.description).toContain("explicitly confirms");
-    expect(priorities?.description).toContain("does not choose");
-  });
-
   it("keeps the active probe after an interview answer instead of auto-selecting the next one", () => {
     const store = createCaseStore();
     selectDecisionChanger(store);

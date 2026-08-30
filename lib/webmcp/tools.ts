@@ -199,9 +199,6 @@ export function importRoleFromClaimsTool(
   return {
     ok: true as const,
     origin: snapshot.source.origin,
-    company: snapshot.source.company,
-    role: snapshot.source.role,
-    sourceUrl: snapshot.source.sourceUrl ?? null,
     claimCount: snapshot.source.claims.length,
   };
 }

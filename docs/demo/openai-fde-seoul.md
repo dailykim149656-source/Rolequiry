@@ -50,6 +50,7 @@ The agent should map this confirmation to the imported claim IDs and call `set_c
 
 ```text
 import_role_from_claims
+get_role_claims
 set_candidate_priorities
 select_decision_changer
 record_research_evidence
