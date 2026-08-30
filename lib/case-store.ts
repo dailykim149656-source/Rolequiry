@@ -76,13 +76,20 @@ export function createCaseStore(initial: RoleCase = ATLAS_FDE) {
       );
       emit();
     },
+    peekDecision() {
+      return deriveCase(state.source);
+    },
+    clearSelection() {
+      state = snapshotFrom(state.source, null, false);
+      emit();
+    },
     selectDecisionChanger() {
       const derived = deriveCase(state.source);
       state = {
         source: state.source,
         derived,
         activeProbeId: derived.topProbeId,
-        rankingVisible: true,
+        rankingVisible: Boolean(derived.topProbeId),
       };
       emit();
       return derived;

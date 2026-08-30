@@ -83,10 +83,10 @@ describe("ChatGPT P0 contract", () => {
     );
     expect(ownership).toBeDefined();
     expect(ownership).not.toHaveProperty("employerStatement");
-    expect(ownership?.authorityCoverage).toEqual({
-      employerStated: true,
-      reportedExperience: true,
-      candidateSpecificAnswer: false,
+    expect(ownership?.authorityCoverage).toMatchObject({
+      employerStated: { present: true },
+      reportedExperience: { count: 2, coverage: 0.55 },
+      candidateSpecificAnswer: { present: false, resolving: false },
     });
   });
 });

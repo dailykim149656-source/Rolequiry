@@ -112,4 +112,20 @@ describe("CaseStore shared state", () => {
     expect(after.rankingVisible).toBe(true);
     expect(after.activeProbeId).toBe("technical-ownership");
   });
+
+  it("lets the registered get_case_state execute closure see live store changes", async () => {
+    const registered = installFakeModelContext();
+    const store = createCaseStore();
+    renderHook(() => useCaseWebMCPTools(store), { wrapper: React.StrictMode });
+    store.setImportance("travel", IMPORTANCE.CRITICAL);
+    const stateTool = registered.get("get_case_state");
+    if (!stateTool?.execute) throw new Error("get_case_state missing");
+    const raw = await stateTool.execute({});
+    const parsed = JSON.parse(raw?.content[0]?.text ?? "{}") as {
+      claims: Array<{ id: string; importance: string }>;
+    };
+    expect(
+      parsed.claims.find((claim) => claim.id === "travel")?.importance,
+    ).toBe("CRITICAL");
+  });
 });

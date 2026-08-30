@@ -1,4 +1,5 @@
 import type { CaseStore } from "@/lib/case-store";
+import { coverageBreakdownFor } from "@/lib/domain/policy";
 import type { DerivedClaim, SpeakerRole } from "@/lib/domain/types";
 
 function publicClaim(claim: DerivedClaim, rankingVisible: boolean) {
@@ -11,17 +12,7 @@ function publicClaim(claim: DerivedClaim, rankingVisible: boolean) {
     unresolvedness: Number(claim.unresolvedness.toFixed(3)),
     tension: Number(claim.tension.toFixed(3)),
     probeEligible: claim.probeEligible,
-    authorityCoverage: {
-      employerStated: claim.evidence.some(
-        (item) => item.scope === "EMPLOYER_STATED",
-      ),
-      reportedExperience: claim.evidence.some(
-        (item) => item.scope === "REPORTED_EXPERIENCE",
-      ),
-      candidateSpecificAnswer: claim.evidence.some(
-        (item) => item.scope === "CANDIDATE_SPECIFIC_ANSWER",
-      ),
-    },
+    authorityCoverage: coverageBreakdownFor(claim.kind, claim.evidence),
     evidenceSummary: claim.evidence.map((item) => ({
       id: item.id,
       scope: item.scope,
@@ -69,15 +60,24 @@ export function getCaseState(store: CaseStore) {
 }
 
 export function selectDecisionChanger(store: CaseStore) {
-  const derived = store.selectDecisionChanger();
+  const derived = store.peekDecision();
   const selected = derived.claims.find(
     (claim) => claim.id === derived.topProbeId,
   );
   if (!selected) {
-    throw new Error("No probe-eligible claim");
+    store.clearSelection();
+    return {
+      ok: true as const,
+      outcome: "NO_PROBE_NEEDED" as const,
+      claim_id: null,
+      unresolved_variable: null,
+      measurable_form: null,
+    };
   }
+  store.selectDecisionChanger();
   return {
     ok: true as const,
+    outcome: "PROBE_SELECTED" as const,
     claim_id: selected.id,
     unresolved_variable: selected.unresolvedVariable,
     measurable_form: selected.measurableForm,
@@ -87,12 +87,6 @@ export function selectDecisionChanger(store: CaseStore) {
       tension: Number(selected.tension.toFixed(3)),
       probe_priority: Number(selected.probePriority.toFixed(3)),
     },
-    ranking: derived.claims
-      .filter((claim) => claim.probeEligible)
-      .map((claim) => ({
-        id: claim.id,
-        probePriority: Number(claim.probePriority.toFixed(3)),
-      })),
   };
 }
 

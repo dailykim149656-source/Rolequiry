@@ -73,32 +73,72 @@ export function reportedChallengeTension(challengingCount: number): number {
   return 0.9;
 }
 
+export function coverageBreakdownFor(
+  kind: ClaimKind,
+  evidence: readonly Evidence[],
+) {
+  const employerPresent = evidence.some(
+    (item) => item.scope === AUTHORITY_SCOPE.EMPLOYER_STATED,
+  );
+  const reports = evidence.filter(
+    (item) => item.scope === AUTHORITY_SCOPE.REPORTED_EXPERIENCE,
+  );
+  const answers = evidence.filter(
+    (item) => item.scope === AUTHORITY_SCOPE.CANDIDATE_SPECIFIC_ANSWER,
+  );
+  const resolvingAnswer = answers.some((item) => item.stance !== "NEUTRAL");
+  const reportCoverage = reportedCoverage(reports.length);
+  if (kind === CLAIM_KIND.EMPLOYER_POLICY) {
+    return {
+      employerStated: {
+        present: employerPresent,
+        contribution: employerPresent ? 1 : 0,
+      },
+      reportedExperience: {
+        count: reports.length,
+        coverage: reportCoverage,
+        contribution: 0,
+      },
+      candidateSpecificAnswer: {
+        present: answers.length > 0,
+        resolving: resolvingAnswer,
+        contribution: 0,
+      },
+      covered: employerPresent ? 1 : 0,
+    } as const;
+  }
+  const employerContribution = employerPresent
+    ? LIVED_EXPERIENCE_WEIGHT.EMPLOYER_STATED
+    : 0;
+  const reportedContribution =
+    LIVED_EXPERIENCE_WEIGHT.REPORTED_EXPERIENCE * reportCoverage;
+  const answerContribution = resolvingAnswer
+    ? LIVED_EXPERIENCE_WEIGHT.CANDIDATE_SPECIFIC_ANSWER
+    : 0;
+  return {
+    employerStated: {
+      present: employerPresent,
+      contribution: employerContribution,
+    },
+    reportedExperience: {
+      count: reports.length,
+      coverage: reportCoverage,
+      contribution: reportedContribution,
+    },
+    candidateSpecificAnswer: {
+      present: answers.length > 0,
+      resolving: resolvingAnswer,
+      contribution: answerContribution,
+    },
+    covered: employerContribution + reportedContribution + answerContribution,
+  } as const;
+}
+
 export function unresolvednessFor(
   kind: ClaimKind,
   evidence: readonly Evidence[],
 ): number {
-  if (kind === CLAIM_KIND.EMPLOYER_POLICY) {
-    const covered = evidence.some(
-      (item) => item.scope === AUTHORITY_SCOPE.EMPLOYER_STATED,
-    );
-    return covered ? 0 : 1;
-  }
-
-  const reports = evidence.filter(
-    (item) => item.scope === AUTHORITY_SCOPE.REPORTED_EXPERIENCE,
-  );
-  const hasEmployer = evidence.some(
-    (item) => item.scope === AUTHORITY_SCOPE.EMPLOYER_STATED,
-  );
-  const hasAnswer = evidence.some(
-    (item) => item.scope === AUTHORITY_SCOPE.CANDIDATE_SPECIFIC_ANSWER,
-  );
-  const covered =
-    (hasEmployer ? LIVED_EXPERIENCE_WEIGHT.EMPLOYER_STATED : 0) +
-    LIVED_EXPERIENCE_WEIGHT.REPORTED_EXPERIENCE *
-      reportedCoverage(reports.length) +
-    (hasAnswer ? LIVED_EXPERIENCE_WEIGHT.CANDIDATE_SPECIFIC_ANSWER : 0);
-  return 1 - covered;
+  return 1 - coverageBreakdownFor(kind, evidence).covered;
 }
 
 export function tensionFor(evidence: readonly Evidence[]): number {
@@ -121,7 +161,7 @@ export function claimStatus(input: {
   readonly unresolvedness: number;
   readonly tension: number;
 }): ClaimStatus {
-  if (input.unresolvedness <= 0.35 && input.tension < 0.5) return "SUPPORTED";
+  if (input.unresolvedness <= 0.35 && input.tension < 0.7) return "SUPPORTED";
   if (input.tension >= 0.7) return "CHALLENGED";
   if (
     IMPORTANCE_WEIGHT[input.importance] >= 0.75 &&
