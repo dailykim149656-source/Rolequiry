@@ -8,8 +8,8 @@ type RegisteredTool = {
 
 declare global {
   interface Window {
-    __roleprobeTools?: Map<string, RegisteredTool>;
-    __roleprobeInvoke?: (
+    __rolequiryTools?: Map<string, RegisteredTool>;
+    __rolequiryInvoke?: (
       name: string,
       args?: Record<string, unknown>,
     ) => Promise<unknown>;
@@ -29,21 +29,21 @@ export function installLocalModelContext() {
   if (typeof document === "undefined") return;
   if (
     process.env.NODE_ENV === "production" &&
-    process.env.NEXT_PUBLIC_ROLEPROBE_WEBMCP_SHIM !== "1"
+    process.env.NEXT_PUBLIC_ROLEQUIRY_WEBMCP_SHIM !== "1"
   ) {
     return;
   }
   if (
     process.env.NODE_ENV !== "test" &&
-    process.env.NEXT_PUBLIC_ROLEPROBE_WEBMCP_SHIM !== "1"
+    process.env.NEXT_PUBLIC_ROLEQUIRY_WEBMCP_SHIM !== "1"
   ) {
     return;
   }
-  const existing = window.__roleprobeTools;
+  const existing = window.__rolequiryTools;
   if (document.modelContext && existing) return;
   const tools = existing ?? new Map<string, RegisteredTool>();
-  window.__roleprobeTools = tools;
-  window.__roleprobeInvoke = async (name, args = {}) => {
+  window.__rolequiryTools = tools;
+  window.__rolequiryInvoke = async (name, args = {}) => {
     const tool = tools.get(name);
     if (!tool) throw new Error(`Unknown tool: ${name}`);
     return tool.execute(args);

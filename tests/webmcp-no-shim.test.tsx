@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it } from "vitest";
 
 afterEach(() => {
   Reflect.deleteProperty(document, "modelContext");
-  Reflect.deleteProperty(window, "__roleprobeTools");
+  Reflect.deleteProperty(window, "__rolequiryTools");
 });
 
 describe("production WebMCP authenticity", () => {

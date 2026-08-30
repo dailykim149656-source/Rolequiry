@@ -6,9 +6,9 @@ Rolequiry is an agent-native candidate due-diligence app for the OpenAI WebMCP C
 
 ## Live Demo URL
 
-https://roleprobe-five.vercel.app/case
+https://rolequiry.vercel.app/case
 
-Employer reference surface: https://roleprobe-five.vercel.app/employer/atlas-fde
+Employer reference surface: https://rolequiry.vercel.app/employer/atlas-fde
 
 ## One URL to test
 
@@ -31,7 +31,7 @@ On `/case`:
 - `select_decision_changer` (write): compute ranking, set the active probe, return unresolved variable + measurable form
 - `record_interview_answer` (write): record a human-obtained answer; unknown claim ids are rejected
 
-On `/employer/atlas-fde`: `get_employer_claims`, `get_employer_policy` (read-only). The employer page and `/case` share the Atlas fixture and link to each other; they do not require both tabs to stay open.
+On `/employer/atlas-fde`: `get_employer_claims`, `get_employer_policy` (read-only). The employer page and `/case` share the Northwind fixture and link to each other; they do not require both tabs to stay open.
 
 ## Architecture
 
@@ -43,7 +43,7 @@ Run two short loops. Do not record an ownership answer while Travel is selected.
 
 Loop 1 — shared state
 
-1. Open `/case` (Atlas). Optionally open employer-published claims, then return.
+1. Open `/case` (Northwind). Optionally open employer-published claims, then return.
 2. Ask what to verify next. `select_decision_changer` picks technical ownership.
 3. Change Travel to CRITICAL, then say "Check again". Selection flips to Travel.
 4. Stop. Reset demo.
@@ -55,7 +55,7 @@ Loop 2 — interview evidence
 
 Loop 3 — generalization
 
-1. Open Demo controls and switch to Kestrel.
+1. Open Demo controls and switch to Harborline.
 2. Say "Same question here." `select_decision_changer` picks hands-on coding, not CRITICAL on-call.
 
 ## Known limitations
@@ -64,7 +64,7 @@ Loop 3 — generalization
 - No server-side model calls. The user's existing agent does language work.
 - `import_role_from_claims` is a swing feature and is not in this core submission.
 - Closing the employer page cannot break `/case`.
-- GitHub repository name remains RoleProbe for now; the product name is Rolequiry.
+- GitHub repository: https://github.com/dailykim149656-source/Rolequiry
 
 ## Tests
 
