@@ -6,9 +6,11 @@ Rolequiry is an agent-native candidate due-diligence app for the OpenAI WebMCP C
 
 ## Live Demo URL
 
-https://rolequiry.vercel.app/case
+Public judging URL: https://roleprobe-five.vercel.app/case
 
-Employer reference surface: https://rolequiry.vercel.app/employer/atlas-fde
+Employer reference surface: https://roleprobe-five.vercel.app/employer/atlas-fde
+
+Project aliases: `rolequiry.vercel.app` exists, but Vercel SSO currently gates it. Use `roleprobe-five.vercel.app` until SSO is disabled.
 
 ## One URL to test
 
