@@ -6,11 +6,11 @@ Rolequiry is an agent-native candidate due-diligence app for the OpenAI WebMCP C
 
 ## Live Demo URL
 
-Public judging URL: https://roleprobe-five.vercel.app/case
+https://rolequiry.com/case
 
-Employer reference surface: https://roleprobe-five.vercel.app/employer/atlas-fde
+Employer reference surface: https://rolequiry.com/employer/atlas-fde
 
-Custom domain `rolequiry.com` is attached on Vercel. Cloudflare nameservers stay in place; add DNS-only records `A @ 76.76.21.21` and `CNAME www cname.vercel-dns.com`, then https://rolequiry.com/case becomes the public URL. Until those records propagate, use https://roleprobe-five.vercel.app/case. `rolequiry.vercel.app` remains SSO-gated.
+`www.rolequiry.com` also serves the same production deployment. Cloudflare stays as DNS; records are DNS-only to Vercel.
 
 ## One URL to test
 
