@@ -24,7 +24,6 @@ function publicClaim(claim: DerivedClaim, rankingVisible: boolean) {
       stance: item.stance,
       speakerRole: item.speakerRole ?? null,
       sourceKind: item.sourceKind ?? null,
-      sourceLabel: item.sourceLabel ?? null,
       synthetic:
         item.synthetic ?? item.text.toLowerCase().includes("synthetic"),
     })),

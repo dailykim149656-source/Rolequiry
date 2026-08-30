@@ -92,7 +92,16 @@ export function decisionPathNodes(
       label: "Active claim",
       body: `${claim.dimension} · ${IMPORTANCE_REASON[claim.importance]}`,
     },
-    { label: "Evidence", body: publicEvidenceLine(claim) },
+    {
+      label: "Evidence",
+      body:
+        mode === "EVIDENCE_UPDATED" && latest?.sourceUrl
+          ? `${publicEvidenceLine(claim)} · Latest: ${latest.sourceLabel ?? "sourced evidence"}`
+          : publicEvidenceLine(claim),
+      ...(mode === "EVIDENCE_UPDATED" && latest?.sourceUrl
+        ? { href: latest.sourceUrl }
+        : {}),
+    },
     {
       label: "Why unresolved",
       body: STATUS_REASON[claim.status],

@@ -90,4 +90,25 @@ describe("decision path projection", () => {
     expect(decisionPathHint("ACTIVE", false)).toMatch(/check again/i);
     expect(decisionPathHint("ACTIVE", true)).toBeNull();
   });
+
+  it("shows the latest source on an unresolved research update", () => {
+    const updated = recordResearchEvidence(ATLAS_FDE, {
+      claimId: "technical-ownership",
+      stance: "CHALLENGES",
+      text: "A first-person post says platform review blocked on-site changes.",
+      sourceKind: "FIRST_PERSON_EXPERIENCE",
+      sourceLabel: "Engineering blog",
+      sourceUrl: "https://example.com/ownership-post",
+    });
+    const ownership = deriveCase(updated).claims.find(
+      (claim) => claim.id === "technical-ownership",
+    );
+    if (!ownership) throw new Error("ownership missing");
+    const evidence = decisionPathNodes(ownership, "EVIDENCE_UPDATED").find(
+      (node) => node.label === "Evidence",
+    );
+    expect(ownership.probeEligible).toBe(true);
+    expect(evidence?.body).toContain("Latest: Engineering blog");
+    expect(evidence?.href).toBe("https://example.com/ownership-post");
+  });
 });

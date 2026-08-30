@@ -31,4 +31,19 @@ describe("selection state", () => {
     });
     expect(store.getState().selectionState).toBe("NO_PROBE_NEEDED");
   });
+
+  it("does not reactivate a resolved probe when importance changes", () => {
+    const store = createCaseStore();
+    selectDecisionChanger(store);
+    recordInterviewAnswerTool(store, {
+      stance: "CHALLENGES",
+      text: "Hiring manager said ownership is split with a central platform team after design review.",
+      speakerRole: SPEAKER_ROLE.HIRING_MANAGER,
+    });
+    expect(store.getState().selectionState).toBe("EVIDENCE_UPDATED");
+    store.setImportance("travel", "CRITICAL");
+    expect(store.getState().selectionState).toBe("EVIDENCE_UPDATED");
+    expect(store.getState().activeProbeId).toBe("technical-ownership");
+    expect(store.getState().rankingVisible).toBe(false);
+  });
 });

@@ -93,14 +93,19 @@ export function createCaseStore(initial: RoleCase = ATLAS_FDE) {
       const selected = derived.claims.find(
         (claim) => claim.id === state.activeProbeId,
       );
+      const keepUpdated =
+        state.selectionState === SELECTION_STATE.EVIDENCE_UPDATED &&
+        Boolean(selected);
       state = {
         source,
         derived,
         activeProbeId: selected ? state.activeProbeId : null,
         rankingVisible: false,
-        selectionState: selected
-          ? SELECTION_STATE.ACTIVE
-          : SELECTION_STATE.IDLE,
+        selectionState: keepUpdated
+          ? SELECTION_STATE.EVIDENCE_UPDATED
+          : selected?.probeEligible
+            ? SELECTION_STATE.ACTIVE
+            : SELECTION_STATE.IDLE,
         prioritiesTouched: true,
       };
       emit();
