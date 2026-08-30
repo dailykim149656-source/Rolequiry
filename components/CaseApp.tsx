@@ -95,19 +95,7 @@ export function CaseApp() {
                 ))}
               </select>
             </label>
-            <p className="mt-3 text-sm">
-              Unresolvedness {claim.unresolvedness.toFixed(3)} · Tension{" "}
-              {claim.tension.toFixed(2)}
-            </p>
-            <p className="mt-1 text-xs text-zinc-500">
-              Evidence: {claim.evidence.length} items. Synthetic workplace
-              signals are labeled in source text.
-            </p>
-            {snapshot.rankingVisible ? (
-              <p className="mt-2 text-sm">
-                Probe priority {claim.probePriority.toFixed(3)}
-              </p>
-            ) : null}
+            <EvidenceCoverage claim={claim} />
           </article>
         ))}
       </section>
@@ -119,25 +107,14 @@ export function CaseApp() {
             <p data-testid="active-probe">Active probe: {selected.dimension}</p>
             <p>Unresolved variable: {selected.unresolvedVariable}</p>
             <p>Measurable form: {selected.measurableForm}</p>
-            {canned ? (
-              <button
-                type="button"
-                className="mt-3 rounded-lg bg-white px-3 py-2 text-zinc-950"
-                onClick={() => store.recordAnswer(canned)}
-              >
-                {canned.buttonLabel}
-              </button>
-            ) : (
-              <p className="mt-3 text-zinc-300">
-                No scripted answer for this claim. Reset and record the
-                ownership answer only after ownership is selected.
-              </p>
-            )}
+            <p className="mt-3 text-zinc-300">
+              Waiting for interview evidence. Tell your agent what the
+              interviewer said.
+            </p>
           </div>
         ) : (
           <p className="mt-3 text-sm text-zinc-300">
-            No probe selected yet. Ask the agent to check what to verify next,
-            or use the button above.
+            No probe selected yet. Ask the agent what to investigate next.
           </p>
         )}
       </section>
@@ -175,6 +152,15 @@ export function CaseApp() {
           >
             Rank next question
           </button>
+          {canned ? (
+            <button
+              type="button"
+              className={chip(false)}
+              onClick={() => store.recordAnswer(canned)}
+            >
+              {canned.buttonLabel}
+            </button>
+          ) : null}
         </div>
         <p className="mt-3" data-testid="tool-status">
           WebMCP registered:{" "}
@@ -190,6 +176,50 @@ export function CaseApp() {
   );
 }
 
+function EvidenceCoverage({
+  claim,
+}: {
+  claim: {
+    readonly evidence: readonly {
+      readonly scope: string;
+      readonly stance: string;
+    }[];
+  };
+}) {
+  const reports = claim.evidence.filter(
+    (item) => item.scope === "REPORTED_EXPERIENCE",
+  );
+  const hasEmployer = claim.evidence.some(
+    (item) => item.scope === "EMPLOYER_STATED",
+  );
+  const hasAnswer = claim.evidence.some(
+    (item) => item.scope === "CANDIDATE_SPECIFIC_ANSWER",
+  );
+  const supports = claim.evidence.filter(
+    (item) => item.stance === "SUPPORTS",
+  ).length;
+  const challenges = claim.evidence.filter(
+    (item) => item.stance === "CHALLENGES",
+  ).length;
+  return (
+    <div className="mt-4 space-y-2 text-sm">
+      <p className="font-medium">Evidence coverage</p>
+      <p>
+        {hasEmployer ? "Employer statement" : "Employer statement — missing"}
+      </p>
+      <p>
+        {reports.length} reported experience{reports.length === 1 ? "" : "s"}
+      </p>
+      <p>
+        {hasAnswer ? "Candidate interview" : "Candidate interview — missing"}
+      </p>
+      <p className="text-zinc-500">
+        Direction: {supports} support{supports === 1 ? "" : "s"} · {challenges}{" "}
+        challenge{challenges === 1 ? "" : "s"}
+      </p>
+    </div>
+  );
+}
 function chip(active: boolean): string {
   return active
     ? "rounded-full bg-zinc-950 px-3 py-1 text-sm text-white"

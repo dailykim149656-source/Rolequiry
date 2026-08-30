@@ -41,7 +41,7 @@ Human UI and WebMCP tools share one in-memory `CaseStore`. `deriveCase` is a pur
 
 ## Testing in ChatGPT/Chrome
 
-Run two short loops. Do not record an ownership answer while Travel is selected.
+Run three short loops. Do not record an ownership answer while Travel is selected.
 
 Loop 1 — shared state
 
@@ -71,6 +71,9 @@ Loop 3 — generalization
 ## Tests
 
 ```bash
+bun install
 bun test
-bunx tsc --noEmit
+bun run typecheck
+bun run build
+bun run dev -- --port 3100
 ```
