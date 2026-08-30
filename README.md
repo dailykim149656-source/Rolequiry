@@ -1,8 +1,8 @@
-# AskTheJob
+# Rolequiry
 
 Interview the job before it interviews you.
 
-AskTheJob is an agent-native candidate due-diligence app for the OpenAI WebMCP Challenge. Job postings are treated as claims, not facts. Deterministic application code ranks the unresolved variable worth probing. The candidate sets priorities. The agent phrases the question. The human brings the answer back.
+Rolequiry is an agent-native candidate due-diligence app for the OpenAI WebMCP Challenge. Job postings are treated as claims, not facts. Deterministic application code ranks the unresolved variable worth probing. The candidate sets priorities. The agent phrases the question. The human brings the answer back.
 
 ## Live Demo URL
 
@@ -20,7 +20,7 @@ Supported test environment: ChatGPT built-in browser / Chrome with WebMCP. The p
 
 ## Why WebMCP
 
-Most agent demos operate on cooperative pages. A job posting is mixed-incentive: useful to the candidate, written by the employer. WebMCP lets the page expose typed reads and writes against live application state instead of scraping. AskTheJob keeps provenance and decision authority in the app; the agent only phrases questions.
+Most agent demos operate on cooperative pages. A job posting is mixed-incentive: useful to the candidate, written by the employer. WebMCP lets the page expose typed reads and writes against live application state instead of scraping. Rolequiry keeps provenance and decision authority in the app; the agent only phrases questions.
 
 ## WebMCP Tools
 
@@ -64,7 +64,7 @@ Loop 3 — generalization
 - No server-side model calls. The user's existing agent does language work.
 - `import_role_from_claims` is a swing feature and is not in this core submission.
 - Closing the employer page cannot break `/case`.
-- GitHub repository name remains RoleProbe for now; the product name is AskTheJob.
+- GitHub repository name remains RoleProbe for now; the product name is Rolequiry.
 
 ## Tests
 

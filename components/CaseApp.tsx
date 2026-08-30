@@ -29,7 +29,7 @@ export function CaseApp() {
 
   return (
     <main className="mx-auto max-w-5xl px-6 py-8">
-      <p className="text-sm tracking-[0.2em] text-zinc-500">ASKTHEJOB</p>
+      <p className="text-sm tracking-[0.2em] text-zinc-500">ROLEQUIRY</p>
       <h1 className="mt-2 text-3xl font-semibold">
         Interview the job before it interviews you.
       </h1>

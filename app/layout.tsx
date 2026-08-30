@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "AskTheJob",
+  title: "Rolequiry",
   description: "Interview the job before it interviews you.",
 };
 
