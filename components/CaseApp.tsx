@@ -133,8 +133,8 @@ export function CaseApp() {
               <p>Unresolved variable: {selected.unresolvedVariable}</p>
               <p>Measurable form: {selected.measurableForm}</p>
               <p className="mt-3 text-zinc-300">
-                Waiting for interview evidence. Tell your agent what the
-                interviewer said.
+                Ask your agent to research this active question, or bring back
+                what the interviewer said.
               </p>
             </div>
           ) : snapshot.selectionState === "NO_PROBE_NEEDED" ? (
@@ -245,29 +245,58 @@ function EvidenceCoverage({ claim }: { claim: DerivedClaim }) {
         <summary className="cursor-pointer">
           View evidence ({claim.evidence.length})
         </summary>
-        <ul className="mt-2 space-y-2">
-          {claim.evidence.map((item) => (
-            <li key={item.id}>
-              <p>
-                {item.scope === "EMPLOYER_STATED"
-                  ? "Employer statement"
-                  : item.scope === "REPORTED_EXPERIENCE"
-                    ? "Reported experience"
-                    : "Candidate interview"}{" "}
-                ·{" "}
-                {item.synthetic || item.text.toLowerCase().includes("synthetic")
-                  ? "synthetic · "
-                  : ""}
-                {item.stance.toLowerCase()}
-              </p>
-              <p>{item.text}</p>
-            </li>
-          ))}
+        <ul className="mt-2 space-y-3">
+          {claim.evidence.map((item) => {
+            const sourceUrl = safeHttpUrl(item.sourceUrl);
+            return (
+              <li key={item.id}>
+                <p>
+                  {item.scope === "EMPLOYER_STATED"
+                    ? "Employer statement"
+                    : item.scope === "REPORTED_EXPERIENCE"
+                      ? "Reported experience"
+                      : "Candidate interview"}{" "}
+                  ·{" "}
+                  {item.synthetic || item.text.toLowerCase().includes("synthetic")
+                    ? "synthetic · "
+                    : ""}
+                  {item.stance.toLowerCase()}
+                  {item.sourceLabel ? ` · ${item.sourceLabel}` : ""}
+                </p>
+                <p>{item.text}</p>
+                {sourceUrl ? (
+                  <p className="mt-1">
+                    <a
+                      className="underline"
+                      href={sourceUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      View source ↗
+                    </a>
+                  </p>
+                ) : null}
+              </li>
+            );
+          })}
         </ul>
       </details>
     </div>
   );
 }
+
+function safeHttpUrl(value?: string): string | null {
+  if (!value) return null;
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === "http:" || parsed.protocol === "https:"
+      ? parsed.toString()
+      : null;
+  } catch {
+    return null;
+  }
+}
+
 function chip(active: boolean): string {
   return active
     ? "rounded-full bg-zinc-950 px-3 py-1 text-sm text-white"
