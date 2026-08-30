@@ -3,7 +3,7 @@ import { deriveCase } from "@/lib/domain/derive-case";
 import { ATLAS_FDE } from "@/lib/fixtures/atlas-fde";
 import { KESTREL_SOLUTIONS } from "@/lib/fixtures/kestrel-solutions";
 
-describe("Fixture B generalization", () => {
+describe("second deterministic fixture", () => {
   it("makes HIGH hands-on coding outrank CRITICAL on-call under the same policy", () => {
     const derived = deriveCase(KESTREL_SOLUTIONS);
     const onCall = derived.claims.find((claim) => claim.id === "on-call-load");
