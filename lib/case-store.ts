@@ -19,11 +19,20 @@ export const FIXTURES = {
 
 export type FixtureId = keyof typeof FIXTURES;
 
+export const SELECTION_STATE = {
+  IDLE: "IDLE",
+  ACTIVE: "ACTIVE",
+  NO_PROBE_NEEDED: "NO_PROBE_NEEDED",
+} as const;
+export type SelectionState =
+  (typeof SELECTION_STATE)[keyof typeof SELECTION_STATE];
+
 export type CaseSnapshot = {
   readonly source: RoleCase;
   readonly derived: DerivedCase;
   readonly activeProbeId: string | null;
   readonly rankingVisible: boolean;
+  readonly selectionState: SelectionState;
 };
 
 type Listener = () => void;
@@ -32,12 +41,14 @@ function snapshotFrom(
   source: RoleCase,
   activeProbeId: string | null,
   rankingVisible: boolean,
+  selectionState: SelectionState = SELECTION_STATE.IDLE,
 ): CaseSnapshot {
   return {
     source,
     derived: deriveCase(source),
     activeProbeId,
     rankingVisible,
+    selectionState,
   };
 }
 
@@ -80,7 +91,12 @@ export function createCaseStore(initial: RoleCase = ATLAS_FDE) {
       return deriveCase(state.source);
     },
     clearSelection() {
-      state = snapshotFrom(state.source, null, false);
+      state = snapshotFrom(
+        state.source,
+        null,
+        false,
+        SELECTION_STATE.NO_PROBE_NEEDED,
+      );
       emit();
     },
     selectDecisionChanger() {
@@ -90,6 +106,9 @@ export function createCaseStore(initial: RoleCase = ATLAS_FDE) {
         derived,
         activeProbeId: derived.topProbeId,
         rankingVisible: Boolean(derived.topProbeId),
+        selectionState: derived.topProbeId
+          ? SELECTION_STATE.ACTIVE
+          : SELECTION_STATE.NO_PROBE_NEEDED,
       };
       emit();
       return derived;

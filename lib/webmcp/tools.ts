@@ -55,6 +55,7 @@ export function getCaseState(store: CaseStore) {
     origin: snapshot.source.origin,
     activeProbeId: snapshot.activeProbeId,
     rankingVisible: snapshot.rankingVisible,
+    selectionState: snapshot.selectionState,
     claims: snapshot.derived.claims.map((claim) => publicClaim(claim, false)),
   };
 }

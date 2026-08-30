@@ -4,7 +4,12 @@ import Link from "next/link";
 import { useMemo, useSyncExternalStore } from "react";
 import { createCaseStore } from "@/lib/case-store";
 import { cannedInterviewAnswer } from "@/lib/demo/canned-answers";
-import { IMPORTANCE, type Importance } from "@/lib/domain/types";
+import { coverageBreakdownFor } from "@/lib/domain/policy";
+import {
+  type DerivedClaim,
+  IMPORTANCE,
+  type Importance,
+} from "@/lib/domain/types";
 import { useCaseWebMCPTools } from "@/lib/webmcp/use-case-tools";
 
 const IMPORTANCE_OPTIONS = [
@@ -73,7 +78,9 @@ export function CaseApp() {
                 </p>
               </div>
               <span className="rounded-full bg-zinc-100 px-2 py-1 text-xs">
-                {claim.status}
+                {claim.status === "CHALLENGED"
+                  ? "CHALLENGED · conflicting evidence"
+                  : claim.status}
               </span>
             </div>
             <label className="mt-4 block text-sm">
@@ -102,7 +109,7 @@ export function CaseApp() {
 
       <section className="mt-8 rounded-2xl bg-zinc-950 p-5 text-zinc-50">
         <h2 className="text-lg font-medium">What to ask next</h2>
-        {selected ? (
+        {snapshot.selectionState === "ACTIVE" && selected ? (
           <div className="mt-3 space-y-2 text-sm">
             <p data-testid="active-probe">Active probe: {selected.dimension}</p>
             <p>Unresolved variable: {selected.unresolvedVariable}</p>
@@ -112,9 +119,13 @@ export function CaseApp() {
               interviewer said.
             </p>
           </div>
+        ) : snapshot.selectionState === "NO_PROBE_NEEDED" ? (
+          <p className="mt-3 text-sm text-zinc-300" data-testid="no-probe">
+            No unresolved claims currently require another probe.
+          </p>
         ) : (
           <p className="mt-3 text-sm text-zinc-300">
-            No probe selected yet. Ask the agent what to investigate next.
+            Ask your agent what to investigate next.
           </p>
         )}
       </section>
@@ -176,47 +187,33 @@ export function CaseApp() {
   );
 }
 
-function EvidenceCoverage({
-  claim,
-}: {
-  claim: {
-    readonly evidence: readonly {
-      readonly scope: string;
-      readonly stance: string;
-    }[];
-  };
-}) {
-  const reports = claim.evidence.filter(
-    (item) => item.scope === "REPORTED_EXPERIENCE",
+function EvidenceCoverage({ claim }: { claim: DerivedClaim }) {
+  const coverage = coverageBreakdownFor(claim.kind, claim.evidence);
+  const external = claim.evidence.filter(
+    (item) => item.scope !== "EMPLOYER_STATED",
   );
-  const hasEmployer = claim.evidence.some(
-    (item) => item.scope === "EMPLOYER_STATED",
-  );
-  const hasAnswer = claim.evidence.some(
-    (item) => item.scope === "CANDIDATE_SPECIFIC_ANSWER",
-  );
-  const supports = claim.evidence.filter(
-    (item) => item.stance === "SUPPORTS",
-  ).length;
-  const challenges = claim.evidence.filter(
+  const supports = external.filter((item) => item.stance === "SUPPORTS").length;
+  const challenges = external.filter(
     (item) => item.stance === "CHALLENGES",
   ).length;
+  const interviewLabel = coverage.candidateSpecificAnswer.resolving
+    ? "Candidate interview — resolving"
+    : coverage.candidateSpecificAnswer.present
+      ? "Candidate interview — non-resolving"
+      : "Candidate interview — missing";
   return (
     <div className="mt-4 space-y-2 text-sm">
       <p className="font-medium">Evidence coverage</p>
       <p>
-        {hasEmployer ? "Employer statement" : "Employer statement — missing"}
+        {coverage.employerStated.present
+          ? "Employer statement · present"
+          : "Employer statement — missing"}
       </p>
       <p>
-        {reports.length} reported experience{reports.length === 1 ? "" : "s"}
+        External signals: {supports} support{supports === 1 ? "" : "s"} ·{" "}
+        {challenges} challenge{challenges === 1 ? "" : "s"}
       </p>
-      <p>
-        {hasAnswer ? "Candidate interview" : "Candidate interview — missing"}
-      </p>
-      <p className="text-zinc-500">
-        Direction: {supports} support{supports === 1 ? "" : "s"} · {challenges}{" "}
-        challenge{challenges === 1 ? "" : "s"}
-      </p>
+      <p>{interviewLabel}</p>
     </div>
   );
 }
