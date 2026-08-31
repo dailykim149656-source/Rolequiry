@@ -2,7 +2,9 @@
 
 Interview the job before it interviews you.
 
-Rolequiry is an agent-native candidate due-diligence app for the OpenAI WebMCP Challenge. Your agent understands your career and investigates the role. Rolequiry keeps what the employer claims, what the evidence supports, what matters to you, and what is still worth asking as application-owned case state.
+Most job tools ask, “Can I get hired?” Rolequiry asks, “If I get the offer, should I join?”
+
+Rolequiry is an agent-native candidate due-diligence app for the OpenAI WebMCP Challenge. ChatGPT can analyze a JD; Rolequiry owns durable, inspectable case state for candidate-confirmed priorities, employer claims, evidence and provenance, active uncertainty, and the next verification target.
 
 The agent can interpret a resume or career summary, values, constraints, and a non-linear career path in conversation; propose where the role may fit or create leverage; and research the active uncertainty. Rolequiry does not store that raw career narrative or produce a fit score. It records only candidate-confirmed importance, typed claims, evidence provenance, and the deterministic next verification target. Source identity and page contents are not independently authenticated.
 
@@ -24,7 +26,7 @@ Supported test environment: ChatGPT built-in browser / Chrome with WebMCP. The p
 
 ## Why WebMCP
 
-Most agent demos operate on cooperative pages. A job posting is mixed-incentive: useful to the candidate, written by the employer. WebMCP lets the page expose typed reads and writes against live application state instead of scraping. The agent extracts employer claims, relates them to the candidate's career context, asks the candidate to confirm the proposed priorities, and researches the currently active uncertainty with its own browsing capabilities. Rolequiry—not the model—derives claim kind, maps declared source categories to authority weight, and computes coverage, state, and ranking. It does not authenticate agent-reported URLs.
+Most agent demos operate on cooperative pages. A job posting is mixed-incentive: useful to the candidate, written by the employer. WebMCP lets the page expose typed reads and writes against live application state instead of scraping. The competition surface is page-native WebMCP, not a standard remote MCP server. The agent extracts employer claims, relates them to the candidate's career context, asks the candidate to confirm the proposed priorities, and researches the currently active uncertainty with its own browsing capabilities. Rolequiry—not the model—derives claim kind, maps declared source categories to authority weight, and computes coverage, state, and ranking. It structures agent-reported provenance but does not independently verify source identity or page content.
 
 ### Decision-directed research
 
@@ -55,7 +57,7 @@ On `/employer/atlas-fde`: `get_employer_claims`, `get_employer_policy` (read-onl
 
 ## Architecture
 
-Human UI and all seven WebMCP tools share one in-memory `CaseStore`. `deriveCase` is a pure function: coverage, unresolvedness, tension, status, probe eligibility. The raw resume stays in agent conversation context; only importance values the candidate explicitly confirms enter Rolequiry. A versioned snapshot is saved in browser `sessionStorage` only for agent-imported cases, so real-role evidence survives reloads in the current tab without carrying into a new tab. Demo fixtures always reload from their canonical state.
+Human UI, the supported manual controls, and all seven WebMCP tools share one in-memory `CaseStore`. `deriveCase` is a pure function: coverage, unresolvedness, tension, status, probe eligibility. The raw resume stays in agent conversation context; only importance values the candidate explicitly confirms enter Rolequiry. A versioned snapshot is saved in browser `sessionStorage` only for agent-imported cases, so real-role evidence survives reloads in the current tab without carrying into a new tab. Demo fixtures always reload from their canonical state.
 
 ## Try the agentic real-role loop
 
@@ -69,7 +71,7 @@ Open https://rolequiry.com/case in ChatGPT's built-in browser or Chrome with Web
 6. Ask the agent to research only that active question and record one sourced finding. Inspect its provenance and what remains unknown in the Decision Path.
 7. Use the measurable form as a falsifiable interview question, then record the answer against the same claim.
 
-The priority dropdowns are the equivalent manual path. For a repeatable real-job rehearsal with a clearly synthetic candidate, use [`docs/demo/openai-fde-seoul.md`](docs/demo/openai-fde-seoul.md).
+The priority dropdowns are the supported manual fallback path and share the same `CaseStore`. Removing WebMCP removes the candidate-specific conversation-to-research loop, not the fallback UI. For a repeatable real-job rehearsal with a clearly synthetic candidate, use [`docs/demo/openai-fde-seoul.md`](docs/demo/openai-fde-seoul.md); for the evaluated multi-journey evidence ledger, use [`docs/evals/webmcp-agent-journeys.md`](docs/evals/webmcp-agent-journeys.md).
 
 For the built-in fixture smoke test: ask `What should I investigate next?`, set Travel to CRITICAL in the UI, then ask `Check again.` The active probe should move from Ownership to Travel without the agent being told about the UI change.
 

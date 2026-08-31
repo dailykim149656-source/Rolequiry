@@ -1,5 +1,9 @@
 # Agentic Candidate Due-Diligence Implementation Plan
 
+> **Status (2026-08-31): Historical.** The seven-tool candidate-priority
+> workflow described here has shipped. Current proof hardening is tracked in
+> `docs/superpowers/plans/2026-08-31-webmcp-proof-hardening.md`.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Complete the conversation-to-case WebMCP loop so an agent can turn a candidate's confirmed career priorities into deterministic Rolequiry state, while fixing the remaining neutral-evidence and raw-source trust edges.
