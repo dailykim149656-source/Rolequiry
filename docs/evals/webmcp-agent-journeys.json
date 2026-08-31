@@ -45,6 +45,45 @@
       ]
     },
     {
+      "id": "minimal-korean-routing",
+      "kind": "direct",
+      "precondition": "Rolequiry starts from a fresh case tab. A resume and JD are attached and available to the connected agent.",
+      "messages": [
+        {
+          "role": "user",
+          "content": "분석해줘."
+        }
+      ],
+      "expectedCalls": [
+        {
+          "turn": 1,
+          "sequence": 1,
+          "functionName": "import_role_from_claims"
+        },
+        {
+          "turn": 1,
+          "sequence": 2,
+          "functionName": "get_role_claims"
+        }
+      ],
+      "forbiddenCalls": [
+        "set_candidate_priorities before explicit confirmation",
+        "select_decision_changer",
+        "asking the candidate to provide claim IDs or tool names",
+        "raw resume persistence"
+      ],
+      "argumentRules": [
+        "the attached JD supplies 1 to 8 testable employer claims",
+        "the attached resume informs only the natural-language priority proposal",
+        "the raw resume is not included in the imported case"
+      ],
+      "observablePass": [
+        "the agent proposes candidate-specific priorities after reading current claim IDs",
+        "the agent pauses for one explicit confirmation before any priority write",
+        "no probe is active"
+      ]
+    },
+    {
       "id": "confirmation-gate",
       "kind": "ambiguous",
       "precondition": "The OpenAI case is imported. The candidate has not seen claim IDs, and no probe is active.",
