@@ -1,85 +1,118 @@
-# OpenAI Seoul FDE real-job rehearsal
+# OpenAI Seoul FDE same-role candidate comparison
 
-This is a repeatable WebMCP demonstration, not a saved candidate profile or a claim that the role is a good fit.
+This is a repeatable page-native WebMCP demo, not a saved candidate profile, fit score, or join recommendation.
 
 ## Source and setup
 
 - Official job page: https://openai.com/careers/forward-deployed-engineer-seoul-seoul-south-korea/
-- Verified against the public page on 2026-08-30.
-- Open `https://rolequiry.com/case` in a browser that exposes the page's WebMCP tools.
+- Verified against the public page on 2026-08-31.
+- Open `/case` on the current Rolequiry origin in a browser that can see page-native WebMCP tools.
 - Confirm that the product bar reports `WebMCP 7/7 live`.
 
-Do not copy the full JD into this repository. The current page provides four useful decision variables for this rehearsal: expected travel, the balance between hands-on coding and coordination, where technical authority sits, and the load created by multiple concurrent deployments.
-
-## Synthetic candidate
-
-The candidate below is fictional and exists only to make the workflow reproducible.
-
-- Six years across backend engineering and AI product engineering.
-- Some customer-facing enterprise delivery, but no sustained high-travel role.
-- Strong preference for hands-on building over primarily coordinating delivery.
-- Values clear technical authority and enough focus to ship production systems well.
-- Comfortable with travel up to roughly 20%, below the posting's stated 50% expectation.
-
-The raw candidate narrative remains in agent conversation context. Rolequiry should receive only extracted employer claims and importance values the candidate explicitly confirms.
-
-## Opening prompt
-
-> Here is my career context and this JD. Put the role into Rolequiry, identify the decision variables that matter specifically to me, and ask me to confirm priorities before writing them.
-
-Provide the synthetic candidate bullets above and the official URL with that prompt.
-
-The agent should browse the source, call `import_role_from_claims`, and propose a priority mapping. It must stop for confirmation before writing priorities. A useful import contains no more than these four concise claim dimensions:
+Do not copy the full JD into this repository. Before the demo, capture the posting's final URL, title, and timestamp. The current page supports these four decision variables for the rehearsal:
 
 1. Travel concentration
 2. Hands-on coding share
 3. Technical decision authority
 4. Concurrent deployment load
 
-Exact claim wording may vary with the agent. Do not pass claim kind, status, coverage, tension, ranking, a resume, or a fit rationale into Rolequiry.
+Search only official OpenAI pages and attributable first-person sources for the active Travel question. If the OpenAI posting disappears, switch to the official Palantir Seoul Forward Deployed Software Engineer posting and rewrite both mappings around that role. If the OpenAI posting is live but no additional credible claim-specific Travel source exists beyond the imported employer claim, keep OpenAI and preserve the research outcome as `UNKNOWN`.
 
-## Candidate confirmation
+## Candidate A
 
-Reply exactly:
+Candidate A is synthetic and stays only in the agent conversation:
 
-> Travel is CRITICAL. Hands-on coding and technical authority are HIGH. Concurrent deployments are MEDIUM.
+```text
+Six years across backend and AI product engineering; some enterprise delivery;
+no sustained high-travel role; travel ceiling about 20%; technical authority
+matters; hands-on coding is preferred but the exact coding mix is flexible.
+```
 
-The agent should map this confirmation to the imported claim IDs and call `set_candidate_priorities`. Check that all four controls update in the UI and that no card is active yet. Priority writing and probe selection are deliberately separate operations.
+Use the official URL with this prompt:
 
-## Expected tool order
+> Here is my career context and this JD. Put the role into Rolequiry, identify the decision variables that matter specifically to me, propose a priority mapping, and ask me to confirm priorities before writing them.
+
+Import only the four dimensions above. Rolequiry should receive extracted employer claims and testable variables only. Keep the raw profile, career narrative, and any fit rationale in the agent conversation.
+
+The agent must propose first and write only after the candidate replies with this exact confirmation:
+
+```text
+Travel concentration = CRITICAL
+Hands-on coding share = MEDIUM
+Technical decision authority = HIGH
+Concurrent deployment load = MEDIUM
+```
+
+Candidate A's full sequence is:
 
 ```text
 import_role_from_claims
 get_role_claims
+human confirmation
 set_candidate_priorities
 select_decision_changer
-record_research_evidence
+record_research_evidence (only when a credible active-probe source exists)
+get_case_state
+select_decision_changer when the user explicitly asks to check again
+```
+
+After `set_candidate_priorities`, all four controls should update and no claim should be active yet. After `select_decision_changer`, Travel should become the active probe.
+
+If a credible active-probe source exists, record one source and keep its identity/provenance agent-reported. Rolequiry stores the URL, kind, and stance metadata but does not authenticate source identity. If the additional Travel evidence is mixed, weak, or non-resolving, do not force a write. Leave the result `UNKNOWN` and turn it into a measurable interview or offer-stage question, for example:
+
+> Across the last two quarters, what were the median and maximum travel days per FDE, and how concentrated were those days across weeks?
+
+## Candidate B
+
+Candidate B is also synthetic and starts from the same imported OpenAI case:
+
+```text
+Six years in solutions and platform engineering; frequent travel is acceptable;
+the next role must keep sustained hands-on production coding; coordination is
+acceptable only when it does not replace building.
+```
+
+Overwrite all four values before selecting again so Candidate A state cannot leak into the comparison:
+
+```text
+Travel concentration = LOW
+Hands-on coding share = CRITICAL
+Technical decision authority = MEDIUM
+Concurrent deployment load = MEDIUM
+```
+
+Candidate B uses the same imported claim IDs from `get_role_claims`. The current proof run returned `imported-1` through `imported-4`, but the agent should always use the IDs it actually receives. Do not reimport or reset the case between candidates.
+
+Candidate B's comparison loop is:
+
+```text
+set_candidate_priorities
 select_decision_changer
 ```
 
-After confirmation, ask:
-
-> Which uncertainty should change my decision next?
-
-Travel should become the active probe because it is candidate-confirmed as CRITICAL and remains unresolved. Then ask:
-
-> Research only this active question. Make a reasonable attempt to find counterevidence, record one source you can cite, and preserve uncertainty when the evidence is mixed or non-resolving.
-
-The agent uses its own browsing capability. It should record one relevant public employer-published or first-person source, not perform an open-ended company survey. A source label and source kind are agent-reported capture metadata; Rolequiry does not authenticate the source identity or page contents.
+Travel should be the selected probe for Candidate A. Hands-on coding should be the selected probe for Candidate B. The selected claim IDs should differ.
 
 ## Observable checkpoints
 
-- Product bar: `WebMCP 7/7 live`.
-- Dossier header: OpenAI role plus the agent-reported original posting link.
-- Claim Board: all four candidate-confirmed priority controls update without a reload.
-- Claim Board: Travel has the `Active probe` highlight only after selection.
-- Evidence drawer: the recorded source has URL, stance, kind, and agent-reported provenance.
-- Decision Path: evidence changes the live case while still showing what remains unknown.
-- After evidence: the path asks the user to `Check again`; it does not silently jump to another probe.
-- Final interview question is measurable, for example: `Across the last two quarters, what were the median and maximum travel days per FDE, and how concentrated were those days across weeks?`
+- Product bar shows `WebMCP 7/7 live`.
+- The dossier header shows the OpenAI role and the agent-reported posting link.
+- `get_role_claims` returns only employer-authored claim text, source snippets, and claim IDs.
+- After Candidate A confirmation, all four priority controls show `CRITICAL`, `MEDIUM`, `HIGH`, `MEDIUM` with no active probe before selection.
+- After Candidate A selection, Travel has the `Active probe` highlight.
+- Candidate B overwrites all four values on the same case before selection, then Hands-on coding becomes the `Active probe`.
+- `get_case_state` remains normalized and contains no resume, profile, career narrative, fit score, or join recommendation field.
 
-## What this proves
+## Storyboard
 
-The connected agent can interpret career context, inspect a real JD, research an active uncertainty, and explain candidate-specific hypotheses. Rolequiry supplies the auditable shared state: employer claims, candidate-confirmed importance, typed evidence provenance, deterministic ranking, and a falsifiable next question.
+Prepared, not published:
 
-This rehearsal does not prove source authenticity, calculate an objective fit score, store the resume, run general company deep research, expose a remote MCP server, or work in a client that cannot see page-native WebMCP tools.
+```text
+0:00-0:20 problem and thesis
+0:20-0:50 Candidate A + real JD import
+0:50-1:20 explicit confirmation + Travel selection
+1:20-1:55 evidence/unknown + verification question
+1:55-2:25 Candidate B priority overwrite + coding selection
+2:25-2:50 why Rolequiry is more than a ChatGPT answer
+```
+
+Do not record, upload, or publish a video from this document alone.
