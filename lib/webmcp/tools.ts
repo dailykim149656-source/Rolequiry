@@ -3,12 +3,18 @@ import { noProbeDetails } from "@/lib/domain/probe-outcome";
 import {
   AUTHORITY_SCOPE,
   EVIDENCE_PROVENANCE,
+  EVIDENCE_STANCE,
   RESEARCH_SOURCE_KIND,
   type ResearchSourceKind,
+  SPEAKER_ROLE,
   type SpeakerRole,
 } from "@/lib/domain/types";
 import { getCaseState } from "@/lib/webmcp/case-state";
 import { normalizeHttpUrl } from "@/lib/webmcp/http-url";
+import {
+  hasOversizedInput,
+  WEBMCP_INPUT_LIMITS,
+} from "@/lib/webmcp/input-limits";
 
 export function getRoleClaims(store: CaseStore) {
   const { source } = store.getState();
@@ -90,6 +96,12 @@ export function recordInterviewAnswerTool(
     speakerRole: SpeakerRole;
   },
 ) {
+  if (!Object.values(EVIDENCE_STANCE).includes(input.stance)) {
+    throw new Error("Invalid evidence stance");
+  }
+  if (!Object.values(SPEAKER_ROLE).includes(input.speakerRole)) {
+    throw new Error("Invalid interview speaker role");
+  }
   const snapshot = store.getState();
   if (!snapshot.activeProbeId) {
     throw new Error("No active probe");
@@ -100,6 +112,9 @@ export function recordInterviewAnswerTool(
   }
   if (!input.text.trim()) {
     throw new Error("Interview answer text is empty");
+  }
+  if (hasOversizedInput([[input.text, WEBMCP_INPUT_LIMITS.text]] as const)) {
+    throw new Error("Interview answer exceeds allowed length");
   }
   store.recordAnswer({
     claimId,
@@ -120,6 +135,9 @@ export function recordResearchEvidenceTool(
     sourceKind: string;
   },
 ) {
+  if (!Object.values(EVIDENCE_STANCE).includes(input.stance)) {
+    throw new Error("Invalid evidence stance");
+  }
   const snapshot = store.getState();
   if (!snapshot.activeProbeId) {
     throw new Error("No active probe");
@@ -128,6 +146,15 @@ export function recordResearchEvidenceTool(
     throw new Error(
       "Research evidence requires summary, sourceUrl, and sourceLabel",
     );
+  }
+  if (
+    hasOversizedInput([
+      [input.summary, WEBMCP_INPUT_LIMITS.text],
+      [input.sourceLabel, WEBMCP_INPUT_LIMITS.label],
+      [input.sourceUrl, WEBMCP_INPUT_LIMITS.url],
+    ])
+  ) {
+    throw new Error("Research evidence exceeds allowed length");
   }
   if (
     input.sourceKind !== RESEARCH_SOURCE_KIND.EMPLOYER_OFFICIAL &&
@@ -167,14 +194,32 @@ export function importRoleFromClaimsTool(
     }>;
   },
 ) {
+  const sourceUrlInput = input.sourceUrl?.trim();
+  if (
+    hasOversizedInput([
+      [input.company, WEBMCP_INPUT_LIMITS.label],
+      [input.role, WEBMCP_INPUT_LIMITS.label],
+      ...(input.sourceUrl
+        ? ([[input.sourceUrl, WEBMCP_INPUT_LIMITS.url]] as const)
+        : []),
+      ...input.claims.flatMap((claim) => [
+        [claim.dimension, WEBMCP_INPUT_LIMITS.label] as const,
+        [claim.employerStatement, WEBMCP_INPUT_LIMITS.text] as const,
+        [claim.unresolvedVariable, WEBMCP_INPUT_LIMITS.text] as const,
+        [claim.measurableForm, WEBMCP_INPUT_LIMITS.text] as const,
+      ]),
+    ])
+  ) {
+    throw new Error("Imported role text exceeds allowed length");
+  }
   const claims = input.claims.map((claim) => ({
     dimension: claim.dimension.trim(),
     employerStatement: claim.employerStatement.trim(),
     unresolvedVariable: claim.unresolvedVariable.trim(),
     measurableForm: claim.measurableForm.trim(),
   }));
-  const sourceUrl = input.sourceUrl?.trim()
-    ? normalizeHttpUrl(input.sourceUrl, "Job posting URL")
+  const sourceUrl = sourceUrlInput
+    ? normalizeHttpUrl(sourceUrlInput, "Job posting URL")
     : undefined;
   if (
     !input.company.trim() ||

@@ -5,6 +5,7 @@ import {
   recordResearchEvidence,
   setClaimImportance,
 } from "@/lib/domain/derive-case";
+import { MAX_EVIDENCE_PER_CLAIM } from "@/lib/domain/limits";
 import type {
   CandidatePriorityInput,
   DerivedCase,
@@ -76,6 +77,13 @@ export function createCaseStore(initial: RoleCase = ATLAS_FDE) {
 
   function emit() {
     for (const listener of listeners) listener();
+  }
+
+  function assertEvidenceCapacity(claimId: string) {
+    const claim = state.source.claims.find((item) => item.id === claimId);
+    if (claim && claim.evidence.length >= MAX_EVIDENCE_PER_CLAIM) {
+      throw new Error("Active claim evidence limit reached");
+    }
   }
 
   function setPriorities(priorities: readonly CandidatePriorityInput[]) {
@@ -182,6 +190,7 @@ export function createCaseStore(initial: RoleCase = ATLAS_FDE) {
       return derived;
     },
     recordAnswer(input: InterviewAnswerInput) {
+      assertEvidenceCapacity(input.claimId);
       const source = recordInterviewAnswer(state.source, input);
       const derived = deriveCase(source);
       state = {
@@ -195,6 +204,7 @@ export function createCaseStore(initial: RoleCase = ATLAS_FDE) {
       emit();
     },
     recordResearch(input: ResearchEvidenceInput) {
+      assertEvidenceCapacity(input.claimId);
       const source = recordResearchEvidence(state.source, input);
       const derived = deriveCase(source);
       state = {

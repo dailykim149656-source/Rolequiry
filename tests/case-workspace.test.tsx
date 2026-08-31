@@ -1,29 +1,72 @@
 // @vitest-environment jsdom
 
-import { cleanup, render, screen, within } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  within,
+} from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { CaseWorkspace } from "@/components/CaseWorkspace";
 import { createCaseStore } from "@/lib/case-store";
 import { SPEAKER_ROLE } from "@/lib/domain/types";
+import type { WebMCPToolDiagnostic } from "@/lib/webmcp/diagnostics";
 import {
   importRoleFromClaimsTool,
   recordInterviewAnswerTool,
+  recordResearchEvidenceTool,
   selectDecisionChanger,
 } from "@/lib/webmcp/tools";
 
 afterEach(cleanup);
 
-function renderWorkspace(store = createCaseStore(), webmcpCount = 0) {
+function createImportedStore() {
+  const store = createCaseStore();
+  importRoleFromClaimsTool(store, {
+    company: "Example Corp",
+    role: "Staff Engineer",
+    claims: [
+      {
+        dimension: "On-call load",
+        employerStatement: "On-call is rare",
+        unresolvedVariable: "How often does this team get paged?",
+        measurableForm: "Pages per engineer last two quarters",
+      },
+    ],
+  });
+  return store;
+}
+
+function renderWorkspace(
+  store = createCaseStore(),
+  webmcpCount = 0,
+  webmcpDiagnostics: readonly WebMCPToolDiagnostic[] = [
+    { name: "get_role_claims", status: "UNAVAILABLE" },
+    { name: "get_case_state", status: "UNAVAILABLE" },
+  ],
+  caseFiles: {
+    readonly message?: string | null;
+    readonly error?: boolean;
+    readonly onExport?: () => void;
+    readonly onImport?: (file: File) => void;
+  } = {},
+) {
   render(
     <CaseWorkspace
+      caseFileError={caseFiles.error ?? false}
+      caseFileMessage={caseFiles.message ?? null}
       cannedAnswerLabel={undefined}
+      onExportCase={caseFiles.onExport ?? (() => undefined)}
       onImportanceChange={() => undefined}
+      onImportCase={caseFiles.onImport ?? (() => undefined)}
       onLoadFixture={() => undefined}
       onRank={() => undefined}
       onRecordAnswer={undefined}
       onReset={() => undefined}
       snapshot={store.getState()}
       webmcpCount={webmcpCount}
+      webmcpDiagnostics={webmcpDiagnostics}
     />,
   );
 }
@@ -32,7 +75,9 @@ describe("case workspace status", () => {
   it("does not claim WebMCP is live when no tools registered", () => {
     renderWorkspace();
 
-    expect(screen.getByText("Open in a WebMCP browser")).toBeTruthy();
+    const summary = screen.getByRole("status");
+    expect(summary.getAttribute("aria-live")).toBe("polite");
+    expect(summary.getAttribute("aria-atomic")).toBe("true");
     expect(screen.queryByText("WebMCP live")).toBeNull();
   });
 
@@ -41,6 +86,62 @@ describe("case workspace status", () => {
 
     expect(screen.getByText("WebMCP 7/7 live")).toBeTruthy();
     expect(screen.getByTestId("tool-status").textContent).toContain("7/7");
+  });
+
+  it("distinguishes registration failures from an unsupported browser", () => {
+    renderWorkspace(createCaseStore(), 0, [
+      { name: "get_role_claims", status: "FAILED" },
+      { name: "get_case_state", status: "FAILED" },
+    ]);
+
+    expect(screen.getByText("WebMCP registration failed")).toBeTruthy();
+    expect(screen.queryByText("Open in a WebMCP browser")).toBeNull();
+  });
+
+  it("shows tool-level diagnostics without exposing raw registration errors", () => {
+    renderWorkspace(createCaseStore(), 1, [
+      { name: "get_role_claims", status: "LIVE" },
+      { name: "get_case_state", status: "FAILED" },
+      { name: "select_decision_changer", status: "PENDING" },
+    ]);
+
+    const diagnostics = screen.getByTestId("webmcp-diagnostics");
+    expect(diagnostics.textContent).toContain("get_case_state");
+    expect(diagnostics.textContent).toContain("Registration failed");
+    expect(diagnostics.textContent).toContain("Registration pending");
+    expect(diagnostics.textContent).not.toContain("NotAllowedError");
+  });
+
+  it("offers local JSON backup and forwards the selected file", () => {
+    const onExport = vi.fn();
+    const onImport = vi.fn();
+    renderWorkspace(createImportedStore(), 0, undefined, {
+      message: "Case imported from local JSON.",
+      onExport,
+      onImport,
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Export case JSON" }));
+    expect(onExport).toHaveBeenCalledOnce();
+
+    const file = new File(["{}"], "case.json", {
+      type: "application/json",
+    });
+    fireEvent.change(screen.getByLabelText("Import case JSON"), {
+      target: { files: [file] },
+    });
+    expect(onImport).toHaveBeenCalledWith(file);
+    expect(screen.getByText("Case imported from local JSON.")).toBeTruthy();
+    expect(screen.getByText(/never uploaded/i)).toBeTruthy();
+  });
+
+  it("offers restore but not a meaningless demo export", () => {
+    renderWorkspace();
+
+    expect(screen.getByLabelText("Import case JSON")).toBeTruthy();
+    expect(
+      screen.queryByRole("button", { name: "Export case JSON" }),
+    ).toBeNull();
   });
 
   it("keeps the employer claims link at the minimum touch-target height", () => {
@@ -80,6 +181,30 @@ describe("case workspace status", () => {
 
     expect(screen.getByText("Priorities ready")).toBeTruthy();
     expect(screen.queryByText(/Set your priorities, then/)).toBeNull();
+  });
+
+  it("shows the agent workflow before the first probe is selected", () => {
+    renderWorkspace();
+
+    const starter = screen.getByTestId("agent-starter");
+    expect(starter.textContent).toContain("What should I investigate next?");
+    expect(starter.textContent).toContain("Verify the active claim");
+    expect(starter.textContent).toContain("Record the answer");
+  });
+
+  it("discloses the ranking formula as an uncalibrated heuristic", () => {
+    renderWorkspace();
+
+    const explanation = screen.getByText("How ranking works").parentElement;
+    expect(explanation?.textContent).toContain("40% candidate priority");
+    expect(explanation?.textContent).toContain("30% unresolvedness");
+    expect(explanation?.textContent).toContain("30% tension");
+    expect(explanation?.textContent).toContain(
+      "Ties use stable dimension text, then claim ID.",
+    );
+    expect(explanation?.textContent).toContain(
+      "transparent heuristic, not a predictive fit score",
+    );
   });
 
   it("shows one priority instruction for a fresh imported case", () => {
@@ -147,6 +272,24 @@ describe("case workspace status", () => {
         name: "Interview: 1 evidence item, supported",
       }).className,
     ).toContain("bg-supported-soft");
+  });
+
+  it("labels agent-declared employer sources without implying verification", () => {
+    const store = createCaseStore();
+    selectDecisionChanger(store);
+    recordResearchEvidenceTool(store, {
+      stance: "SUPPORTS",
+      summary: "The employer page describes end-to-end ownership.",
+      sourceUrl: "https://example.com/engineering",
+      sourceLabel: "Engineering page",
+      sourceKind: "EMPLOYER_OFFICIAL",
+    });
+    renderWorkspace(store);
+
+    expect(
+      screen.getByText("Employer-published · agent-reported"),
+    ).toBeTruthy();
+    expect(screen.queryByText(/^Verified$/)).toBeNull();
   });
 
   it("labels neutral-only evidence as neutral instead of empty", () => {

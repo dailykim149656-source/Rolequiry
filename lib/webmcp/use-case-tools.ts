@@ -2,6 +2,7 @@
 
 import { useWebMCP } from "use-webmcp-tool";
 import type { CaseStore } from "@/lib/case-store";
+import { WEBMCP_INPUT_LIMITS } from "@/lib/webmcp/input-limits";
 import {
   CASE_TOOL_CONTRACTS,
   getCaseState,
@@ -23,7 +24,11 @@ const answerSchema = {
   type: "object",
   properties: {
     stance: { type: "string", enum: ["SUPPORTS", "CHALLENGES", "NEUTRAL"] },
-    text: { type: "string", minLength: 1 },
+    text: {
+      type: "string",
+      minLength: 1,
+      maxLength: WEBMCP_INPUT_LIMITS.text,
+    },
     speakerRole: {
       type: "string",
       enum: ["RECRUITER", "HIRING_MANAGER", "TEAM_MEMBER", "OTHER"],
@@ -37,9 +42,21 @@ const researchSchema = {
   type: "object",
   properties: {
     stance: { type: "string", enum: ["SUPPORTS", "CHALLENGES", "NEUTRAL"] },
-    summary: { type: "string", minLength: 1 },
-    sourceUrl: { type: "string", minLength: 1 },
-    sourceLabel: { type: "string", minLength: 1 },
+    summary: {
+      type: "string",
+      minLength: 1,
+      maxLength: WEBMCP_INPUT_LIMITS.text,
+    },
+    sourceUrl: {
+      type: "string",
+      minLength: 1,
+      maxLength: WEBMCP_INPUT_LIMITS.url,
+    },
+    sourceLabel: {
+      type: "string",
+      minLength: 1,
+      maxLength: WEBMCP_INPUT_LIMITS.label,
+    },
     sourceKind: {
       type: "string",
       enum: ["EMPLOYER_OFFICIAL", "FIRST_PERSON_EXPERIENCE"],
@@ -52,9 +69,21 @@ const researchSchema = {
 const importSchema = {
   type: "object",
   properties: {
-    company: { type: "string", minLength: 1 },
-    role: { type: "string", minLength: 1 },
-    sourceUrl: { type: "string", minLength: 1 },
+    company: {
+      type: "string",
+      minLength: 1,
+      maxLength: WEBMCP_INPUT_LIMITS.label,
+    },
+    role: {
+      type: "string",
+      minLength: 1,
+      maxLength: WEBMCP_INPUT_LIMITS.label,
+    },
+    sourceUrl: {
+      type: "string",
+      minLength: 1,
+      maxLength: WEBMCP_INPUT_LIMITS.url,
+    },
     claims: {
       type: "array",
       minItems: 1,
@@ -62,10 +91,26 @@ const importSchema = {
       items: {
         type: "object",
         properties: {
-          dimension: { type: "string", minLength: 1 },
-          employerStatement: { type: "string", minLength: 1 },
-          unresolvedVariable: { type: "string", minLength: 1 },
-          measurableForm: { type: "string", minLength: 1 },
+          dimension: {
+            type: "string",
+            minLength: 1,
+            maxLength: WEBMCP_INPUT_LIMITS.label,
+          },
+          employerStatement: {
+            type: "string",
+            minLength: 1,
+            maxLength: WEBMCP_INPUT_LIMITS.text,
+          },
+          unresolvedVariable: {
+            type: "string",
+            minLength: 1,
+            maxLength: WEBMCP_INPUT_LIMITS.text,
+          },
+          measurableForm: {
+            type: "string",
+            minLength: 1,
+            maxLength: WEBMCP_INPUT_LIMITS.text,
+          },
         },
         required: [
           "dimension",
@@ -91,7 +136,11 @@ const prioritiesSchema = {
       items: {
         type: "object",
         properties: {
-          claimId: { type: "string", minLength: 1 },
+          claimId: {
+            type: "string",
+            minLength: 1,
+            maxLength: WEBMCP_INPUT_LIMITS.identifier,
+          },
           importance: {
             type: "string",
             enum: ["LOW", "MEDIUM", "HIGH", "CRITICAL"],

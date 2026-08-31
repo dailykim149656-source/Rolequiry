@@ -108,6 +108,60 @@ describe("WebMCP registration wrapper", () => {
       },
     });
   });
+
+  it("publishes explicit limits for every agent-authored string", () => {
+    const registered = installFakeModelContext();
+    renderHook(() => useCaseWebMCPTools(createCaseStore()), {
+      wrapper: React.StrictMode,
+    });
+
+    expect(
+      registered.get("record_interview_answer")?.inputSchema,
+    ).toMatchObject({
+      properties: { text: { maxLength: 5_000 } },
+    });
+    expect(
+      registered.get("record_research_evidence")?.inputSchema,
+    ).toMatchObject({
+      properties: {
+        summary: { maxLength: 5_000 },
+        sourceLabel: { maxLength: 300 },
+        sourceUrl: { maxLength: 2_048 },
+      },
+    });
+    expect(
+      registered.get("import_role_from_claims")?.inputSchema,
+    ).toMatchObject({
+      properties: {
+        company: { maxLength: 300 },
+        role: { maxLength: 300 },
+        sourceUrl: { maxLength: 2_048 },
+        claims: {
+          items: {
+            properties: {
+              dimension: { maxLength: 300 },
+              employerStatement: { maxLength: 5_000 },
+              unresolvedVariable: { maxLength: 5_000 },
+              measurableForm: { maxLength: 5_000 },
+            },
+          },
+        },
+      },
+    });
+    expect(
+      registered.get("set_candidate_priorities")?.inputSchema,
+    ).toMatchObject({
+      properties: {
+        priorities: {
+          items: {
+            properties: {
+              claimId: { maxLength: 300 },
+            },
+          },
+        },
+      },
+    });
+  });
 });
 
 describe("CaseStore shared state", () => {

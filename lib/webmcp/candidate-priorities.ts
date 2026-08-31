@@ -1,6 +1,10 @@
 import type { CaseStore } from "@/lib/case-store";
 import { type CandidatePriorityInput, IMPORTANCE } from "@/lib/domain/types";
 import { getCaseState } from "@/lib/webmcp/case-state";
+import {
+  hasOversizedInput,
+  WEBMCP_INPUT_LIMITS,
+} from "@/lib/webmcp/input-limits";
 
 export function setCandidatePrioritiesTool(
   store: CaseStore,
@@ -11,6 +15,13 @@ export function setCandidatePrioritiesTool(
   }
   if (input.priorities.length > 8) {
     throw new Error("At most eight candidate priorities are allowed");
+  }
+  if (
+    input.priorities.some((priority) =>
+      hasOversizedInput([[priority.claimId, WEBMCP_INPUT_LIMITS.identifier]]),
+    )
+  ) {
+    throw new Error("Candidate priority claim ID exceeds allowed length");
   }
   const invalidImportance = input.priorities.find(
     (priority) => !Object.values(IMPORTANCE).includes(priority.importance),

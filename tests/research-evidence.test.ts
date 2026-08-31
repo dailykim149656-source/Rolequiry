@@ -93,6 +93,43 @@ describe("record_research_evidence", () => {
     ).toThrow(/http/i);
   });
 
+  it("rejects oversized research text before mutation", () => {
+    const store = createCaseStore();
+    selectDecisionChanger(store);
+    const before = store.getState().source;
+
+    expect(() =>
+      recordResearchEvidenceTool(store, {
+        stance: "SUPPORTS",
+        summary: "x".repeat(5_001),
+        sourceUrl: "https://example.com/post",
+        sourceLabel: "Engineering post",
+        sourceKind: "FIRST_PERSON_EXPERIENCE",
+      }),
+    ).toThrow("Research evidence exceeds allowed length");
+    expect(store.getState().source).toBe(before);
+  });
+
+  it("rejects an invalid research stance before mutation", () => {
+    const store = createCaseStore();
+    selectDecisionChanger(store);
+    const before = store.getState().source;
+
+    expect(() =>
+      Reflect.apply(recordResearchEvidenceTool, undefined, [
+        store,
+        {
+          stance: "CONFIRMS",
+          summary: "This must not be stored.",
+          sourceUrl: "https://example.com/post",
+          sourceLabel: "Engineering post",
+          sourceKind: "FIRST_PERSON_EXPERIENCE",
+        },
+      ]),
+    ).toThrow("Invalid evidence stance");
+    expect(store.getState().source).toBe(before);
+  });
+
   it("marks official employer contradictions as challenged", () => {
     const updated = recordResearchEvidence(ATLAS_FDE, {
       claimId: "compensation",
@@ -158,6 +195,59 @@ describe("evidence provenance", () => {
     expect(researched.claims[0]?.evidence.at(-1)).toMatchObject({
       provenance: "AGENT_REPORTED",
     });
+  });
+
+  it("skips a restored research ID that already uses the next suffix", () => {
+    const imported = importRoleFromClaims({
+      company: "Example Corp",
+      role: "Staff Engineer",
+      claims: [
+        {
+          dimension: "On-call load",
+          employerStatement: "On-call is rare",
+          unresolvedVariable: "How often does this team get paged?",
+          measurableForm: "Pages per engineer last two quarters",
+        },
+      ],
+    });
+    const claim = imported.claims[0];
+    if (!claim) throw new Error("imported claim missing");
+    const restored = {
+      ...imported,
+      claims: [
+        {
+          ...claim,
+          evidence: [
+            ...claim.evidence,
+            {
+              id: "imported-1-research-3",
+              scope: "REPORTED_EXPERIENCE" as const,
+              stance: "NEUTRAL" as const,
+              text: "Earlier restored research",
+              sourceKind: "REPORTED_EXPERIENCE" as const,
+              sourceLabel: "Earlier source",
+              sourceUrl: "https://example.com/earlier",
+              synthetic: false,
+              provenance: "AGENT_REPORTED" as const,
+            },
+          ],
+        },
+      ],
+    };
+
+    const updated = recordResearchEvidence(restored, {
+      claimId: "imported-1",
+      stance: "SUPPORTS",
+      text: "New research",
+      sourceKind: "FIRST_PERSON_EXPERIENCE",
+      sourceLabel: "New source",
+      sourceUrl: "https://example.com/new",
+    });
+    const ids =
+      updated.claims[0]?.evidence.map((evidence) => evidence.id) ?? [];
+
+    expect(ids.at(-1)).toBe("imported-1-research-4");
+    expect(new Set(ids).size).toBe(ids.length);
   });
 });
 

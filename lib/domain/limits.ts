@@ -1,0 +1,3 @@
+export const MAX_CASE_FILE_BYTES = 64 * 1024 * 1024;
+export const MAX_EVIDENCE_PER_CLAIM = 100;
+export const MAX_IDENTIFIER_LENGTH = 300;

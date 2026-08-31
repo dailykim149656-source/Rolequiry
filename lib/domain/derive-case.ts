@@ -1,3 +1,4 @@
+import { MAX_IDENTIFIER_LENGTH } from "./limits";
 import {
   claimStatus,
   deriveClaimKind,
@@ -23,6 +24,40 @@ import {
   RESEARCH_SOURCE_KIND,
   SOURCE_KIND,
 } from "./types";
+
+function nextEvidenceId(
+  claim: SourceClaim,
+  channel: "interview" | "research",
+): string {
+  const existingIds = new Set(claim.evidence.map((evidence) => evidence.id));
+  let sequence = claim.evidence.length + 1;
+  const candidateFor = (value: number) => {
+    const suffix = `-${channel}-${value}`;
+    const prefix = claim.id.slice(0, MAX_IDENTIFIER_LENGTH - suffix.length);
+    return `${prefix}${suffix}`;
+  };
+  let candidate = candidateFor(sequence);
+  while (existingIds.has(candidate)) {
+    sequence += 1;
+    candidate = candidateFor(sequence);
+  }
+  return candidate;
+}
+
+function stableTextCompare(left: string, right: string): number {
+  if (left < right) return -1;
+  if (left > right) return 1;
+  return 0;
+}
+
+export function importedRoleCaseId(company: string): string {
+  const prefix = "imported-";
+  const slug = company
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+  return `${prefix}${slug.slice(0, MAX_IDENTIFIER_LENGTH - prefix.length)}`;
+}
 
 function deriveClaim(claim: SourceClaim): DerivedClaim {
   const kind = deriveClaimKind(claim);
@@ -63,7 +98,10 @@ export function deriveCase(roleCase: RoleCase): DerivedCase {
     if (!best) return claim;
     if (claim.probePriority > best.probePriority) return claim;
     if (claim.probePriority < best.probePriority) return best;
-    return claim.dimension.localeCompare(best.dimension) < 0 ? claim : best;
+    const dimensionOrder = stableTextCompare(claim.dimension, best.dimension);
+    if (dimensionOrder < 0) return claim;
+    if (dimensionOrder > 0) return best;
+    return stableTextCompare(claim.id, best.id) < 0 ? claim : best;
   }, null);
   return {
     id: roleCase.id,
@@ -101,7 +139,7 @@ export function recordInterviewAnswer(
       const nextEvidence = [
         ...claim.evidence,
         {
-          id: `${claim.id}-interview-${claim.evidence.length + 1}`,
+          id: nextEvidenceId(claim, "interview"),
           scope: AUTHORITY_SCOPE.CANDIDATE_SPECIFIC_ANSWER,
           stance: input.stance,
           text: input.text,
@@ -138,7 +176,7 @@ export function recordResearchEvidence(
         evidence: [
           ...claim.evidence,
           {
-            id: `${claim.id}-research-${claim.evidence.length + 1}`,
+            id: nextEvidenceId(claim, "research"),
             scope,
             stance: input.stance,
             text: input.text,
@@ -156,10 +194,7 @@ export function recordResearchEvidence(
 
 export function importRoleFromClaims(input: ImportedRoleInput): RoleCase {
   return {
-    id: `imported-${input.company
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-|-$/g, "")}`,
+    id: importedRoleCaseId(input.company),
     company: input.company.trim(),
     role: input.role.trim(),
     ...(input.sourceUrl ? { sourceUrl: input.sourceUrl } : {}),
