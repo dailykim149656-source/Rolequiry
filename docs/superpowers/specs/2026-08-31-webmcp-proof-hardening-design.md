@@ -53,21 +53,28 @@ interpretation and research loop are absent.
 
 | Header | Value |
 | --- | --- |
-| `Cross-Origin-Opener-Policy` | `same-origin` |
-| `Cross-Origin-Embedder-Policy` | `require-corp` |
+| `Origin-Agent-Cluster` | `?1` |
 | `Permissions-Policy` | `tools=(self)` |
 
 The global rule is smaller and safer than maintaining separate exceptions for
 `/case`, imported-case routes, and framework assets. The current app loads its
-runtime assets from the same origin; external job and evidence URLs are links,
-not embedded resources.
+runtime assets from the same origin.
+
+Chrome's WebMCP origin-isolation gate requires an origin-keyed agent cluster
+with `document.domain` disabled. It is not the COOP-plus-COEP mechanism exposed
+as `crossOriginIsolated`. In particular, `Origin-Agent-Cluster: ?0` disables
+WebMCP. Explicit `?1` makes the app's intent stable, while the explicit tools
+policy preserves the platform's default top-level and same-origin access.
+COOP and COEP are not added because they do not satisfy an additional WebMCP
+requirement and can unnecessarily restrict embedded resources and opener
+relationships.
 
 The change is accepted only if the built application reports
-`crossOriginIsolated === true`, all pages and assets still load without console
-or network errors, and both ChatGPT's WebMCP-capable browser and Chrome with the
-WebMCP flag discover all seven tools. If either agent surface stops working, the
-header configuration must be revised before merge rather than documented as a
-known limitation.
+`window.originAgentCluster === true`, all pages and assets still load without
+console or network errors, and both ChatGPT's WebMCP-capable browser and Chrome
+with the WebMCP testing flag discover all seven tools. If either agent surface
+stops working, the header configuration must be revised before merge rather
+than documented as a known limitation.
 
 ## Agent Journey Evaluations
 
@@ -171,8 +178,9 @@ only if the webpack production build and deployed artifact remain green.
 
 Runtime verification must prove:
 
-- the three response headers have the exact configured values;
-- `crossOriginIsolated` is `true` in the built and deployed application;
+- the two response headers have the exact configured values;
+- `window.originAgentCluster` is `true` and no route opts into
+  `Origin-Agent-Cluster: ?0`;
 - desktop and narrow layouts have no regression;
 - there are no blocked application assets or new console errors;
 - normal-browser fallback copy remains accurate;
@@ -181,8 +189,10 @@ Runtime verification must prove:
 - the full journey follows the confirmation and active-probe boundaries; and
 - the same JD selects different decision-changing probes for Candidates A and B.
 
-The evaluation ledger records the current full commit SHA so the evidence cannot
-be mistaken for coverage of a later build.
+The evaluation ledger records the exact evaluated code commit SHA so the
+evidence cannot be mistaken for coverage of a later runtime or tool-contract
+change. An evidence-only documentation commit may follow that SHA; any later
+runtime or tool-contract change invalidates the model run and requires a rerun.
 
 ## Deferred Until After Code Freeze
 
