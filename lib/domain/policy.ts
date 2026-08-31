@@ -24,6 +24,12 @@ export const LIVED_EXPERIENCE_WEIGHT = {
   CANDIDATE_SPECIFIC_ANSWER: 0.5,
 } as const satisfies Record<AuthorityScope, number>;
 
+export const PROBE_PRIORITY_WEIGHT = {
+  IMPORTANCE: 0.4,
+  UNRESOLVEDNESS: 0.3,
+  TENSION: 0.3,
+} as const;
+
 const EXPLICIT_POLICY_STATEMENT =
   /(visa sponsorship|remote-first|on-site required|hybrid work|paid time off|equity granted|relocation assistance)/i;
 const COMPENSATION_CONTEXT =
@@ -278,8 +284,8 @@ export function probePriority(input: {
   return {
     probeEligible,
     probePriority:
-      0.4 * IMPORTANCE_WEIGHT[input.importance] +
-      0.3 * input.unresolvedness +
-      0.3 * input.tension,
+      PROBE_PRIORITY_WEIGHT.IMPORTANCE * IMPORTANCE_WEIGHT[input.importance] +
+      PROBE_PRIORITY_WEIGHT.UNRESOLVEDNESS * input.unresolvedness +
+      PROBE_PRIORITY_WEIGHT.TENSION * input.tension,
   };
 }

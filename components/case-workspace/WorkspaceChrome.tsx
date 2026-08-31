@@ -1,18 +1,23 @@
 import Link from "next/link";
 import type { CaseSnapshot, FixtureId } from "@/lib/case-store";
+import type { WebMCPToolDiagnostic } from "@/lib/webmcp/diagnostics";
 import { Icon } from "./Icon";
 
 export function ProductBar({
   webmcpCount,
+  diagnostics = [],
   total = 7,
 }: {
   readonly webmcpCount: number;
+  readonly diagnostics?: readonly WebMCPToolDiagnostic[];
   readonly total?: number;
 }) {
-  const status =
-    webmcpCount === total
-      ? `WebMCP ${total}/${total} live`
-      : `WebMCP ${webmcpCount}/${total}`;
+  const hasFailure = diagnostics.some((item) => item.status === "FAILED");
+  const isPending = diagnostics.some((item) => item.status === "PENDING");
+  const isLive = webmcpCount === total;
+  const status = isLive
+    ? `WebMCP ${total}/${total} live`
+    : `WebMCP ${webmcpCount}/${total}`;
   return (
     <header className="mb-5 flex items-center justify-between gap-4 px-1">
       <div className="flex min-w-0 items-center gap-3">
@@ -28,11 +33,31 @@ export function ProductBar({
           </p>
         </div>
       </div>
-      <span className="flex shrink-0 items-center gap-2 rounded-full border border-line bg-surface px-3 py-1.5 text-xs font-medium text-secondary">
+      <output
+        aria-atomic="true"
+        aria-live="polite"
+        className="flex shrink-0 items-center gap-2 rounded-full border border-line bg-surface px-3 py-1.5 text-xs font-medium text-secondary"
+      >
         <span
-          className={`size-2 rounded-full ${webmcpCount === total ? "bg-supported" : "bg-unverified"}`}
+          className={`size-2 rounded-full ${
+            hasFailure
+              ? "bg-challenged"
+              : isLive
+                ? "bg-supported"
+                : "bg-unverified"
+          }`}
         />
-        {webmcpCount === 0 ? (
+        {hasFailure ? (
+          <>
+            <span className="sm:hidden">Registration failed</span>
+            <span className="hidden sm:inline">WebMCP registration failed</span>
+          </>
+        ) : isPending ? (
+          <>
+            <span className="sm:hidden">WebMCP registering</span>
+            <span className="hidden sm:inline">{status} · registering</span>
+          </>
+        ) : webmcpCount === 0 ? (
           <>
             <span className="sm:hidden">WebMCP required</span>
             <span className="hidden sm:inline">Open in a WebMCP browser</span>
@@ -40,7 +65,7 @@ export function ProductBar({
         ) : (
           status
         )}
-      </span>
+      </output>
     </header>
   );
 }
@@ -116,6 +141,68 @@ export function DossierHeader({
   );
 }
 
+export function CaseFileControls({
+  canExport,
+  error,
+  message,
+  onExport,
+  onImport,
+}: {
+  readonly canExport: boolean;
+  readonly error: boolean;
+  readonly message: string | null;
+  readonly onExport: () => void;
+  readonly onImport: (file: File) => void;
+}) {
+  return (
+    <section
+      aria-label="Case file"
+      className="mt-3 flex flex-col gap-3 rounded-2xl border border-line bg-surface px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between"
+    >
+      <div className="min-w-0">
+        <p className="font-semibold text-ink">Local case backup</p>
+        <p className="mt-0.5 text-xs leading-5 text-muted">
+          The JSON is created and read on this device; it is never uploaded.
+        </p>
+        {message ? (
+          <p
+            className={`mt-1 text-xs font-medium ${error ? "text-challenged" : "text-supported"}`}
+            role={error ? "alert" : "status"}
+          >
+            {message}
+          </p>
+        ) : null}
+      </div>
+      <div className="flex shrink-0 flex-wrap gap-2">
+        {canExport ? (
+          <button
+            className={controlChip(false)}
+            onClick={onExport}
+            type="button"
+          >
+            Export case JSON
+          </button>
+        ) : null}
+        <label
+          className={`${controlChip(false)} relative inline-flex cursor-pointer items-center overflow-hidden focus-within:ring-2 focus-within:ring-brand/30`}
+        >
+          Import case JSON
+          <input
+            accept=".json,application/json"
+            className="absolute inset-0 cursor-pointer opacity-0"
+            onChange={(event) => {
+              const file = event.currentTarget.files?.[0];
+              if (file) onImport(file);
+              event.currentTarget.value = "";
+            }}
+            type="file"
+          />
+        </label>
+      </div>
+    </section>
+  );
+}
+
 export function CompanyMark({ company }: { readonly company: string }) {
   const words = company
     .split(/\s+/)
@@ -163,6 +250,7 @@ export function DemoControls({
   onRecordAnswer,
   onReset,
   webmcpCount,
+  webmcpDiagnostics,
 }: {
   readonly activeFixture: string;
   readonly cannedAnswerLabel: string | undefined;
@@ -171,6 +259,7 @@ export function DemoControls({
   readonly onRecordAnswer: (() => void) | undefined;
   readonly onReset: () => void;
   readonly webmcpCount: number;
+  readonly webmcpDiagnostics: readonly WebMCPToolDiagnostic[];
 }) {
   return (
     <details className="mt-5 rounded-2xl border border-dashed border-strong bg-surface/60 p-4 text-sm text-secondary">
@@ -211,8 +300,64 @@ export function DemoControls({
       <p className="mt-3 text-xs text-muted" data-testid="tool-status">
         WebMCP registered: {webmcpCount}/7
       </p>
+      <ToolDiagnostics diagnostics={webmcpDiagnostics} />
     </details>
   );
+}
+
+function ToolDiagnostics({
+  diagnostics,
+}: {
+  readonly diagnostics: readonly WebMCPToolDiagnostic[];
+}) {
+  const allUnavailable = diagnostics.every(
+    (item) => item.status === "UNAVAILABLE",
+  );
+  return (
+    <div
+      className="mt-3 border-t border-line pt-3"
+      data-testid="webmcp-diagnostics"
+    >
+      <p className="text-xs font-semibold uppercase tracking-[0.1em] text-ink">
+        Tool diagnostics
+      </p>
+      {allUnavailable ? (
+        <p className="mt-2 text-xs leading-5 text-muted">
+          This browser does not expose document.modelContext. Open the same page
+          in ChatGPT&apos;s browser or WebMCP-enabled Chrome.
+        </p>
+      ) : (
+        <ul className="mt-2 grid gap-1.5 sm:grid-cols-2">
+          {diagnostics.map((item) => (
+            <li
+              className="flex min-w-0 items-center justify-between gap-2 rounded-lg bg-quiet px-2.5 py-2 text-xs"
+              key={item.name}
+            >
+              <code className="truncate text-ink">{item.name}</code>
+              <span
+                className={`shrink-0 font-semibold ${diagnosticTone(item.status)}`}
+              >
+                {diagnosticLabel(item.status)}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+function diagnosticLabel(status: WebMCPToolDiagnostic["status"]): string {
+  if (status === "LIVE") return "Live";
+  if (status === "FAILED") return "Registration failed";
+  if (status === "PENDING") return "Registration pending";
+  return "Browser unavailable";
+}
+
+function diagnosticTone(status: WebMCPToolDiagnostic["status"]): string {
+  if (status === "LIVE") return "text-supported";
+  if (status === "FAILED") return "text-challenged";
+  return "text-unverified";
 }
 
 function controlChip(active: boolean): string {

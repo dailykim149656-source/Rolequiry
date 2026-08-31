@@ -267,6 +267,48 @@ describe("import_role_from_claims", () => {
       }),
     ).toThrow(/empty/i);
   });
+
+  it("rejects oversized imported text before mutation", () => {
+    const store = createCaseStore();
+    const before = store.getState().source;
+
+    expect(() =>
+      importRoleFromClaimsTool(store, {
+        company: "x".repeat(301),
+        role: "Staff Engineer",
+        claims: [
+          {
+            dimension: "On-call load",
+            employerStatement: "On-call is rare",
+            unresolvedVariable: "How often does this team get paged?",
+            measurableForm: "Pages per engineer last two quarters",
+          },
+        ],
+      }),
+    ).toThrow("Imported role text exceeds allowed length");
+    expect(store.getState().source).toBe(before);
+  });
+
+  it("counts imported claim whitespace toward the schema length limit", () => {
+    const store = createCaseStore();
+    const before = store.getState().source;
+
+    expect(() =>
+      importRoleFromClaimsTool(store, {
+        company: "Example Corp",
+        role: "Staff Engineer",
+        claims: [
+          {
+            dimension: "On-call load",
+            employerStatement: `${"x".repeat(5_000)} `,
+            unresolvedVariable: "How often does this team get paged?",
+            measurableForm: "Pages per engineer last two quarters",
+          },
+        ],
+      }),
+    ).toThrow("Imported role text exceeds allowed length");
+    expect(store.getState().source).toBe(before);
+  });
 });
 
 describe("set_candidate_priorities", () => {
@@ -419,14 +461,22 @@ describe("registered write loop", () => {
     ).toBe(true);
   });
 
-  it("imports, confirms priorities, then selects through live closures", async () => {
+  it("runs import, confirmation, research, and interview through live closures", async () => {
     const registered = installFakeModelContext();
     const store = createCaseStore();
     renderHook(() => useCaseWebMCPTools(store), { wrapper: React.StrictMode });
     const imported = registered.get("import_role_from_claims");
     const priorities = registered.get("set_candidate_priorities");
     const select = registered.get("select_decision_changer");
-    if (!imported?.execute || !priorities?.execute || !select?.execute) {
+    const research = registered.get("record_research_evidence");
+    const record = registered.get("record_interview_answer");
+    if (
+      !imported?.execute ||
+      !priorities?.execute ||
+      !select?.execute ||
+      !research?.execute ||
+      !record?.execute
+    ) {
       throw new Error("conversation-to-case tools missing");
     }
 
@@ -449,7 +499,10 @@ describe("registered write loop", () => {
       ],
     });
     const prioritizedRaw = await priorities.execute({
-      priorities: [{ claimId: "imported-2", importance: "CRITICAL" }],
+      priorities: [
+        { claimId: "imported-1", importance: "HIGH" },
+        { claimId: "imported-2", importance: "CRITICAL" },
+      ],
     });
     const prioritized = JSON.parse(prioritizedRaw.content[0]?.text ?? "{}");
 
@@ -462,5 +515,35 @@ describe("registered write loop", () => {
     const selectedRaw = await select.execute({});
     const selected = JSON.parse(selectedRaw.content[0]?.text ?? "{}");
     expect(selected.claim_id).toBe("imported-2");
+
+    const researchedRaw = await research.execute({
+      stance: "CHALLENGES",
+      summary: "A first-person report describes travel-heavy launch windows.",
+      sourceUrl: "https://example.com/travel-report",
+      sourceLabel: "Former engineer report",
+      sourceKind: "FIRST_PERSON_EXPERIENCE",
+    });
+    const researched = JSON.parse(researchedRaw.content[0]?.text ?? "{}");
+    expect(researched.selectionState).toBe("EVIDENCE_UPDATED");
+    expect(
+      JSON.parse((await select.execute({})).content[0]?.text ?? "{}"),
+    ).toMatchObject({
+      outcome: "PROBE_SELECTED",
+      claim_id: "imported-2",
+    });
+
+    const interviewedRaw = await record.execute({
+      stance: "SUPPORTS",
+      text: "The hiring manager gave the team's quarterly travel range.",
+      speakerRole: SPEAKER_ROLE.HIRING_MANAGER,
+    });
+    const interviewed = JSON.parse(interviewedRaw.content[0]?.text ?? "{}");
+    expect(interviewed.selectionState).toBe("EVIDENCE_UPDATED");
+    expect(
+      JSON.parse((await select.execute({})).content[0]?.text ?? "{}"),
+    ).toMatchObject({
+      outcome: "PROBE_SELECTED",
+      claim_id: "imported-1",
+    });
   });
 });

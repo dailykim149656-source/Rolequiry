@@ -79,7 +79,7 @@ For the built-in fixture smoke test: ask `What should I investigate next?`, set 
 - No server-side model calls. The user's existing agent does language work and external research.
 - No resume upload or candidate-profile database. Raw career context remains in the connected agent's conversation.
 - No deterministic fit score. Career fit and synergy remain hypotheses for the agent and candidate to test against Rolequiry's evidence state.
-- Imported case data stays in the current tab's session storage; demo fixtures reset on reload, and there is no cross-tab sync, account sync, or server backup.
+- Imported case data uses the current tab's session storage when browser quota permits; the UI warns if refresh persistence fails, and demo fixtures reset on reload. Validated JSON export/import gives real imported cases an explicit local backup without uploading them, but there is no cross-tab sync, account sync, or server backup.
 - Imported cases start with employer testimony only. The agent may add sourced first-person or employer-official research; Rolequiry stores agent-reported provenance, it does not independently verify the page.
 - Rolequiry ranks lived-experience uncertainty, not written employer policy. Compensation bands and similar employer-owned statements are recorded, but they are not the next research probe.
 - Rolequiry deliberately does not ingest arbitrary news or analyst commentary into its current authority model.

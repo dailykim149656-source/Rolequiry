@@ -3,6 +3,10 @@ import {
   decisionPathHint,
   decisionPathNodes,
 } from "@/lib/domain/decision-path";
+import {
+  LIVED_EXPERIENCE_WEIGHT,
+  PROBE_PRIORITY_WEIGHT,
+} from "@/lib/domain/policy";
 import { noProbeDetails } from "@/lib/domain/probe-outcome";
 import type { DerivedClaim } from "@/lib/domain/types";
 import { Icon, type IconName } from "./Icon";
@@ -65,12 +69,42 @@ export function DecisionPanel({
           snapshot.selectionState === "EVIDENCE_UPDATED") ? (
         <DecisionPath claim={selected} mode={snapshot.selectionState} />
       ) : (
-        <DecisionNotice
-          body="Ask your agent “What should I investigate next?” to choose the first question from your priorities."
-          title="Priorities ready"
-        />
+        <AgentStarter />
       )}
+      <RankingDisclosure />
     </section>
+  );
+}
+
+function RankingDisclosure() {
+  const percent = (value: number) => `${Math.round(value * 100)}%`;
+  return (
+    <details className="mt-5 border-t border-line pt-4 text-sm text-secondary">
+      <summary className="min-h-11 cursor-pointer py-2 font-semibold text-ink outline-none focus-visible:ring-2 focus-visible:ring-brand/30">
+        How ranking works
+      </summary>
+      <div className="space-y-2 pb-1 leading-6">
+        <p>
+          Eligible unresolved claims are ranked by{" "}
+          {percent(PROBE_PRIORITY_WEIGHT.IMPORTANCE)} candidate priority,{" "}
+          {percent(PROBE_PRIORITY_WEIGHT.UNRESOLVEDNESS)} unresolvedness, and{" "}
+          {percent(PROBE_PRIORITY_WEIGHT.TENSION)} tension.
+        </p>
+        <p>Ties use stable dimension text, then claim ID.</p>
+        <p>
+          For lived experience, evidence coverage weights employer claims at
+          {` ${percent(LIVED_EXPERIENCE_WEIGHT.EMPLOYER_STATED)}`}, public
+          reports at up to{" "}
+          {percent(LIVED_EXPERIENCE_WEIGHT.REPORTED_EXPERIENCE)}, and a
+          resolving interview answer at{" "}
+          {percent(LIVED_EXPERIENCE_WEIGHT.CANDIDATE_SPECIFIC_ANSWER)}.
+        </p>
+        <p>
+          This is a transparent heuristic, not a predictive fit score or an
+          empirically calibrated outcome model.
+        </p>
+      </div>
+    </details>
   );
 }
 
@@ -121,6 +155,44 @@ function PrioritiesRequired() {
         Set your priorities
         <Icon className="size-4" name="arrow" />
       </a>
+    </div>
+  );
+}
+
+function AgentStarter() {
+  const steps = [
+    ["1", "Ask “What should I investigate next?”"],
+    ["2", "Verify the active claim with public evidence."],
+    ["3", "Record the answer, then check again."],
+  ] as const;
+
+  return (
+    <div className="mt-4" data-testid="agent-starter">
+      <div className="flex gap-4 rounded-2xl border border-brand/20 bg-brand-soft/50 p-5">
+        <span className="grid size-11 shrink-0 place-items-center rounded-full bg-surface text-brand shadow-sm">
+          <Icon className="size-5" name="spark" />
+        </span>
+        <div>
+          <h3 className="text-lg font-semibold">Priorities ready</h3>
+          <p className="mt-1 text-sm leading-6 text-secondary">
+            Your agent reads and writes this same case as the investigation
+            moves forward.
+          </p>
+        </div>
+      </div>
+      <ol className="mt-3 grid gap-2">
+        {steps.map(([number, text]) => (
+          <li
+            className="flex items-center gap-3 rounded-xl border border-line bg-quiet px-3 py-2.5 text-sm text-secondary"
+            key={number}
+          >
+            <span className="grid size-7 shrink-0 place-items-center rounded-full bg-surface font-semibold text-brand">
+              {number}
+            </span>
+            {text}
+          </li>
+        ))}
+      </ol>
     </div>
   );
 }

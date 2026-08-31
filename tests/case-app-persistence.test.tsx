@@ -1,7 +1,13 @@
 // @vitest-environment jsdom
 
-import { cleanup, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+} from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { CaseApp } from "@/components/CaseApp";
 import {
   CASE_STORAGE_KEY,
@@ -27,8 +33,40 @@ function savedCase(company: string) {
   return serializePersistedCase(store.getState());
 }
 
+function largeSavedCase() {
+  const payload = JSON.parse(savedCase("Large File Corp"));
+  const template = payload.state.source.claims[0];
+  payload.state.source.claims = Array.from({ length: 3 }, (_, claimIndex) => {
+    const claimId = `imported-${claimIndex + 1}`;
+    return {
+      ...template,
+      id: claimId,
+      dimension: `Evidence-heavy claim ${claimIndex + 1}`,
+      evidence: [
+        {
+          ...template.evidence[0],
+          id: `${claimId}-employer`,
+        },
+        ...Array.from({ length: 99 }, (_, evidenceIndex) => ({
+          id: `${claimId}-interview-${evidenceIndex + 2}`,
+          scope: "CANDIDATE_SPECIFIC_ANSWER",
+          stance: "NEUTRAL",
+          text: "😀".repeat(5_000),
+          speakerRole: "HIRING_MANAGER",
+          sourceKind: "INTERVIEW",
+          sourceLabel: "HIRING_MANAGER",
+          synthetic: false,
+          provenance: "CANDIDATE_REPORTED",
+        })),
+      ],
+    };
+  });
+  return JSON.stringify(payload);
+}
+
 afterEach(() => {
   cleanup();
+  vi.restoreAllMocks();
   window.localStorage.clear();
   window.sessionStorage.clear();
 });
@@ -64,5 +102,172 @@ describe("CaseApp persistence", () => {
     render(<CaseApp />);
 
     expect(window.sessionStorage.getItem(CASE_STORAGE_KEY)).toBeNull();
+  });
+
+  it("restores a validated local JSON file without uploading it", async () => {
+    render(<CaseApp />);
+    const contents = savedCase("File Corp");
+    const file = {
+      name: "rolequiry-file-corp.json",
+      size: contents.length,
+      text: async () => contents,
+    } as File;
+
+    fireEvent.change(screen.getByLabelText("Import case JSON"), {
+      target: { files: [file] },
+    });
+
+    expect(await screen.findByText("File Corp")).toBeTruthy();
+    expect(
+      await screen.findByText("Case imported from local JSON."),
+    ).toBeTruthy();
+  });
+
+  it("warns when an imported case cannot persist across refresh", async () => {
+    vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+      throw new DOMException("Quota exceeded", "QuotaExceededError");
+    });
+    render(<CaseApp />);
+    const contents = savedCase("Quota Corp");
+    const file = {
+      name: "rolequiry-quota-corp.json",
+      size: contents.length,
+      text: async () => contents,
+    } as File;
+
+    fireEvent.change(screen.getByLabelText("Import case JSON"), {
+      target: { files: [file] },
+    });
+
+    expect(await screen.findByText("Quota Corp")).toBeTruthy();
+    expect(
+      await screen.findByText(
+        "Case imported, but this browser could not keep it for refresh. Keep the JSON file to restore it.",
+      ),
+    ).toBeTruthy();
+    expect(screen.queryByText("Case imported from local JSON.")).toBeNull();
+  });
+
+  it("imports a valid backup the app can produce at evidence limits", async () => {
+    render(<CaseApp />);
+    const contents = largeSavedCase();
+    const size = new TextEncoder().encode(contents).byteLength;
+    expect(size).toBeGreaterThan(5 * 1024 * 1024);
+    const file = {
+      name: "rolequiry-large-file-corp.json",
+      size,
+      text: async () => contents,
+    } as File;
+
+    fireEvent.change(screen.getByLabelText("Import case JSON"), {
+      target: { files: [file] },
+    });
+
+    expect(
+      await screen.findByText("Large File Corp", undefined, {
+        timeout: 10_000,
+      }),
+    ).toBeTruthy();
+    expect(
+      await screen.findByText("Case imported from local JSON."),
+    ).toBeTruthy();
+  }, 15_000);
+
+  it("rejects an invalid local JSON file without changing the case", async () => {
+    render(<CaseApp />);
+    const file = {
+      name: "invalid.json",
+      size: 10,
+      text: async () => '{"version":2}',
+    } as File;
+
+    fireEvent.change(screen.getByLabelText("Import case JSON"), {
+      target: { files: [file] },
+    });
+
+    expect(
+      await screen.findByText("Could not import this Rolequiry JSON file."),
+    ).toBeTruthy();
+    expect(screen.getByText("Northwind Automation")).toBeTruthy();
+  });
+
+  it("rejects an external file that claims demo-fixture authority", async () => {
+    const payload = JSON.parse(
+      serializePersistedCase(createCaseStore().getState()),
+    );
+    payload.state.source.company = "Forged Demo Corp";
+    payload.state.source.claims[0].kind = "EMPLOYER_POLICY";
+    const contents = JSON.stringify(payload);
+    const file = {
+      name: "forged-demo.json",
+      size: contents.length,
+      text: async () => contents,
+    } as File;
+    render(<CaseApp />);
+
+    fireEvent.change(screen.getByLabelText("Import case JSON"), {
+      target: { files: [file] },
+    });
+
+    expect(
+      await screen.findByText("Could not import this Rolequiry JSON file."),
+    ).toBeTruthy();
+    expect(screen.getByText("Northwind Automation")).toBeTruthy();
+    expect(screen.queryByText("Forged Demo Corp")).toBeNull();
+  });
+
+  it("keeps the newest selection when file reads finish out of order", async () => {
+    let finishFirstRead: (contents: string) => void = () => undefined;
+    const firstRead = new Promise<string>((resolve) => {
+      finishFirstRead = resolve;
+    });
+    const firstFile = {
+      name: "first.json",
+      size: 1_000,
+      text: () => firstRead,
+    } as File;
+    const secondContents = savedCase("Second Corp");
+    const secondFile = {
+      name: "second.json",
+      size: secondContents.length,
+      text: async () => secondContents,
+    } as File;
+    render(<CaseApp />);
+    const input = screen.getByLabelText("Import case JSON");
+
+    fireEvent.change(input, { target: { files: [firstFile] } });
+    fireEvent.change(input, { target: { files: [secondFile] } });
+
+    expect(await screen.findByText("Second Corp")).toBeTruthy();
+    await act(async () => {
+      finishFirstRead(savedCase("First Corp"));
+      await firstRead;
+    });
+
+    expect(screen.getByText("Second Corp")).toBeTruthy();
+    expect(screen.queryByText("First Corp")).toBeNull();
+  });
+
+  it("downloads the current case as a local JSON file", async () => {
+    const createObjectUrl = vi
+      .spyOn(URL, "createObjectURL")
+      .mockReturnValue("blob:rolequiry-case");
+    vi.spyOn(URL, "revokeObjectURL").mockImplementation(() => undefined);
+    const downloadedNames: string[] = [];
+    vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(
+      function recordDownload(this: HTMLAnchorElement) {
+        downloadedNames.push(this.download);
+      },
+    );
+    window.sessionStorage.setItem(CASE_STORAGE_KEY, savedCase("Export Corp"));
+    render(<CaseApp />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Export case JSON" }));
+
+    expect(createObjectUrl).toHaveBeenCalledWith(expect.any(Blob));
+    expect(downloadedNames).toEqual([
+      "rolequiry-export-corp-staff-engineer.json",
+    ]);
+    expect(await screen.findByText("Case JSON exported locally.")).toBeTruthy();
   });
 });

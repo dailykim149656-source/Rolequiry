@@ -102,6 +102,19 @@ describe("selection state", () => {
     expect(store.getState().rankingVisible).toBe(false);
   });
 
+  it("re-ranks the active probe after a candidate changes priority and checks again", () => {
+    const store = createCaseStore();
+
+    expect(selectDecisionChanger(store).claim_id).toBe("technical-ownership");
+    store.setImportance("travel", "CRITICAL");
+
+    expect(store.getState().activeProbeId).toBe("technical-ownership");
+    expect(store.getState().rankingVisible).toBe(false);
+    expect(selectDecisionChanger(store).claim_id).toBe("travel");
+    expect(store.getState().activeProbeId).toBe("travel");
+    expect(store.getState().rankingVisible).toBe(true);
+  });
+
   it("keeps imported priorities marked as touched when no probe is eligible", () => {
     const store = createCaseStore();
     importRoleFromClaimsTool(store, {

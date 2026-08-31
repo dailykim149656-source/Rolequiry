@@ -103,4 +103,54 @@ describe("Fixture A deriveCase", () => {
     };
     expect(deriveCase(first).topProbeId).toBe("alpha");
   });
+
+  it("uses claim ID when scores and dimension text are identical", () => {
+    const ownership = ATLAS_FDE.claims[0];
+    if (!ownership) throw new Error("ownership missing");
+    const tied = {
+      ...ATLAS_FDE,
+      origin: "AGENT_IMPORTED" as const,
+      claims: [
+        {
+          ...ownership,
+          id: "zeta",
+          dimension: "Technical ownership",
+          importance: IMPORTANCE.HIGH,
+        },
+        {
+          ...ownership,
+          id: "alpha",
+          dimension: "Technical ownership",
+          importance: IMPORTANCE.HIGH,
+        },
+      ],
+    };
+
+    expect(deriveCase(tied).topProbeId).toBe("alpha");
+  });
+
+  it("uses locale-independent dimension ordering for equal scores", () => {
+    const ownership = ATLAS_FDE.claims[0];
+    if (!ownership) throw new Error("ownership missing");
+    const tied = {
+      ...ATLAS_FDE,
+      origin: "AGENT_IMPORTED" as const,
+      claims: [
+        {
+          ...ownership,
+          id: "accented",
+          dimension: "ä ownership",
+          importance: IMPORTANCE.HIGH,
+        },
+        {
+          ...ownership,
+          id: "plain",
+          dimension: "z ownership",
+          importance: IMPORTANCE.HIGH,
+        },
+      ],
+    };
+
+    expect(deriveCase(tied).topProbeId).toBe("plain");
+  });
 });
