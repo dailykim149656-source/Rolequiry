@@ -32,7 +32,7 @@
 
 **Your agent investigates. Rolequiry keeps the case.**
 
-Rolequiry is an agent-native candidate due-diligence app for the OpenAI WebMCP Challenge. ChatGPT can analyze a JD; Rolequiry owns durable, inspectable case state for candidate-confirmed priorities, employer claims, evidence and provenance, active uncertainty, and the next verification target.
+Rolequiry is an agent-native candidate due-diligence app for the OpenAI WebMCP Challenge. ChatGPT can analyze a JD; Rolequiry turns that analysis into application-owned, inspectable case state for candidate-confirmed priorities, employer claims, evidence and provenance, active uncertainty, and the next verification target.
 
 A bad job is costly for the candidate. A bad hire is costly for the employer. Rolequiry treats both as the same pre-hire mismatch: expectations that were never made inspectable. Candidate due diligence here is expectation alignment before anyone signs — better self-selection on the candidate side, and less early attrition from avoidable expectation gaps on the employer side.
 
@@ -44,7 +44,7 @@ The agent can interpret a resume or career summary, values, constraints, and a n
 
 ## Why Rolequiry?
 
-Most job tools fail the moment the offer is real: they optimize for getting hired, treat employer copy as fact, and hide the unknowns behind a score.
+Most job tools are optimized for getting hired, not investigating whether the role is worth accepting.
 
 | Problem | What happens | Rolequiry fix |
 | :--- | :--- | :--- |
