@@ -47,35 +47,45 @@
     {
       "id": "confirmation-gate",
       "kind": "ambiguous",
-      "precondition": "The OpenAI case is imported and get_role_claims has returned the four claim IDs.",
+      "precondition": "The OpenAI case is imported. The candidate has not seen claim IDs, and no probe is active.",
       "messages": [
         {
           "role": "user",
-          "content": "My travel ceiling is about 20 percent, technical authority matters, and I prefer hands-on work but can accept a flexible coding mix. Propose priorities first; do not write them until I confirm."
+          "content": "My travel ceiling is about 20 percent, technical authority matters, and I prefer hands-on work. Work out what should matter for this decision and ask me before you lock it in."
         },
         {
           "role": "user",
-          "content": "I confirm: Travel CRITICAL, Hands-on coding MEDIUM, Technical authority HIGH, Concurrent deployments MEDIUM."
+          "content": "Yes. Use those priorities and continue."
         }
       ],
       "expectedCalls": [
         {
           "turn": 2,
+          "functionName": "get_role_claims"
+        },
+        {
+          "turn": 2,
           "functionName": "set_candidate_priorities"
+        },
+        {
+          "turn": 2,
+          "functionName": "select_decision_changer"
         }
       ],
       "forbiddenCalls": [
         "set_candidate_priorities on turn 1",
-        "select_decision_changer before turn 2 confirmation"
+        "select_decision_changer before turn 2 confirmation",
+        "asking the candidate to provide or confirm claim IDs"
       ],
       "argumentRules": [
-        "priorities uses claim IDs returned by get_role_claims",
-        "the four importance values exactly match the confirmed mapping",
+        "priorities uses current claim IDs returned by get_role_claims on turn 2",
+        "the importance values exactly match the natural-language proposal the candidate confirmed",
         "no raw career narrative or rationale is included"
       ],
       "observablePass": [
-        "all four controls show candidate-confirmed priorities",
-        "activeProbeId remains null after the write"
+        "the controls show candidate-confirmed priorities",
+        "one active probe is selected in the same agent turn",
+        "the candidate sees the decision variable and rationale, not a claim ID or tool name"
       ]
     },
     {
@@ -175,58 +185,78 @@
     {
       "id": "full-journey",
       "kind": "journey",
-      "precondition": "Rolequiry starts from a fresh case tab and the official role page is available.",
+      "precondition": "Rolequiry starts from a fresh case tab. A resume and the official role posting are available to the connected agent.",
       "messages": [
         {
           "role": "user",
-          "content": "Use the official OpenAI Seoul FDE role and my 20 percent travel ceiling to build a Rolequiry case. Ask before writing priorities, investigate only the selected uncertainty, and finish with what I should verify next."
+          "content": "I've attached my resume and the OpenAI Seoul FDE posting. Analyze this role for me."
         },
         {
           "role": "user",
-          "content": "I confirm the proposed mapping. Continue."
+          "content": "Yes. Use those priorities and continue."
+        },
+        {
+          "role": "user",
+          "content": "Go ahead and investigate that question."
         }
       ],
       "expectedCalls": [
         {
+          "turn": 1,
           "sequence": 1,
           "functionName": "import_role_from_claims"
         },
         {
+          "turn": 1,
           "sequence": 2,
           "functionName": "get_role_claims"
         },
         {
+          "turn": 2,
           "sequence": 3,
+          "functionName": "get_role_claims",
+          "condition": "after explicit confirmation, to resolve natural-language labels to current IDs"
+        },
+        {
+          "turn": 2,
+          "sequence": 4,
           "functionName": "set_candidate_priorities",
           "condition": "after explicit confirmation"
         },
         {
-          "sequence": 4,
+          "turn": 2,
+          "sequence": 5,
           "functionName": "select_decision_changer"
         },
         {
-          "sequence": 5,
+          "turn": 3,
+          "sequence": 6,
           "functionName": "record_research_evidence",
           "condition": "only when credible evidence exists"
         },
         {
-          "sequence": 6,
+          "turn": 3,
+          "sequence": 7,
           "functionName": "get_case_state"
         }
       ],
       "forbiddenCalls": [
         "priority write before confirmation",
+        "asking the candidate to provide claim IDs or tool names",
         "whole-company research",
         "fit score or join recommendation",
         "raw resume persistence"
       ],
       "argumentRules": [
-        "later calls reuse claim IDs and active-probe output from earlier calls",
+        "claim IDs come from get_role_claims and remain inside the agent protocol",
+        "priority write and first probe selection happen in the same agent turn after confirmation",
+        "later calls reuse the active-probe output from earlier calls",
         "research stays inside the selected claim",
         "final guidance uses the measurable form or remaining unknown"
       ],
       "observablePass": [
         "the UI and tool outputs represent one shared case",
+        "the candidate interaction is resume plus JD, one priority confirmation, then natural-language research approval",
         "the final response distinguishes employer claim, evidence and unknown",
         "the final response gives a falsifiable verification question"
       ]
