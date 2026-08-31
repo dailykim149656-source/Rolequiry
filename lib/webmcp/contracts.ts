@@ -32,7 +32,7 @@ export const CASE_TOOL_CONTRACTS = [
   {
     name: "record_research_evidence",
     description:
-      "Decision-directed research only: research the currently active probe, not the whole company. Record one agent-reported public employer-published or first-person source with provenance. Before choosing a strong SUPPORTS or CHALLENGES stance, make a reasonable attempt to find credible counterevidence; use NEUTRAL when the source is genuinely non-resolving or mixed. Do not choose authority scope or derived decision fields.",
+      "Decision-directed research only: research the currently active probe, not the whole company. Record one agent-reported public employer-published or first-person source with provenance. Stance is relative to the active employer claim, never the candidate's preference or constraint. Before choosing a strong SUPPORTS or CHALLENGES stance, seek credible counterevidence; use NEUTRAL when the source is genuinely non-resolving or mixed. Do not choose derived decision fields.",
     annotations: { readOnlyHint: false },
   },
   {
