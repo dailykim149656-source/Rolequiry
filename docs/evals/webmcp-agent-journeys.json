@@ -1,0 +1,235 @@
+{
+  "schemaVersion": "rolequiry-webmcp-evals-v1",
+  "source": "https://developer.chrome.com/docs/ai/webmcp/evals",
+  "roleUrl": "https://openai.com/careers/forward-deployed-engineer-seoul-seoul-south-korea/",
+  "toolNames": [
+    "get_role_claims",
+    "get_case_state",
+    "select_decision_changer",
+    "record_interview_answer",
+    "import_role_from_claims",
+    "record_research_evidence",
+    "set_candidate_priorities"
+  ],
+  "scenarios": [
+    {
+      "id": "direct-import",
+      "kind": "direct",
+      "precondition": "Rolequiry is open with no imported OpenAI case.",
+      "messages": [
+        {
+          "role": "user",
+          "content": "Import the official OpenAI Forward Deployed Engineer, Seoul posting into Rolequiry as testable employer claims. Do not infer my priorities yet."
+        }
+      ],
+      "expectedCalls": [
+        {
+          "turn": 1,
+          "functionName": "import_role_from_claims"
+        }
+      ],
+      "forbiddenCalls": [
+        "set_candidate_priorities",
+        "record_research_evidence",
+        "record_interview_answer"
+      ],
+      "argumentRules": [
+        "sourceUrl equals the official roleUrl",
+        "claims contains 1 to 8 non-empty employer claims",
+        "claims omit kind, coverage, status, unresolvedness, tension and ranking"
+      ],
+      "observablePass": [
+        "case origin is AGENT_IMPORTED",
+        "no priority is candidate-confirmed",
+        "no probe is active"
+      ]
+    },
+    {
+      "id": "confirmation-gate",
+      "kind": "ambiguous",
+      "precondition": "The OpenAI case is imported and get_role_claims has returned the four claim IDs.",
+      "messages": [
+        {
+          "role": "user",
+          "content": "My travel ceiling is about 20 percent, technical authority matters, and I prefer hands-on work but can accept a flexible coding mix. Propose priorities first; do not write them until I confirm."
+        },
+        {
+          "role": "user",
+          "content": "I confirm: Travel CRITICAL, Hands-on coding MEDIUM, Technical authority HIGH, Concurrent deployments MEDIUM."
+        }
+      ],
+      "expectedCalls": [
+        {
+          "turn": 2,
+          "functionName": "set_candidate_priorities"
+        }
+      ],
+      "forbiddenCalls": [
+        "set_candidate_priorities on turn 1",
+        "select_decision_changer before turn 2 confirmation"
+      ],
+      "argumentRules": [
+        "priorities uses claim IDs returned by get_role_claims",
+        "the four importance values exactly match the confirmed mapping",
+        "no raw career narrative or rationale is included"
+      ],
+      "observablePass": [
+        "all four controls show candidate-confirmed priorities",
+        "activeProbeId remains null after the write"
+      ]
+    },
+    {
+      "id": "decision-routing",
+      "kind": "direct",
+      "precondition": "Candidate A priorities are confirmed and no probe is active.",
+      "messages": [
+        {
+          "role": "user",
+          "content": "Which uncertainty should change my decision next?"
+        }
+      ],
+      "expectedCalls": [
+        {
+          "turn": 1,
+          "functionName": "select_decision_changer"
+        }
+      ],
+      "forbiddenCalls": [
+        "record_research_evidence before selection",
+        "an agent-invented research target"
+      ],
+      "argumentRules": [
+        "the tool takes an empty object",
+        "the returned claim_id, unresolved_variable and measurable_form become the sole research target"
+      ],
+      "observablePass": [
+        "Travel is the active probe",
+        "ranking becomes visible only after selection"
+      ]
+    },
+    {
+      "id": "research-discipline",
+      "kind": "ambiguous",
+      "precondition": "Travel is the active probe.",
+      "messages": [
+        {
+          "role": "user",
+          "content": "Research only the active Travel question. Attempt to find credible counterevidence. Record a source only if it resolves this claim; preserve uncertainty when it does not."
+        }
+      ],
+      "expectedCalls": [
+        {
+          "turn": 1,
+          "functionName": "record_research_evidence",
+          "condition": "only when a credible claim-specific source exists"
+        }
+      ],
+      "forbiddenCalls": [
+        "researching a non-active claim",
+        "record_interview_answer",
+        "set_candidate_priorities",
+        "recording arbitrary news or analyst commentary"
+      ],
+      "argumentRules": [
+        "sourceKind is EMPLOYER_OFFICIAL or FIRST_PERSON_EXPERIENCE",
+        "stance is NEUTRAL when material is mixed or non-resolving",
+        "sourceUrl, sourceLabel and summary refer to the same source"
+      ],
+      "observablePass": [
+        "evidence is attached only to Travel when recorded",
+        "weak material is neutral or unrecorded",
+        "unknown remains explicit"
+      ]
+    },
+    {
+      "id": "interview-continuity",
+      "kind": "journey",
+      "precondition": "One claim is active and the candidate supplies a real hiring-manager answer.",
+      "messages": [
+        {
+          "role": "user",
+          "content": "The hiring manager told me the team typically travels two weeks per quarter, with occasional longer launches. Record this answer against the question we are currently checking."
+        }
+      ],
+      "expectedCalls": [
+        {
+          "turn": 1,
+          "functionName": "record_interview_answer"
+        }
+      ],
+      "forbiddenCalls": [
+        "supplying claimId",
+        "attaching the answer to a non-active claim",
+        "fabricating an answer"
+      ],
+      "argumentRules": [
+        "speakerRole is HIRING_MANAGER",
+        "text preserves the candidate-provided substance",
+        "stance reflects whether the answer supports, challenges or leaves the active claim neutral"
+      ],
+      "observablePass": [
+        "only the active claim gains candidate-specific evidence",
+        "selectionState becomes EVIDENCE_UPDATED"
+      ]
+    },
+    {
+      "id": "full-journey",
+      "kind": "journey",
+      "precondition": "Rolequiry starts from a fresh case tab and the official role page is available.",
+      "messages": [
+        {
+          "role": "user",
+          "content": "Use the official OpenAI Seoul FDE role and my 20 percent travel ceiling to build a Rolequiry case. Ask before writing priorities, investigate only the selected uncertainty, and finish with what I should verify next."
+        },
+        {
+          "role": "user",
+          "content": "I confirm the proposed mapping. Continue."
+        }
+      ],
+      "expectedCalls": [
+        {
+          "sequence": 1,
+          "functionName": "import_role_from_claims"
+        },
+        {
+          "sequence": 2,
+          "functionName": "get_role_claims"
+        },
+        {
+          "sequence": 3,
+          "functionName": "set_candidate_priorities",
+          "condition": "after explicit confirmation"
+        },
+        {
+          "sequence": 4,
+          "functionName": "select_decision_changer"
+        },
+        {
+          "sequence": 5,
+          "functionName": "record_research_evidence",
+          "condition": "only when credible evidence exists"
+        },
+        {
+          "sequence": 6,
+          "functionName": "get_case_state"
+        }
+      ],
+      "forbiddenCalls": [
+        "priority write before confirmation",
+        "whole-company research",
+        "fit score or join recommendation",
+        "raw resume persistence"
+      ],
+      "argumentRules": [
+        "later calls reuse claim IDs and active-probe output from earlier calls",
+        "research stays inside the selected claim",
+        "final guidance uses the measurable form or remaining unknown"
+      ],
+      "observablePass": [
+        "the UI and tool outputs represent one shared case",
+        "the final response distinguishes employer claim, evidence and unknown",
+        "the final response gives a falsifiable verification question"
+      ]
+    }
+  ]
+}
