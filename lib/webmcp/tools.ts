@@ -1,4 +1,5 @@
 import type { CaseStore } from "@/lib/case-store";
+import { coverageBreakdownFor } from "@/lib/domain/policy";
 import { noProbeDetails } from "@/lib/domain/probe-outcome";
 import {
   AUTHORITY_SCOPE,
@@ -50,8 +51,11 @@ export function selectDecisionChanger(store: CaseStore) {
       ok: true as const,
       outcome: "PRIORITIES_REQUIRED" as const,
       claim_id: null,
+      claim_kind: null,
+      status: null,
       unresolved_variable: null,
       measurable_form: null,
+      authorityCoverage: null,
     };
   }
   const derived = store.peekDecision();
@@ -67,8 +71,11 @@ export function selectDecisionChanger(store: CaseStore) {
       reason: noProbe.reason,
       unprioritized_lived_claims: noProbe.unprioritizedLivedClaimCount,
       claim_id: null,
+      claim_kind: null,
+      status: null,
       unresolved_variable: null,
       measurable_form: null,
+      authorityCoverage: null,
     };
   }
   store.selectDecisionChanger();
@@ -76,8 +83,11 @@ export function selectDecisionChanger(store: CaseStore) {
     ok: true as const,
     outcome: "PROBE_SELECTED" as const,
     claim_id: selected.id,
+    claim_kind: selected.kind,
+    status: selected.status,
     unresolved_variable: selected.unresolvedVariable,
     measurable_form: selected.measurableForm,
+    authorityCoverage: coverageBreakdownFor(selected.kind, selected.evidence),
     rationale: {
       importance: selected.importance,
       unresolvedness: Number(selected.unresolvedness.toFixed(3)),

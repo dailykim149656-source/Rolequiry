@@ -14,7 +14,7 @@ export const CASE_TOOL_CONTRACTS = [
   {
     name: "select_decision_changer",
     description:
-      "After a confirmed priority write, call this in the same agent turn. Also call when the user asks what to investigate next, including check again after priorities or evidence change. Compute ranking, set the active probe, and return structured rationale.",
+      "After a confirmed priority write, call this in the same agent turn. Also call when the user asks what to investigate next, including check again after priorities or evidence change. Rolequiry computes ranking and sets the active probe. The returned claim_id is the app-owned authoritative next investigation target; do not re-rank, substitute, or skip it based on your own interpretation of employer prose. Use the selected probe exactly as returned. Employer-stated evidence is partial coverage for a LIVED_EXPERIENCE claim and does not by itself settle it.",
     annotations: { readOnlyHint: false, untrustedContentHint: true },
   },
   {

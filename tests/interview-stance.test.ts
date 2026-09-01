@@ -6,6 +6,7 @@ import { SPEAKER_ROLE } from "@/lib/domain/types";
 import { ATLAS_FDE } from "@/lib/fixtures/atlas-fde";
 import {
   getCaseState,
+  importRoleFromClaimsTool,
   recordInterviewAnswerTool,
   selectDecisionChanger,
 } from "@/lib/webmcp/tools";
@@ -118,6 +119,57 @@ describe("select_decision_changer outcomes", () => {
     expect("claim_id" in result ? result.claim_id : null).toBe(
       "technical-ownership",
     );
+  });
+
+  it("returns the selected claim as an authoritative lived-experience target", () => {
+    const store = createCaseStore();
+    importRoleFromClaimsTool(store, {
+      company: "OpenAI",
+      role: "Forward Deployed Engineer, Seoul",
+      claims: [
+        {
+          dimension: "Travel concentration",
+          employerStatement: "50% travel is expected.",
+          unresolvedVariable:
+            "How that stated 50% is distributed across cadence and concentration",
+          measurableForm:
+            "Median and maximum travel days per FDE across the last two quarters",
+        },
+        {
+          dimension: "Technical decision authority",
+          employerStatement:
+            "Own discovery, technical scoping, system design, build, and production rollout.",
+          unresolvedVariable:
+            "Who decides architecture after a customer deployment is live",
+          measurableForm:
+            "Named owner of the last customer-site change shipped without central review",
+        },
+      ],
+    });
+    store.setPriorities([
+      { claimId: "imported-1", importance: "CRITICAL" },
+      { claimId: "imported-2", importance: "HIGH" },
+    ]);
+
+    const result = selectDecisionChanger(store);
+
+    expect(result).toMatchObject({
+      outcome: "PROBE_SELECTED",
+      claim_id: "imported-1",
+      claim_kind: "LIVED_EXPERIENCE",
+      status: "MATERIAL_AMBIGUITY",
+      authorityCoverage: {
+        employerStated: { present: true, contribution: 0.2 },
+        reportedExperience: { count: 0, coverage: 0, contribution: 0 },
+        candidateSpecificAnswer: {
+          present: false,
+          resolving: false,
+          contribution: 0,
+        },
+        covered: 0.2,
+      },
+    });
+    expect(result).not.toHaveProperty("ranking");
   });
 
   it("exposes counted authority coverage instead of booleans", () => {

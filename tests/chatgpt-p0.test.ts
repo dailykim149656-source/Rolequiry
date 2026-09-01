@@ -25,6 +25,9 @@ describe("ChatGPT P0 contract", () => {
     );
     expect(state?.description.toLowerCase()).not.toContain("check again");
     expect(select?.description.toLowerCase()).toContain("check again");
+    expect(select?.description.toLowerCase()).toContain("do not re-rank");
+    expect(select?.description.toLowerCase()).toContain("authoritative");
+    expect(select?.description).toContain("LIVED_EXPERIENCE");
   });
 
   it("keeps the active probe after an interview answer instead of auto-selecting the next one", () => {

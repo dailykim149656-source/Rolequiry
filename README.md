@@ -116,7 +116,7 @@ On `/case`:
 | :--- | :--- | :--- |
 | `get_role_claims` | read | Employer testimony, not verified facts |
 | `get_case_state` | read | App-owned coverage, unresolvedness, tension and priorities keyed by claim ID; no role prose or ranking |
-| `select_decision_changer` | write | Compute ranking, set the active probe, return an untrusted agent-authored unresolved variable + measurable form |
+| `select_decision_changer` | write | App-owned next probe; do not re-rank. Returns unresolved variable, measurable form, claim kind, status, and coverage |
 | `record_interview_answer` | write | Record a human-obtained answer against the active probe |
 | `import_role_from_claims` | write | Create a tab-local case from extracted employer statements and an optional job-posting `sourceUrl` |
 | `record_research_evidence` | write | Record sourced public evidence the agent found for the active probe |
