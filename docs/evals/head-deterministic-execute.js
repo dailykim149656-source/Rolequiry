@@ -2,7 +2,7 @@
   const out = {
     startedAt: new Date().toISOString(),
     url: location.href,
-    evaluatedBaseSha: "eb5827b1a1616132f2029de7d3c5df6e2ee5c739",
+    evaluatedBaseSha: "b6897cf709515b151fb84d37e7d8d15e9e1bb792",
     steps: [],
     checks: {},
   };
@@ -152,6 +152,14 @@
   });
   const stateA = await exec("get_case_state", {});
   const dossierA = await exec("get_decision_dossier", {});
+  await exec("record_research_evidence", {
+    stance: "CHALLENGES",
+    summary: "A third-party job board claims Seoul travel runs far above 50%.",
+    sourceUrl: "https://jobs.example-board.com/openai-fde-seoul",
+    sourceLabel: "Job board mirror",
+    sourceKind: "EMPLOYER_OFFICIAL",
+  });
+  const stateAfterPoison = await exec("get_case_state", {});
 
   const candidateB = await exec("set_candidate_priorities", {
     priorities: [
@@ -242,6 +250,22 @@
     dossierA.remainingDecisionBlockers === 2 &&
     dossierA.interviewPack?.[0]?.claimId === ids["Travel concentration"] &&
     dossierA.interviewPack?.[0]?.askWho === "TEAM_MEMBER";
+  const travelAfterPoison = stateAfterPoison.claims.find(
+    (claim) => claim.id === ids["Travel concentration"],
+  );
+  out.checks.crossDomainEmployerQuarantine = {
+    flagged: travelAfterPoison?.evidenceSummary.some(
+      (evidence) => evidence.sourceOrganizationMatch === false,
+    ),
+    tension: travelAfterPoison?.tension,
+    status: travelAfterPoison?.status,
+    covered: travelAfterPoison?.authorityCoverage?.covered,
+  };
+  out.checks.crossDomainEmployerQuarantinePass =
+    out.checks.crossDomainEmployerQuarantine.flagged === true &&
+    travelAfterPoison?.tension === 0 &&
+    travelAfterPoison?.status === "MATERIAL_AMBIGUITY" &&
+    travelAfterPoison?.authorityCoverage?.covered === 0.2;
   out.checks.codingActiveAfterCandidateB =
     selectB.claim_id === ids["Hands-on coding share"] &&
     stateB.activeProbeId === ids["Hands-on coding share"];
@@ -274,6 +298,7 @@
     out.checks.travelActiveAfterCandidateA &&
     out.checks.travelSelectionAuthoritative &&
     out.checks.dossierRollupPass &&
+    out.checks.crossDomainEmployerQuarantinePass &&
     out.checks.codingActiveAfterCandidateB &&
     out.checks.selectedClaimIdsDiffer &&
     out.checks.stateHasNoIdentityFields &&

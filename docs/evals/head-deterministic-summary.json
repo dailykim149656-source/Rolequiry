@@ -1,11 +1,11 @@
 {
   "schemaVersion": "rolequiry-webmcp-evals-v1",
   "kind": "deterministic-browser-full-journey",
-  "evaluatedBaseSha": "eb5827b1a1616132f2029de7d3c5df6e2ee5c739",
-  "toolContractsSha256": "a0c2f7245de2fb6feb15bcafad143899042c7ad0e5f26004fc52aa9b320e3fd1",
-  "ranAt": "2026-09-01T16:31:54.289Z",
+  "evaluatedBaseSha": "b6897cf709515b151fb84d37e7d8d15e9e1bb792",
+  "toolContractsSha256": "f4dcbfc1de576153dffc5e4676a445e4011aed5c35a7457b8cce80743db0b4ba",
+  "ranAt": "2026-09-01T16:57:15.228Z",
   "surfacePath": "/case",
-  "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36",
+  "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
   "verdict": "PASS",
   "pass": true,
   "tools": [
@@ -61,7 +61,7 @@
     },
     {
       "name": "record_research_evidence",
-      "description": "Decision-directed research only: when the candidate naturally approves research, investigate only the currently active probe, not the whole company. Record one agent-reported public employer-published or first-person source with provenance only when it is credible and claim-specific. Stance is relative to the active employer claim, never the candidate's preference or constraint. Before choosing a strong SUPPORTS or CHALLENGES stance, seek credible counterevidence; use NEUTRAL when the source is genuinely non-resolving or mixed. After a successful write, call get_case_state and explain what remains unknown. Never require a tool name or claim ID from the candidate. Do not choose derived decision fields.",
+      "description": "Decision-directed research only: when the candidate naturally approves research, investigate only the currently active probe, not the whole company. Record one agent-reported public employer-published or first-person source with provenance only when it is credible and claim-specific. Stance is relative to the active employer claim, never the candidate's preference or constraint. Before choosing a strong SUPPORTS or CHALLENGES stance, seek credible counterevidence; use NEUTRAL when the source is genuinely non-resolving or mixed. An employer-published source whose domain does not match the job posting's organization is recorded but excluded from employer authority in the derived decision state. After a successful write, call get_case_state and explain what remains unknown. Never require a tool name or claim ID from the candidate. Do not choose derived decision fields.",
       "annotations": {
         "readOnlyHint": false,
         "untrustedContentHint": false
@@ -93,6 +93,8 @@
     "record_research_evidence",
     "get_case_state",
     "get_decision_dossier",
+    "record_research_evidence",
+    "get_case_state",
     "set_candidate_priorities",
     "select_decision_changer",
     "get_case_state"
@@ -135,6 +137,8 @@
       "record_research_evidence",
       "get_case_state",
       "get_decision_dossier",
+      "record_research_evidence",
+      "get_case_state",
       "set_candidate_priorities",
       "select_decision_changer",
       "get_case_state"
@@ -204,6 +208,13 @@
       }
     },
     "dossierRollupPass": true,
+    "crossDomainEmployerQuarantine": {
+      "flagged": true,
+      "tension": 0,
+      "status": "MATERIAL_AMBIGUITY",
+      "covered": 0.2
+    },
+    "crossDomainEmployerQuarantinePass": true,
     "codingActiveAfterCandidateB": true,
     "selectedClaimIdsDiffer": true,
     "selectionOutcomes": {
