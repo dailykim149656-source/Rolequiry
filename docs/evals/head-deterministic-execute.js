@@ -2,7 +2,7 @@
   const out = {
     startedAt: new Date().toISOString(),
     url: location.href,
-    evaluatedBaseSha: "afd5a0d946ad7d1a7f5ee9a58c99769c2205cbb8",
+    evaluatedBaseSha: "2a679f33231bd2239839e3c8dd1e13a7d9b2e82a",
     steps: [],
     checks: {},
   };
@@ -214,6 +214,17 @@
   out.checks.travelActiveAfterCandidateA =
     selectA.claim_id === ids["Travel concentration"] &&
     stateA.activeProbeId === ids["Travel concentration"];
+  out.checks.authoritativeSelectionA = {
+    claim_kind: selectA.claim_kind,
+    status: selectA.status,
+    authorityCoverage: selectA.authorityCoverage,
+  };
+  out.checks.travelSelectionAuthoritative =
+    selectA.claim_kind === "LIVED_EXPERIENCE" &&
+    selectA.status === "MATERIAL_AMBIGUITY" &&
+    selectA.authorityCoverage?.employerStated?.present === true &&
+    selectA.authorityCoverage?.employerStated?.contribution === 0.2 &&
+    selectA.authorityCoverage?.covered === 0.2;
   out.checks.codingActiveAfterCandidateB =
     selectB.claim_id === ids["Hands-on coding share"] &&
     stateB.activeProbeId === ids["Hands-on coding share"];
@@ -243,6 +254,7 @@
     out.checks.neutralResearchEvidenceRecorded &&
     out.checks.researchUnknownPreserved &&
     out.checks.travelActiveAfterCandidateA &&
+    out.checks.travelSelectionAuthoritative &&
     out.checks.codingActiveAfterCandidateB &&
     out.checks.selectedClaimIdsDiffer &&
     out.checks.stateHasNoIdentityFields &&

@@ -1,11 +1,11 @@
 {
   "schemaVersion": "rolequiry-webmcp-evals-v1",
   "kind": "deterministic-browser-full-journey",
-  "evaluatedBaseSha": "afd5a0d946ad7d1a7f5ee9a58c99769c2205cbb8",
-  "toolContractsSha256": "ee4197525d4732a3d09aeae7c99b3177fba223dcab8baa8bfd97b5ca420ab20a",
-  "ranAt": "2026-08-31T13:26:58.162Z",
+  "evaluatedBaseSha": "2a679f33231bd2239839e3c8dd1e13a7d9b2e82a",
+  "toolContractsSha256": "d084a5a7bb0e6d0473cfa774c86eeae6de63e31eb64218e0dffca5c9e690058a",
+  "ranAt": "2026-09-01T14:57:01.038Z",
   "surfacePath": "/case",
-  "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.0.0 Safari/537.36",
+  "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36",
   "verdict": "PASS",
   "pass": true,
   "tools": [
@@ -60,7 +60,7 @@
     },
     {
       "name": "select_decision_changer",
-      "description": "After a confirmed priority write, call this in the same agent turn. Also call when the user asks what to investigate next, including check again after priorities or evidence change. Compute ranking, set the active probe, and return structured rationale.",
+      "description": "After a confirmed priority write, call this in the same agent turn. Also call when the user asks what to investigate next, including check again after priorities or evidence change. Rolequiry computes ranking and sets the active probe. The returned claim_id is the app-owned authoritative next investigation target; do not re-rank, substitute, or skip it based on your own interpretation of employer prose. Use the selected probe exactly as returned. Employer-stated evidence is partial coverage for a LIVED_EXPERIENCE claim and does not by itself settle it.",
       "annotations": {
         "readOnlyHint": false,
         "untrustedContentHint": true
@@ -154,6 +154,28 @@
       "probeEligible": true
     },
     "travelActiveAfterCandidateA": true,
+    "authoritativeSelectionA": {
+      "claim_kind": "LIVED_EXPERIENCE",
+      "status": "MATERIAL_AMBIGUITY",
+      "authorityCoverage": {
+        "employerStated": {
+          "present": true,
+          "contribution": 0.2
+        },
+        "reportedExperience": {
+          "count": 0,
+          "coverage": 0,
+          "contribution": 0
+        },
+        "candidateSpecificAnswer": {
+          "present": false,
+          "resolving": false,
+          "contribution": 0
+        },
+        "covered": 0.2
+      }
+    },
+    "travelSelectionAuthoritative": true,
     "codingActiveAfterCandidateB": true,
     "selectedClaimIdsDiffer": true,
     "selectionOutcomes": {
