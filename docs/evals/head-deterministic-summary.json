@@ -1,15 +1,16 @@
 {
   "schemaVersion": "rolequiry-webmcp-evals-v1",
   "kind": "deterministic-browser-full-journey",
-  "evaluatedBaseSha": "2a679f33231bd2239839e3c8dd1e13a7d9b2e82a",
-  "toolContractsSha256": "d084a5a7bb0e6d0473cfa774c86eeae6de63e31eb64218e0dffca5c9e690058a",
-  "ranAt": "2026-09-01T14:57:01.038Z",
+  "evaluatedBaseSha": "1325d8fad057048a5e47efa1d72a070cf3356500",
+  "toolContractsSha256": "a0c2f7245de2fb6feb15bcafad143899042c7ad0e5f26004fc52aa9b320e3fd1",
+  "ranAt": "2026-09-01T16:21:07.102Z",
   "surfacePath": "/case",
   "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36",
   "verdict": "PASS",
   "pass": true,
   "tools": [
     "get_case_state",
+    "get_decision_dossier",
     "get_role_claims",
     "import_role_from_claims",
     "record_interview_answer",
@@ -24,6 +25,14 @@
       "annotations": {
         "readOnlyHint": true,
         "untrustedContentHint": false
+      }
+    },
+    {
+      "name": "get_decision_dossier",
+      "description": "When the candidate asks where the decision stands, what is known or still unknown, or what to ask in upcoming interviews, call this tool and present its app-derived rollup. Rolequiry computes per-claim resolution, remaining decision blockers, and the interview question pack from recorded evidence and confirmed priorities; do not recompute, re-rank, or invent blockers from raw claims. This tool reports overall progress and never chooses the next probe; keep using select_decision_changer for the single next investigation target. Dimension and question text originate from imported case prose.",
+      "annotations": {
+        "readOnlyHint": true,
+        "untrustedContentHint": true
       }
     },
     {
@@ -83,6 +92,7 @@
     "select_decision_changer",
     "record_research_evidence",
     "get_case_state",
+    "get_decision_dossier",
     "set_candidate_priorities",
     "select_decision_changer",
     "get_case_state"
@@ -94,7 +104,8 @@
     "set_candidate_priorities",
     "select_decision_changer",
     "record_research_evidence",
-    "get_case_state"
+    "get_case_state",
+    "get_decision_dossier"
   ],
   "claimIds": {
     "Travel concentration": "imported-1",
@@ -103,9 +114,10 @@
     "Concurrent deployment load": "imported-4"
   },
   "checks": {
-    "toolCountIsSeven": true,
+    "toolCountIsEight": true,
     "toolNames": [
       "get_case_state",
+      "get_decision_dossier",
       "get_role_claims",
       "import_role_from_claims",
       "record_interview_answer",
@@ -122,6 +134,7 @@
       "select_decision_changer",
       "record_research_evidence",
       "get_case_state",
+      "get_decision_dossier",
       "set_candidate_priorities",
       "select_decision_changer",
       "get_case_state"
@@ -133,7 +146,8 @@
       "set_candidate_priorities",
       "select_decision_changer",
       "record_research_evidence",
-      "get_case_state"
+      "get_case_state",
+      "get_decision_dossier"
     ],
     "confirmationRouting": [
       "get_role_claims",
@@ -176,6 +190,19 @@
       }
     },
     "travelSelectionAuthoritative": true,
+    "dossierRollup": {
+      "outcome": "DOSSIER",
+      "remainingDecisionBlockers": 2,
+      "firstAsk": {
+        "claimId": "imported-1",
+        "dimension": "Travel concentration",
+        "importance": "CRITICAL",
+        "askWho": "TEAM_MEMBER",
+        "question": "Median and maximum travel days per FDE across the last two quarters, and how concentrated those days were across weeks",
+        "context": "How that stated 50% is distributed across cadence, concentration, duration, launch spikes, and consecutive onsite stretches"
+      }
+    },
+    "dossierRollupPass": true,
     "codingActiveAfterCandidateB": true,
     "selectedClaimIdsDiffer": true,
     "selectionOutcomes": {

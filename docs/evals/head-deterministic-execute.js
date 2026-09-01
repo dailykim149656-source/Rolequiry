@@ -2,7 +2,7 @@
   const out = {
     startedAt: new Date().toISOString(),
     url: location.href,
-    evaluatedBaseSha: "2a679f33231bd2239839e3c8dd1e13a7d9b2e82a",
+    evaluatedBaseSha: "1325d8fad057048a5e47efa1d72a070cf3356500",
     steps: [],
     checks: {},
   };
@@ -58,7 +58,7 @@
     description: t.description,
     annotations: t.annotations,
   }));
-  out.checks.toolCountIsSeven = out.tools.length === 7;
+  out.checks.toolCountIsEight = out.tools.length === 8;
   out.checks.toolNames = out.tools.map((t) => t.name).sort();
   const toolContractsDigest = await crypto.subtle.digest(
     "SHA-256",
@@ -151,6 +151,7 @@
     sourceKind: "EMPLOYER_OFFICIAL",
   });
   const stateA = await exec("get_case_state", {});
+  const dossierA = await exec("get_decision_dossier", {});
 
   const candidateB = await exec("set_candidate_priorities", {
     priorities: [
@@ -168,7 +169,7 @@
   out.finishedAt = new Date().toISOString();
   out.checks.sequence = out.steps.map((step) => step.name);
   out.checks.candidateASequence = out.steps
-    .slice(0, 7)
+    .slice(0, 8)
     .map((step) => step.name);
   out.checks.confirmationRouting = out.steps
     .slice(2, 5)
@@ -225,6 +226,16 @@
     selectA.authorityCoverage?.employerStated?.present === true &&
     selectA.authorityCoverage?.employerStated?.contribution === 0.2 &&
     selectA.authorityCoverage?.covered === 0.2;
+  out.checks.dossierRollup = {
+    outcome: dossierA.outcome,
+    remainingDecisionBlockers: dossierA.remainingDecisionBlockers,
+    firstAsk: dossierA.interviewPack?.[0] ?? null,
+  };
+  out.checks.dossierRollupPass =
+    dossierA.outcome === "DOSSIER" &&
+    dossierA.remainingDecisionBlockers === 2 &&
+    dossierA.interviewPack?.[0]?.claimId === ids["Travel concentration"] &&
+    dossierA.interviewPack?.[0]?.askWho === "TEAM_MEMBER";
   out.checks.codingActiveAfterCandidateB =
     selectB.claim_id === ids["Hands-on coding share"] &&
     stateB.activeProbeId === ids["Hands-on coding share"];
@@ -246,7 +257,7 @@
   out.checks.stateHasNoIdentityFields =
     stateHasNoIdentityFields(stateA) && stateHasNoIdentityFields(stateB);
   out.checks.pass =
-    out.checks.toolCountIsSeven &&
+    out.checks.toolCountIsEight &&
     out.checks.noPreSelectionProbe &&
     out.checks.fourPriorityWrites &&
     out.checks.confirmationRoutingPass &&
@@ -255,6 +266,7 @@
     out.checks.researchUnknownPreserved &&
     out.checks.travelActiveAfterCandidateA &&
     out.checks.travelSelectionAuthoritative &&
+    out.checks.dossierRollupPass &&
     out.checks.codingActiveAfterCandidateB &&
     out.checks.selectedClaimIdsDiffer &&
     out.checks.stateHasNoIdentityFields &&
