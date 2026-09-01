@@ -1,4 +1,5 @@
 import type { CaseSnapshot } from "@/lib/case-store";
+import { sourceOrganization } from "@/lib/domain/policy";
 import {
   CLAIM_KIND,
   type DerivedClaim,
@@ -59,6 +60,7 @@ export function ClaimBoard({
         {snapshot.derived.claims.map((claim) => (
           <ClaimCard
             active={claim.id === snapshot.activeProbeId}
+            caseOrganization={sourceOrganization(snapshot.source.sourceUrl)}
             claim={claim}
             key={claim.id}
             onImportanceChange={onImportanceChange}
@@ -71,10 +73,12 @@ export function ClaimBoard({
 
 function ClaimCard({
   active,
+  caseOrganization,
   claim,
   onImportanceChange,
 }: {
   readonly active: boolean;
+  readonly caseOrganization: string;
   readonly claim: DerivedClaim;
   readonly onImportanceChange: (
     claimId: string,
@@ -130,7 +134,7 @@ function ClaimCard({
           <p className="mt-2 text-xs text-muted">{rankingNote}</p>
         </div>
       </div>
-      <EvidenceList claim={claim} />
+      <EvidenceList caseOrganization={caseOrganization} claim={claim} />
     </article>
   );
 }

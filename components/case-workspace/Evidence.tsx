@@ -1,3 +1,4 @@
+import { employerSourceOrganizationMatch } from "@/lib/domain/policy";
 import {
   AUTHORITY_SCOPE,
   type DerivedClaim,
@@ -93,7 +94,13 @@ function EvidenceSignal({
   );
 }
 
-export function EvidenceList({ claim }: { readonly claim: DerivedClaim }) {
+export function EvidenceList({
+  claim,
+  caseOrganization = "",
+}: {
+  readonly claim: DerivedClaim;
+  readonly caseOrganization?: string;
+}) {
   const groups = [
     {
       key: AUTHORITY_SCOPE.EMPLOYER_STATED,
@@ -138,7 +145,11 @@ export function EvidenceList({ claim }: { readonly claim: DerivedClaim }) {
               </div>
               <ul className="divide-y divide-line">
                 {items.map((item) => (
-                  <EvidenceRow item={item} key={item.id} />
+                  <EvidenceRow
+                    caseOrganization={caseOrganization}
+                    item={item}
+                    key={item.id}
+                  />
                 ))}
               </ul>
             </section>
@@ -149,12 +160,22 @@ export function EvidenceList({ claim }: { readonly claim: DerivedClaim }) {
   );
 }
 
-function EvidenceRow({ item }: { readonly item: Evidence }) {
+function EvidenceRow({
+  item,
+  caseOrganization,
+}: {
+  readonly item: Evidence;
+  readonly caseOrganization: string;
+}) {
   const sourceUrl = safeHttpUrl(item.sourceUrl);
   const synthetic =
     item.synthetic || item.text.toLowerCase().includes("synthetic");
   const source = item.sourceLabel ?? evidenceSourceLabel(item);
   const provenance = evidenceProvenanceLabel(item);
+  const organizationMatch = employerSourceOrganizationMatch(
+    item,
+    caseOrganization,
+  );
   return (
     <li className="bg-surface/70 p-3">
       <div className="flex flex-wrap items-center gap-2">
@@ -168,6 +189,15 @@ function EvidenceRow({ item }: { readonly item: Evidence }) {
           <span className="text-xs font-medium text-muted">Synthetic</span>
         ) : null}
         <span className="text-xs font-medium text-muted">{provenance}</span>
+        {organizationMatch === false ? (
+          <span className="rounded-full bg-amber-soft px-2 py-0.5 text-xs font-semibold text-amber">
+            Different domain than the job posting
+          </span>
+        ) : organizationMatch === true ? (
+          <span className="text-xs font-medium text-supported">
+            Domain matches the job posting
+          </span>
+        ) : null}
       </div>
       <p className="mt-1.5 leading-6 text-secondary">{item.text}</p>
       {sourceUrl ? (

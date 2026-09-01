@@ -4,6 +4,7 @@ import {
   CLAIM_KIND,
   type ClaimKind,
   type ClaimStatus,
+  EVIDENCE_PROVENANCE,
   type Evidence,
   IMPORTANCE,
   type Importance,
@@ -115,6 +116,21 @@ export function sourceOrganization(url?: string): string {
   } catch {
     return url.toLowerCase();
   }
+}
+
+// App-owned check on an agent-declared employer source: does its organization
+// match the job posting's organization? Null when the check does not apply
+// (non-employer evidence) or cannot run (missing URLs). This verifies domain
+// consistency at record time, not authorship.
+export function employerSourceOrganizationMatch(
+  evidence: Evidence,
+  caseOrganization: string,
+): boolean | null {
+  const provenance = evidence.provenance ?? EVIDENCE_PROVENANCE.CASE_INPUT;
+  if (provenance !== EVIDENCE_PROVENANCE.AGENT_REPORTED) return null;
+  if (evidence.scope !== AUTHORITY_SCOPE.EMPLOYER_STATED) return null;
+  if (!caseOrganization || !evidence.sourceUrl) return null;
+  return sourceOrganization(evidence.sourceUrl) === caseOrganization;
 }
 
 function uniqueReportedCount(

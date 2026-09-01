@@ -1,8 +1,12 @@
 import type { CaseStore } from "@/lib/case-store";
-import { coverageBreakdownFor } from "@/lib/domain/policy";
+import {
+  coverageBreakdownFor,
+  employerSourceOrganizationMatch,
+  sourceOrganization,
+} from "@/lib/domain/policy";
 import { type DerivedClaim, EVIDENCE_PROVENANCE } from "@/lib/domain/types";
 
-function publicClaim(claim: DerivedClaim) {
+function publicClaim(claim: DerivedClaim, caseOrganization: string) {
   return {
     id: claim.id,
     importance: claim.importance,
@@ -22,17 +26,24 @@ function publicClaim(claim: DerivedClaim) {
       provenance: item.provenance ?? EVIDENCE_PROVENANCE.CASE_INPUT,
       synthetic:
         item.synthetic ?? item.text.toLowerCase().includes("synthetic"),
+      sourceOrganizationMatch: employerSourceOrganizationMatch(
+        item,
+        caseOrganization,
+      ),
     })),
   };
 }
 
 export function getCaseState(store: CaseStore) {
   const snapshot = store.getState();
+  const caseOrganization = sourceOrganization(snapshot.source.sourceUrl);
   return {
     origin: snapshot.source.origin,
     activeProbeId: snapshot.activeProbeId,
     rankingVisible: snapshot.rankingVisible,
     selectionState: snapshot.selectionState,
-    claims: snapshot.derived.claims.map(publicClaim),
+    claims: snapshot.derived.claims.map((claim) =>
+      publicClaim(claim, caseOrganization),
+    ),
   };
 }

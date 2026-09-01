@@ -212,6 +212,12 @@
     unresolvedness: travelAfterResearch?.unresolvedness,
     probeEligible: travelAfterResearch?.probeEligible,
   };
+  out.checks.researchOrganizationMatch =
+    travelAfterResearch?.evidenceSummary.some(
+      (evidence) =>
+        evidence.provenance === "AGENT_REPORTED" &&
+        evidence.sourceOrganizationMatch === true,
+    ) === true;
   out.checks.travelActiveAfterCandidateA =
     selectA.claim_id === ids["Travel concentration"] &&
     stateA.activeProbeId === ids["Travel concentration"];
@@ -264,6 +270,7 @@
     out.checks.researchRoutingPass &&
     out.checks.neutralResearchEvidenceRecorded &&
     out.checks.researchUnknownPreserved &&
+    out.checks.researchOrganizationMatch &&
     out.checks.travelActiveAfterCandidateA &&
     out.checks.travelSelectionAuthoritative &&
     out.checks.dossierRollupPass &&

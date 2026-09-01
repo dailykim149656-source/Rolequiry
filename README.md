@@ -36,7 +36,7 @@ Rolequiry is an agent-native candidate due-diligence app for the OpenAI WebMCP C
 
 A bad job is costly for the candidate. A bad hire is costly for the employer. Rolequiry treats both as the same pre-hire mismatch: expectations that were never made inspectable. Candidate due diligence here is expectation alignment before anyone signs — better self-selection on the candidate side, and less early attrition from avoidable expectation gaps on the employer side.
 
-The agent can interpret a resume or career summary, values, constraints, and a non-linear career path in conversation; propose where the role may fit or create leverage; and research the active uncertainty. Rolequiry does not store that raw career narrative or produce a fit score. It records only candidate-confirmed importance, typed claims, evidence provenance, and the deterministic next verification target. Source identity and page contents are not independently authenticated.
+The agent can interpret a resume or career summary, values, constraints, and a non-linear career path in conversation; propose where the role may fit or create leverage; and research the active uncertainty. Rolequiry does not store that raw career narrative or produce a fit score. It records only candidate-confirmed importance, typed claims, evidence provenance, and the deterministic next verification target. Employer-official sources are domain-checked against the job posting's organization; authorship and page contents are not independently authenticated.
 
 > Page-native WebMCP on `/case`. No remote MCP server. Production never installs a fake `modelContext`.
 
@@ -81,7 +81,7 @@ Supported test environment: ChatGPT built-in browser / Chrome with WebMCP. The p
 
 Most agent demos operate on cooperative pages. A job posting is mixed-incentive: useful to the candidate, written by the employer. WebMCP lets the page expose typed reads and writes against live application state instead of scraping. The competition surface is page-native WebMCP, not a standard remote MCP server.
 
-The agent extracts employer claims, relates them to the candidate's career context, asks the candidate to confirm the proposed priorities, and researches the currently active uncertainty with its own browsing capabilities. Rolequiry—not the model—derives claim kind, maps declared source categories to authority weight, and computes coverage, state, and ranking. It structures agent-reported provenance but does not independently verify source identity or page content.
+The agent extracts employer claims, relates them to the candidate's career context, asks the candidate to confirm the proposed priorities, and researches the currently active uncertainty with its own browsing capabilities. Rolequiry—not the model—derives claim kind, maps declared source categories to authority weight, and computes coverage, state, and ranking. It structures agent-reported provenance and cross-checks a declared employer-official source's domain against the job posting's organization, flagging mismatches in state and UI; it does not authenticate authorship or page content.
 
 ### Decision-directed research
 
@@ -101,6 +101,7 @@ Decision Path shows provenance + what remains unknown
 - The agent can use its own browser, search, or deep-research capabilities outside Rolequiry.
 - `record_research_evidence` writes one agent-reported employer-published or first-person finding back into the active probe.
 - App-owned capture provenance stays attached to the evidence and is visible in the UI; it identifies who supplied the record, not who independently verified it.
+- Employer-official research is domain-checked against the job posting's organization; a mismatch is flagged in case state and the evidence list.
 - Duplicate source URLs are rejected, and `NEUTRAL` research is stored without reducing uncertainty.
 - The research tool asks the agent to make a reasonable counterevidence check before assigning a strong `SUPPORTS` or `CHALLENGES` stance.
 

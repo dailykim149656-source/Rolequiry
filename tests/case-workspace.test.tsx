@@ -295,6 +295,37 @@ describe("case workspace status", () => {
     ).toContain("bg-supported-soft");
   });
 
+  it("flags an agent-declared employer source from a different domain", () => {
+    const store = createCaseStore();
+    importRoleFromClaimsTool(store, {
+      company: "OpenAI",
+      role: "Forward Deployed Engineer, Seoul",
+      sourceUrl: "https://openai.com/careers/fde-seoul/",
+      claims: [
+        {
+          dimension: "Travel concentration",
+          employerStatement: "50% travel is expected.",
+          unresolvedVariable: "How the stated 50% is distributed",
+          measurableForm: "Median travel days per quarter",
+        },
+      ],
+    });
+    store.setPriorities([{ claimId: "imported-1", importance: "CRITICAL" }]);
+    selectDecisionChanger(store);
+    recordResearchEvidenceTool(store, {
+      stance: "NEUTRAL",
+      summary: "A job board mirrors the posting text.",
+      sourceUrl: "https://jobs.example-board.com/openai-fde-seoul",
+      sourceLabel: "Job board mirror",
+      sourceKind: "EMPLOYER_OFFICIAL",
+    });
+    renderWorkspace(store);
+
+    expect(
+      screen.getByText("Different domain than the job posting"),
+    ).toBeTruthy();
+  });
+
   it("labels agent-declared employer sources without implying verification", () => {
     const store = createCaseStore();
     selectDecisionChanger(store);
