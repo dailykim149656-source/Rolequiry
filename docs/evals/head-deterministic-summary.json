@@ -1,9 +1,9 @@
 {
   "schemaVersion": "rolequiry-webmcp-evals-v1",
   "kind": "deterministic-browser-full-journey",
-  "evaluatedBaseSha": "1325d8fad057048a5e47efa1d72a070cf3356500",
+  "evaluatedBaseSha": "eb5827b1a1616132f2029de7d3c5df6e2ee5c739",
   "toolContractsSha256": "a0c2f7245de2fb6feb15bcafad143899042c7ad0e5f26004fc52aa9b320e3fd1",
-  "ranAt": "2026-09-01T16:21:07.102Z",
+  "ranAt": "2026-09-01T16:31:54.289Z",
   "surfacePath": "/case",
   "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36",
   "verdict": "PASS",
@@ -167,6 +167,7 @@
       "unresolvedness": 0.8,
       "probeEligible": true
     },
+    "researchOrganizationMatch": true,
     "travelActiveAfterCandidateA": true,
     "authoritativeSelectionA": {
       "claim_kind": "LIVED_EXPERIENCE",

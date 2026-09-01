@@ -2,7 +2,7 @@
   const out = {
     startedAt: new Date().toISOString(),
     url: location.href,
-    evaluatedBaseSha: "1325d8fad057048a5e47efa1d72a070cf3356500",
+    evaluatedBaseSha: "eb5827b1a1616132f2029de7d3c5df6e2ee5c739",
     steps: [],
     checks: {},
   };
