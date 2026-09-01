@@ -81,7 +81,7 @@ Supported test environment: ChatGPT built-in browser / Chrome with WebMCP. The p
 
 Most agent demos operate on cooperative pages. A job posting is mixed-incentive: useful to the candidate, written by the employer. WebMCP lets the page expose typed reads and writes against live application state instead of scraping. The competition surface is page-native WebMCP, not a standard remote MCP server.
 
-The agent extracts employer claims, relates them to the candidate's career context, asks the candidate to confirm the proposed priorities, and researches the currently active uncertainty with its own browsing capabilities. Rolequiry—not the model—derives claim kind, maps declared source categories to authority weight, and computes coverage, state, and ranking. It structures agent-reported provenance and cross-checks a declared employer-official source's domain against the job posting's organization, flagging mismatches in state and UI; it does not authenticate authorship or page content.
+The agent extracts employer claims, relates them to the candidate's career context, asks the candidate to confirm the proposed priorities, and researches the currently active uncertainty with its own browsing capabilities. Rolequiry—not the model—derives claim kind, maps declared source categories to authority weight, and computes coverage, state, and ranking. It structures agent-reported provenance and cross-checks a declared employer-official source's domain against the job posting's organization; a mismatched source stays recorded and visible but is excluded from employer authority in the derived decision state. It does not authenticate authorship or page content.
 
 ### Decision-directed research
 
@@ -101,7 +101,7 @@ Decision Path shows provenance + what remains unknown
 - The agent can use its own browser, search, or deep-research capabilities outside Rolequiry.
 - `record_research_evidence` writes one agent-reported employer-published or first-person finding back into the active probe.
 - App-owned capture provenance stays attached to the evidence and is visible in the UI; it identifies who supplied the record, not who independently verified it.
-- Employer-official research is domain-checked against the job posting's organization; a mismatch is flagged in case state and the evidence list.
+- Employer-official research is domain-checked against the job posting's organization; a mismatch is flagged in case state and the evidence list and excluded from coverage and tension, so a wrong or malicious declaration cannot settle or challenge a claim.
 - Duplicate source URLs are rejected, and `NEUTRAL` research is stored without reducing uncertainty.
 - The research tool asks the agent to make a reasonable counterevidence check before assigning a strong `SUPPORTS` or `CHALLENGES` stance.
 

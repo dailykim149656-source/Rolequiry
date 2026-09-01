@@ -1,5 +1,6 @@
 import type { CaseStore } from "@/lib/case-store";
 import {
+  authorityEvidence,
   coverageBreakdownFor,
   employerSourceOrganizationMatch,
   sourceOrganization,
@@ -16,7 +17,10 @@ function publicClaim(claim: DerivedClaim, caseOrganization: string) {
     unresolvedness: Number(claim.unresolvedness.toFixed(3)),
     tension: Number(claim.tension.toFixed(3)),
     probeEligible: claim.probeEligible,
-    authorityCoverage: coverageBreakdownFor(claim.kind, claim.evidence),
+    authorityCoverage: coverageBreakdownFor(
+      claim.kind,
+      authorityEvidence(claim.evidence, caseOrganization),
+    ),
     evidenceSummary: claim.evidence.map((item) => ({
       id: item.id,
       scope: item.scope,

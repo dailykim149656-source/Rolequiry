@@ -1,4 +1,5 @@
 import {
+  authorityEvidence,
   coverageBreakdownFor,
   uniqueChallengingReportCount,
   uniqueSupportingReportCount,
@@ -40,13 +41,12 @@ function latestEvidence(evidence: readonly Evidence[]): Evidence | undefined {
   return evidence.at(-1);
 }
 
-function employerLine(claim: DerivedClaim): string {
-  const employer = claim.evidence.filter(
-    (item) => item.scope === "EMPLOYER_STATED",
-  );
+function employerLine(claim: DerivedClaim, caseOrganization: string): string {
+  const trusted = authorityEvidence(claim.evidence, caseOrganization);
+  const employer = trusted.filter((item) => item.scope === "EMPLOYER_STATED");
   if (employer.some((item) => item.stance === "CHALLENGES"))
     return "Employer-source conflict";
-  return coverageBreakdownFor(claim.kind, claim.evidence).employerStated.present
+  return coverageBreakdownFor(claim.kind, trusted).employerStated.present
     ? "Employer claim present"
     : "Employer claim —";
 }
@@ -57,16 +57,20 @@ function stanceWord(stance: Evidence["stance"]): string {
   return "neutral";
 }
 
-export function publicEvidenceLine(claim: DerivedClaim): string {
-  const coverage = coverageBreakdownFor(claim.kind, claim.evidence);
-  const supports = uniqueSupportingReportCount(claim.evidence);
-  const challenges = uniqueChallengingReportCount(claim.evidence);
+export function publicEvidenceLine(
+  claim: DerivedClaim,
+  caseOrganization = "",
+): string {
+  const trusted = authorityEvidence(claim.evidence, caseOrganization);
+  const coverage = coverageBreakdownFor(claim.kind, trusted);
+  const supports = uniqueSupportingReportCount(trusted);
+  const challenges = uniqueChallengingReportCount(trusted);
   const interview = coverage.candidateSpecificAnswer.resolving
     ? "resolving"
     : coverage.candidateSpecificAnswer.present
       ? "non-resolving"
       : "—";
-  return `${employerLine(claim)} · Public ${counted(supports, "support", "supports")} / ${counted(challenges, "challenge", "challenges")} · Interview ${interview}`;
+  return `${employerLine(claim, caseOrganization)} · Public ${counted(supports, "support", "supports")} / ${counted(challenges, "challenge", "challenges")} · Interview ${interview}`;
 }
 
 export function decisionPathHint(
@@ -90,6 +94,7 @@ function changedBody(item: Evidence | undefined): string {
 export function decisionPathNodes(
   claim: DerivedClaim,
   mode: DecisionPathMode = "ACTIVE",
+  caseOrganization = "",
 ): readonly DecisionPathNode[] {
   const latest = latestEvidence(claim.evidence);
   if (mode === "EVIDENCE_UPDATED" && !claim.probeEligible) {
@@ -113,8 +118,8 @@ export function decisionPathNodes(
       label: "Evidence",
       body:
         mode === "EVIDENCE_UPDATED" && latest?.sourceUrl
-          ? `${publicEvidenceLine(claim)} · Latest: ${latest.sourceLabel ?? "sourced evidence"} · ${stanceWord(latest.stance)}`
-          : publicEvidenceLine(claim),
+          ? `${publicEvidenceLine(claim, caseOrganization)} · Latest: ${latest.sourceLabel ?? "sourced evidence"} · ${stanceWord(latest.stance)}`
+          : publicEvidenceLine(claim, caseOrganization),
       ...(mode === "EVIDENCE_UPDATED" && latest?.sourceUrl
         ? { href: latest.sourceUrl }
         : {}),

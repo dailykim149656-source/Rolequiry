@@ -1,8 +1,10 @@
 import { MAX_IDENTIFIER_LENGTH } from "./limits";
 import {
+  authorityEvidence,
   claimStatus,
   deriveClaimKind,
   probePriority,
+  sourceOrganization,
   tensionFor,
   unresolvednessFor,
 } from "./policy";
@@ -59,10 +61,14 @@ export function importedRoleCaseId(company: string): string {
   return `${prefix}${slug.slice(0, MAX_IDENTIFIER_LENGTH - prefix.length)}`;
 }
 
-function deriveClaim(claim: SourceClaim): DerivedClaim {
+function deriveClaim(
+  claim: SourceClaim,
+  caseOrganization: string,
+): DerivedClaim {
   const kind = deriveClaimKind(claim);
-  const unresolvedness = unresolvednessFor(kind, claim.evidence);
-  const tension = tensionFor(claim.evidence);
+  const trusted = authorityEvidence(claim.evidence, caseOrganization);
+  const unresolvedness = unresolvednessFor(kind, trusted);
+  const tension = tensionFor(trusted);
   const ranking = probePriority({
     importance: claim.importance,
     unresolvedness,
@@ -92,7 +98,10 @@ function deriveClaim(claim: SourceClaim): DerivedClaim {
 }
 
 export function deriveCase(roleCase: RoleCase): DerivedCase {
-  const claims = roleCase.claims.map(deriveClaim);
+  const caseOrganization = sourceOrganization(roleCase.sourceUrl);
+  const claims = roleCase.claims.map((claim) =>
+    deriveClaim(claim, caseOrganization),
+  );
   const eligible = claims.filter((claim) => claim.probeEligible);
   const top = eligible.reduce<DerivedClaim | null>((best, claim) => {
     if (!best) return claim;

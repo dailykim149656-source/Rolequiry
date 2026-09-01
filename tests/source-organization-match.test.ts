@@ -73,6 +73,93 @@ describe("employer source organization match", () => {
   });
 });
 
+describe("evidence authority integrity", () => {
+  function importedTravelCase() {
+    const store = createCaseStore();
+    importRoleFromClaimsTool(store, {
+      company: "OpenAI",
+      role: "Forward Deployed Engineer, Seoul",
+      sourceUrl:
+        "https://openai.com/careers/forward-deployed-engineer-seoul-seoul-south-korea/",
+      claims: [
+        {
+          dimension: "Travel concentration",
+          employerStatement: "50% travel is expected.",
+          unresolvedVariable: "How the stated 50% is distributed",
+          measurableForm: "Median travel days per quarter",
+        },
+        {
+          dimension: "Technical decision authority",
+          employerStatement: "Set technical direction with customers.",
+          unresolvedVariable: "Who owns architecture decisions",
+          measurableForm: "Named decisions owned by the role per launch",
+        },
+      ],
+    });
+    store.setPriorities([
+      { claimId: "imported-1", importance: "CRITICAL" },
+      { claimId: "imported-2", importance: "HIGH" },
+    ]);
+    selectDecisionChanger(store);
+    return store;
+  }
+
+  it("quarantines a cross-domain employer-official challenge from decision math", () => {
+    const store = importedTravelCase();
+    recordResearchEvidenceTool(store, {
+      stance: "CHALLENGES",
+      summary:
+        "A third-party job board claims Seoul travel runs far above 50%.",
+      sourceUrl: "https://jobs.example-board.com/openai-fde-seoul",
+      sourceLabel: "Job board mirror",
+      sourceKind: "EMPLOYER_OFFICIAL",
+    });
+
+    const travel = getCaseState(store).claims.find(
+      (claim) => claim.id === "imported-1",
+    );
+    expect(
+      travel?.evidenceSummary.some(
+        (item) => item.sourceOrganizationMatch === false,
+      ),
+    ).toBe(true);
+    expect(travel?.tension).toBe(0);
+    expect(travel?.status).toBe("MATERIAL_AMBIGUITY");
+    expect(travel?.authorityCoverage.covered).toBe(0.2);
+
+    const reselect = selectDecisionChanger(store);
+    expect(reselect).toMatchObject({
+      outcome: "PROBE_SELECTED",
+      claim_id: "imported-1",
+      status: "MATERIAL_AMBIGUITY",
+      rationale: { tension: 0 },
+    });
+  });
+
+  it("still counts a matching-domain employer challenge as real tension", () => {
+    const store = importedTravelCase();
+    recordResearchEvidenceTool(store, {
+      stance: "CHALLENGES",
+      summary:
+        "An official engineering blog post describes sustained onsite stretches well above the posted cadence.",
+      sourceUrl: "https://openai.com/blog/fde-life-in-seoul",
+      sourceLabel: "Official engineering blog",
+      sourceKind: "EMPLOYER_OFFICIAL",
+    });
+
+    const travel = getCaseState(store).claims.find(
+      (claim) => claim.id === "imported-1",
+    );
+    expect(
+      travel?.evidenceSummary.some(
+        (item) => item.sourceOrganizationMatch === true,
+      ),
+    ).toBe(true);
+    expect(travel?.tension).toBe(1);
+    expect(travel?.status).toBe("CHALLENGED");
+  });
+});
+
 describe("get_case_state organization check", () => {
   it("surfaces the app-owned domain check on agent-reported employer evidence", () => {
     const store = createCaseStore();

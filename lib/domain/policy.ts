@@ -133,6 +133,19 @@ export function employerSourceOrganizationMatch(
   return sourceOrganization(evidence.sourceUrl) === caseOrganization;
 }
 
+// Evidence that may enter authority math. An agent-declared employer-official
+// source whose organization contradicts the job posting stays recorded and
+// visible, but it must not count as employer authority in coverage or tension,
+// so a wrong or malicious declaration cannot settle or challenge a claim.
+export function authorityEvidence(
+  evidence: readonly Evidence[],
+  caseOrganization: string,
+): readonly Evidence[] {
+  return evidence.filter(
+    (item) => employerSourceOrganizationMatch(item, caseOrganization) !== false,
+  );
+}
+
 function uniqueReportedCount(
   evidence: readonly Evidence[],
   stance?: "SUPPORTS" | "CHALLENGES",

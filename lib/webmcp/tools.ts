@@ -1,6 +1,10 @@
 import type { CaseStore } from "@/lib/case-store";
 import { deriveDossier } from "@/lib/domain/dossier";
-import { coverageBreakdownFor } from "@/lib/domain/policy";
+import {
+  authorityEvidence,
+  coverageBreakdownFor,
+  sourceOrganization,
+} from "@/lib/domain/policy";
 import { noProbeDetails } from "@/lib/domain/probe-outcome";
 import {
   AUTHORITY_SCOPE,
@@ -88,7 +92,13 @@ export function selectDecisionChanger(store: CaseStore) {
     status: selected.status,
     unresolved_variable: selected.unresolvedVariable,
     measurable_form: selected.measurableForm,
-    authorityCoverage: coverageBreakdownFor(selected.kind, selected.evidence),
+    authorityCoverage: coverageBreakdownFor(
+      selected.kind,
+      authorityEvidence(
+        selected.evidence,
+        sourceOrganization(snapshot.source.sourceUrl),
+      ),
+    ),
     rationale: {
       importance: selected.importance,
       unresolvedness: Number(selected.unresolvedness.toFixed(3)),

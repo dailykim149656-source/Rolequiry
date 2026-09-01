@@ -6,6 +6,7 @@ import {
 import {
   LIVED_EXPERIENCE_WEIGHT,
   PROBE_PRIORITY_WEIGHT,
+  sourceOrganization,
 } from "@/lib/domain/policy";
 import { noProbeDetails } from "@/lib/domain/probe-outcome";
 import type { DerivedClaim } from "@/lib/domain/types";
@@ -67,7 +68,11 @@ export function DecisionPanel({
       ) : selected &&
         (snapshot.selectionState === "ACTIVE" ||
           snapshot.selectionState === "EVIDENCE_UPDATED") ? (
-        <DecisionPath claim={selected} mode={snapshot.selectionState} />
+        <DecisionPath
+          caseOrganization={sourceOrganization(snapshot.source.sourceUrl)}
+          claim={selected}
+          mode={snapshot.selectionState}
+        />
       ) : (
         <AgentStarter />
       )}
@@ -223,13 +228,15 @@ function DecisionNotice({
 }
 
 function DecisionPath({
+  caseOrganization,
   claim,
   mode,
 }: {
+  readonly caseOrganization: string;
   readonly claim: DerivedClaim;
   readonly mode: "ACTIVE" | "EVIDENCE_UPDATED";
 }) {
-  const nodes = decisionPathNodes(claim, mode);
+  const nodes = decisionPathNodes(claim, mode, caseOrganization);
   return (
     <ol
       className="relative mt-4 space-y-3 before:absolute before:bottom-8 before:left-[1.35rem] before:top-8 before:w-0.5 before:bg-brand/30"
