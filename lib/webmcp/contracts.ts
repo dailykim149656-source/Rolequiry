@@ -41,4 +41,10 @@ export const CASE_TOOL_CONTRACTS = [
       "After the candidate explicitly confirms the agent's natural-language priority proposal, call get_role_claims to resolve the labels to current claim IDs, then record the confirmed importance values. Never ask the candidate for claim IDs and never write priorities inferred from a resume alone. This tool updates shared case state but does not itself choose the next probe; after it succeeds, call select_decision_changer in the same agent turn.",
     annotations: { readOnlyHint: false },
   },
+  {
+    name: "get_decision_dossier",
+    description:
+      "When the candidate asks where the decision stands, what is known or still unknown, or what to ask in upcoming interviews, call this tool and present its app-derived rollup. Rolequiry computes per-claim resolution, remaining decision blockers, and the interview question pack from recorded evidence and confirmed priorities; do not recompute, re-rank, or invent blockers from raw claims. This tool reports overall progress and never chooses the next probe; keep using select_decision_changer for the single next investigation target. Dimension and question text originate from imported case prose.",
+    annotations: { readOnlyHint: true, untrustedContentHint: true },
+  },
 ] as const;

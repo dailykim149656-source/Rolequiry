@@ -6,6 +6,7 @@ import { WEBMCP_INPUT_LIMITS } from "@/lib/webmcp/input-limits";
 import {
   CASE_TOOL_CONTRACTS,
   getCaseState,
+  getDecisionDossier,
   getRoleClaims,
   importRoleFromClaimsTool,
   recordInterviewAnswerTool,
@@ -164,6 +165,7 @@ export function useCaseWebMCPTools(store: CaseStore) {
     importContract,
     researchContract,
     prioritiesContract,
+    dossierContract,
   ] = CASE_TOOL_CONTRACTS;
   const claims = useWebMCP({
     name: claimsContract.name,
@@ -239,6 +241,22 @@ export function useCaseWebMCPTools(store: CaseStore) {
       }>;
     }) => setCandidatePrioritiesTool(store, args),
   });
+  const dossier = useWebMCP({
+    name: dossierContract.name,
+    description: dossierContract.description,
+    inputSchema: emptySchema,
+    annotations: dossierContract.annotations,
+    execute: () => getDecisionDossier(store),
+  });
 
-  return { claims, state, select, record, imported, research, priorities };
+  return {
+    claims,
+    state,
+    select,
+    record,
+    imported,
+    research,
+    priorities,
+    dossier,
+  };
 }

@@ -1,12 +1,15 @@
 import Link from "next/link";
 import type { CaseSnapshot, FixtureId } from "@/lib/case-store";
+import { CASE_TOOL_CONTRACTS } from "@/lib/webmcp/contracts";
 import type { WebMCPToolDiagnostic } from "@/lib/webmcp/diagnostics";
 import { Icon } from "./Icon";
+
+const TOTAL_TOOLS = CASE_TOOL_CONTRACTS.length;
 
 export function ProductBar({
   webmcpCount,
   diagnostics = [],
-  total = 7,
+  total = TOTAL_TOOLS,
 }: {
   readonly webmcpCount: number;
   readonly diagnostics?: readonly WebMCPToolDiagnostic[];
@@ -298,7 +301,7 @@ export function DemoControls({
         ) : null}
       </div>
       <p className="mt-3 text-xs text-muted" data-testid="tool-status">
-        WebMCP registered: {webmcpCount}/7
+        WebMCP registered: {webmcpCount}/{TOTAL_TOOLS}
       </p>
       <ToolDiagnostics diagnostics={webmcpDiagnostics} />
     </details>

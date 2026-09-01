@@ -30,6 +30,20 @@ describe("ChatGPT P0 contract", () => {
     expect(select?.description).toContain("LIVED_EXPERIENCE");
   });
 
+  it("reserves decision-progress routing for get_decision_dossier", () => {
+    const dossier = CASE_TOOL_CONTRACTS.find(
+      (item) => item.name === "get_decision_dossier",
+    );
+    const state = CASE_TOOL_CONTRACTS.find(
+      (item) => item.name === "get_case_state",
+    );
+    expect(dossier?.description).toContain("where the decision stands");
+    expect(dossier?.description.toLowerCase()).toContain("do not recompute");
+    expect(dossier?.description.toLowerCase()).not.toContain("check again");
+    expect(dossier?.annotations.readOnlyHint).toBe(true);
+    expect(state?.description.toLowerCase()).not.toContain("decision stands");
+  });
+
   it("keeps the active probe after an interview answer instead of auto-selecting the next one", () => {
     const store = createCaseStore();
     selectDecisionChanger(store);

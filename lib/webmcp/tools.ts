@@ -1,4 +1,5 @@
 import type { CaseStore } from "@/lib/case-store";
+import { deriveDossier } from "@/lib/domain/dossier";
 import { coverageBreakdownFor } from "@/lib/domain/policy";
 import { noProbeDetails } from "@/lib/domain/probe-outcome";
 import {
@@ -94,6 +95,28 @@ export function selectDecisionChanger(store: CaseStore) {
       tension: Number(selected.tension.toFixed(3)),
       probe_priority: Number(selected.probePriority.toFixed(3)),
     },
+  };
+}
+
+export function getDecisionDossier(store: CaseStore) {
+  const snapshot = store.getState();
+  if (
+    snapshot.source.origin === "AGENT_IMPORTED" &&
+    !snapshot.prioritiesTouched
+  ) {
+    return {
+      ok: true as const,
+      outcome: "PRIORITIES_REQUIRED" as const,
+      remainingDecisionBlockers: null,
+      tiers: [],
+      interviewPack: [],
+    };
+  }
+  return {
+    ok: true as const,
+    outcome: "DOSSIER" as const,
+    activeProbeId: snapshot.activeProbeId,
+    ...deriveDossier(snapshot.derived),
   };
 }
 

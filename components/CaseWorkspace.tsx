@@ -1,5 +1,6 @@
 import { ClaimBoard } from "@/components/case-workspace/ClaimBoard";
 import { DecisionPanel } from "@/components/case-workspace/DecisionPanel";
+import { DossierPanel } from "@/components/case-workspace/DossierPanel";
 import {
   CaseFileControls,
   DemoControls,
@@ -67,6 +68,7 @@ export function CaseWorkspace({
             snapshot={snapshot}
           />
         </div>
+        <DossierPanel snapshot={snapshot} />
         <DemoControls
           activeFixture={snapshot.source.id}
           cannedAnswerLabel={cannedAnswerLabel}

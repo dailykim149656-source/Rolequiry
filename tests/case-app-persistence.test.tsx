@@ -72,13 +72,25 @@ afterEach(() => {
 });
 
 describe("CaseApp persistence", () => {
-  it("restores the current tab session instead of browser-local state", async () => {
+  it("prefers the durable browser-local case over a legacy tab session", async () => {
     window.sessionStorage.setItem(CASE_STORAGE_KEY, savedCase("Session Corp"));
     window.localStorage.setItem(CASE_STORAGE_KEY, savedCase("Local Corp"));
 
     render(<CaseApp />);
 
+    expect(await screen.findByText("Local Corp")).toBeTruthy();
+  });
+
+  it("migrates a legacy tab-session case into durable local storage", async () => {
+    window.sessionStorage.setItem(CASE_STORAGE_KEY, savedCase("Session Corp"));
+
+    render(<CaseApp />);
+
     expect(await screen.findByText("Session Corp")).toBeTruthy();
+    expect(window.localStorage.getItem(CASE_STORAGE_KEY)).toContain(
+      "Session Corp",
+    );
+    expect(window.sessionStorage.getItem(CASE_STORAGE_KEY)).toBeNull();
   });
 
   it("starts from the canonical fixture when a modified demo was saved", () => {
@@ -98,10 +110,10 @@ describe("CaseApp persistence", () => {
     ).toBe("LOW");
   });
 
-  it("does not retain the demo fixture in tab storage", () => {
+  it("does not retain the demo fixture in durable storage", () => {
     render(<CaseApp />);
 
-    expect(window.sessionStorage.getItem(CASE_STORAGE_KEY)).toBeNull();
+    expect(window.localStorage.getItem(CASE_STORAGE_KEY)).toBeNull();
   });
 
   it("restores a validated local JSON file without uploading it", async () => {
@@ -259,7 +271,7 @@ describe("CaseApp persistence", () => {
         downloadedNames.push(this.download);
       },
     );
-    window.sessionStorage.setItem(CASE_STORAGE_KEY, savedCase("Export Corp"));
+    window.localStorage.setItem(CASE_STORAGE_KEY, savedCase("Export Corp"));
     render(<CaseApp />);
 
     fireEvent.click(screen.getByRole("button", { name: "Export case JSON" }));

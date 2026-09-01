@@ -9,6 +9,7 @@ import {
 } from "react";
 import { CaseWorkspace } from "@/components/CaseWorkspace";
 import {
+  CASE_STORAGE_KEY,
   createCaseExport,
   loadPersistedCase,
   parseImportedCaseFile,
@@ -38,16 +39,29 @@ export function CaseApp() {
     store.getState,
   );
   useEffect(() => {
-    const saved = loadPersistedCase(window.sessionStorage);
+    const local = loadPersistedCase(window.localStorage);
+    const legacyTabSession = local
+      ? null
+      : loadPersistedCase(window.sessionStorage);
+    const saved = local ?? legacyTabSession;
     if (saved) store.restore(saved);
     const persist = () => {
-      if (savePersistedCase(window.sessionStorage, store.getState())) return;
+      if (savePersistedCase(window.localStorage, store.getState())) {
+        return true;
+      }
       setCaseFileStatus({
         error: true,
         message: SESSION_PERSISTENCE_WARNING,
       });
+      return false;
     };
-    persist();
+    if (persist() && legacyTabSession) {
+      try {
+        window.sessionStorage.removeItem(CASE_STORAGE_KEY);
+      } catch {
+        // The durable copy already exists; the stale tab copy can remain.
+      }
+    }
     return store.subscribe(persist);
   }, [store]);
   const selected = snapshot.derived.claims.find(
@@ -62,6 +76,7 @@ export function CaseApp() {
     [CASE_TOOL_CONTRACTS[4].name, webmcp.imported],
     [CASE_TOOL_CONTRACTS[5].name, webmcp.research],
     [CASE_TOOL_CONTRACTS[6].name, webmcp.priorities],
+    [CASE_TOOL_CONTRACTS[7].name, webmcp.dossier],
   ] as const;
   const webmcpCount = registrations.filter(
     ([, state]) => state.registered,
@@ -114,7 +129,7 @@ export function CaseApp() {
       if (!saved) throw new Error("Invalid case file");
       store.restore(saved);
       const persisted = savePersistedCase(
-        window.sessionStorage,
+        window.localStorage,
         store.getState(),
       );
       setCaseFileStatus({

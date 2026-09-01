@@ -81,11 +81,32 @@ describe("case workspace status", () => {
     expect(screen.queryByText("WebMCP live")).toBeNull();
   });
 
-  it("reports all seven case tools when they are registered", () => {
-    renderWorkspace(createCaseStore(), 7);
+  it("reports all eight case tools when they are registered", () => {
+    renderWorkspace(createCaseStore(), 8);
 
-    expect(screen.getByText("WebMCP 7/7 live")).toBeTruthy();
-    expect(screen.getByTestId("tool-status").textContent).toContain("7/7");
+    expect(screen.getByText("WebMCP 8/8 live")).toBeTruthy();
+    expect(screen.getByTestId("tool-status").textContent).toContain("8/8");
+  });
+
+  it("shows the due diligence dossier with an interview pack for the demo case", () => {
+    renderWorkspace();
+
+    const dossier = screen.getByTestId("decision-dossier");
+    expect(dossier.textContent).toContain("Due diligence dossier");
+    expect(screen.getByTestId("dossier-blockers")).toBeTruthy();
+    expect(
+      within(screen.getByTestId("interview-pack")).getAllByText(/Ask the/i)
+        .length,
+    ).toBeGreaterThan(0);
+  });
+
+  it("locks the dossier for an imported case until priorities are confirmed", () => {
+    renderWorkspace(createImportedStore());
+
+    expect(screen.getByTestId("decision-dossier").textContent).toContain(
+      "Confirm your priorities first",
+    );
+    expect(screen.queryByTestId("dossier-blockers")).toBeNull();
   });
 
   it("distinguishes registration failures from an unsupported browser", () => {

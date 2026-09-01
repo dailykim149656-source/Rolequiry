@@ -118,9 +118,10 @@ On `/case`:
 | `get_case_state` | read | App-owned coverage, unresolvedness, tension and priorities keyed by claim ID; no role prose or ranking |
 | `select_decision_changer` | write | App-owned next probe; do not re-rank. Returns unresolved variable, measurable form, claim kind, status, and coverage |
 | `record_interview_answer` | write | Record a human-obtained answer against the active probe |
-| `import_role_from_claims` | write | Create a tab-local case from extracted employer statements and an optional job-posting `sourceUrl` |
+| `import_role_from_claims` | write | Create a browser-local case from extracted employer statements and an optional job-posting `sourceUrl` |
 | `record_research_evidence` | write | Record sourced public evidence the agent found for the active probe |
 | `set_candidate_priorities` | write | Record one to eight confirmed importance values; the agent resolves IDs internally and then selects the first probe in the same turn |
+| `get_decision_dossier` | read | App-owned case rollup: per-claim resolution, remaining decision blockers, and the interview question pack; reports progress, never picks the next probe |
 
 On `/employer/atlas-fde`: `get_employer_claims`, `get_employer_policy` (read-only). The employer page and `/case` share the Northwind fixture and link to each other; they do not require both tabs to stay open.
 
@@ -128,16 +129,16 @@ On `/employer/atlas-fde`: `get_employer_claims`, `get_employer_policy` (read-onl
 
 ## Architecture
 
-Human UI, the supported manual controls, and all seven WebMCP tools share one in-memory `CaseStore`. `deriveCase` is a pure function: coverage, unresolvedness, tension, status, probe eligibility.
+Human UI, the supported manual controls, and all eight WebMCP tools share one in-memory `CaseStore`. `deriveCase` is a pure function: coverage, unresolvedness, tension, status, probe eligibility. `deriveDossier` folds the same derived claims into case-level progress: per-claim resolution, remaining decision blockers, and the interview question pack.
 
 | Layer | Owns |
 | :--- | :--- |
 | Connected agent | Raw resume, career narrative, search, and hypotheses |
 | Rolequiry | Confirmed importance, typed claims, evidence provenance, next probe |
 | `deriveCase` | Coverage, unresolvedness, tension, status, ranking |
-| `sessionStorage` | Versioned snapshot for agent-imported cases in the current tab only |
+| `localStorage` | Versioned snapshot for agent-imported cases in this browser profile |
 
-The raw resume stays in agent conversation context; only importance values the candidate explicitly confirms enter Rolequiry. A versioned snapshot is saved in browser `sessionStorage` only for agent-imported cases, so real-role evidence survives reloads in the current tab without carrying into a new tab. Demo fixtures always reload from their canonical state.
+The raw resume stays in agent conversation context; only importance values the candidate explicitly confirms enter Rolequiry. A versioned snapshot is saved in browser `localStorage` only for agent-imported cases, so real-role evidence survives reloads and browser restarts on this device — an investigation can continue across days of recruiter calls and interviews. Legacy tab-session snapshots migrate to `localStorage` on load. Nothing is uploaded; demo fixtures always reload from their canonical state.
 
 ---
 
@@ -167,7 +168,7 @@ For the built-in fixture smoke test: ask `What should I investigate next?`, set 
 - No resume upload or candidate-profile database. Raw career context remains in the connected agent's conversation.
 - The import schema rejects resume/profile fields, but it is not semantic data-loss prevention: a noncompliant agent could still misclassify resume prose as employer-claim text. The tool contract explicitly forbids that.
 - No deterministic fit score. Career fit and synergy remain hypotheses for the agent and candidate to test against Rolequiry's evidence state.
-- Imported case data uses the current tab's session storage when browser quota permits; the UI warns if refresh persistence fails, and demo fixtures reset on reload. Validated JSON export/import gives real imported cases an explicit local backup without uploading them, but there is no cross-tab sync, account sync, or server backup.
+- Imported case data persists in this browser's local storage when quota permits; the UI warns if persistence fails, and demo fixtures reset on reload. Validated JSON export/import gives real imported cases an explicit local backup without uploading them, but there is no account sync or server backup.
 - Imported cases start with employer testimony only. The agent may add sourced first-person or employer-official research; Rolequiry stores agent-reported provenance, it does not independently verify the page.
 - Rolequiry ranks lived-experience uncertainty, not written employer policy. Compensation bands and similar employer-owned statements are recorded, but they are not the next research probe.
 - Rolequiry deliberately does not ingest arbitrary news or analyst commentary into its current authority model.

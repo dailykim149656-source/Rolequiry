@@ -430,6 +430,7 @@ describe("registered write loop", () => {
     expect([...registered.keys()].sort()).toEqual(
       [
         "get_case_state",
+        "get_decision_dossier",
         "get_role_claims",
         "import_role_from_claims",
         "record_interview_answer",
