@@ -134,16 +134,24 @@ export function employerSourceOrganizationMatch(
 }
 
 // Evidence that may enter authority math. An agent-declared employer-official
-// source whose organization contradicts the job posting stays recorded and
-// visible, but it must not count as employer authority in coverage or tension,
-// so a wrong or malicious declaration cannot settle or challenge a claim.
+// source earns employer authority only when its organization verifiably
+// matches the job posting's (match === true). Mismatched and unverifiable
+// declarations — including any employer declaration on a case that has no
+// posting URL to check against — stay recorded and visible, but they must not
+// count as employer authority in coverage or tension, so a wrong, malicious,
+// or uncheckable declaration cannot settle or challenge a claim.
 export function authorityEvidence(
   evidence: readonly Evidence[],
   caseOrganization: string,
 ): readonly Evidence[] {
-  return evidence.filter(
-    (item) => employerSourceOrganizationMatch(item, caseOrganization) !== false,
-  );
+  return evidence.filter((item) => {
+    const provenance = item.provenance ?? EVIDENCE_PROVENANCE.CASE_INPUT;
+    const agentDeclaredEmployer =
+      provenance === EVIDENCE_PROVENANCE.AGENT_REPORTED &&
+      item.scope === AUTHORITY_SCOPE.EMPLOYER_STATED;
+    if (!agentDeclaredEmployer) return true;
+    return employerSourceOrganizationMatch(item, caseOrganization) === true;
+  });
 }
 
 function uniqueReportedCount(

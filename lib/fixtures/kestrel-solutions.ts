@@ -10,6 +10,7 @@ export const KESTREL_SOLUTIONS: RoleCase = {
   id: "kestrel-solutions",
   company: "Harborline Systems (synthetic demo)",
   role: "Solutions Engineer",
+  sourceUrl: "https://harborline.example.com/careers/solutions-engineer",
   origin: CASE_ORIGIN.DEMO_FIXTURE,
   claims: [
     {

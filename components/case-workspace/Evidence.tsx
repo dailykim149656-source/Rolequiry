@@ -176,6 +176,11 @@ function EvidenceRow({
     item,
     caseOrganization,
   );
+  const unverifiableEmployerSource =
+    organizationMatch === null &&
+    (item.provenance ?? EVIDENCE_PROVENANCE.CASE_INPUT) ===
+      EVIDENCE_PROVENANCE.AGENT_REPORTED &&
+    item.scope === AUTHORITY_SCOPE.EMPLOYER_STATED;
   return (
     <li className="bg-surface/70 p-3">
       <div className="flex flex-wrap items-center gap-2">
@@ -196,6 +201,10 @@ function EvidenceRow({
         ) : organizationMatch === true ? (
           <span className="text-xs font-medium text-supported">
             Domain matches the job posting
+          </span>
+        ) : unverifiableEmployerSource ? (
+          <span className="rounded-full bg-amber-soft px-2 py-0.5 text-xs font-semibold text-amber">
+            No job posting domain to verify against
           </span>
         ) : null}
       </div>

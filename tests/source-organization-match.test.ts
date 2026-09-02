@@ -136,6 +136,57 @@ describe("evidence authority integrity", () => {
     });
   });
 
+  // Employer authority is opt-in by verified domain consistency: when the
+  // imported case carries no posting URL, there is no organization to check
+  // against, so an agent-declared employer-official source must stay recorded
+  // but out of authority math instead of silently settling or challenging.
+  it("keeps an unverifiable employer challenge out of authority when the case has no posting URL", () => {
+    const store = createCaseStore();
+    importRoleFromClaimsTool(store, {
+      company: "OpenAI",
+      role: "Forward Deployed Engineer, Seoul",
+      claims: [
+        {
+          dimension: "Travel concentration",
+          employerStatement: "50% travel is expected.",
+          unresolvedVariable: "How the stated 50% is distributed",
+          measurableForm: "Median travel days per quarter",
+        },
+      ],
+    });
+    store.setPriorities([{ claimId: "imported-1", importance: "CRITICAL" }]);
+    selectDecisionChanger(store);
+    recordResearchEvidenceTool(store, {
+      stance: "CHALLENGES",
+      summary: "A page claiming to be official says travel runs far above 50%.",
+      sourceUrl: "https://jobs.example-board.com/openai-fde-seoul",
+      sourceLabel: "Claimed official posting",
+      sourceKind: "EMPLOYER_OFFICIAL",
+    });
+
+    const travel = getCaseState(store).claims.find(
+      (claim) => claim.id === "imported-1",
+    );
+    expect(
+      travel?.evidenceSummary.some(
+        (item) =>
+          item.provenance === "AGENT_REPORTED" &&
+          item.sourceOrganizationMatch === null,
+      ),
+    ).toBe(true);
+    expect(travel?.tension).toBe(0);
+    expect(travel?.status).toBe("MATERIAL_AMBIGUITY");
+    expect(travel?.authorityCoverage.covered).toBe(0.2);
+
+    const reselect = selectDecisionChanger(store);
+    expect(reselect).toMatchObject({
+      outcome: "PROBE_SELECTED",
+      claim_id: "imported-1",
+      status: "MATERIAL_AMBIGUITY",
+      rationale: { tension: 0 },
+    });
+  });
+
   it("still counts a matching-domain employer challenge as real tension", () => {
     const store = importedTravelCase();
     recordResearchEvidenceTool(store, {

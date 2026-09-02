@@ -344,6 +344,36 @@ describe("case workspace status", () => {
     expect(screen.queryByText(/^Verified$/)).toBeNull();
   });
 
+  it("flags an agent-declared employer source when the case has no posting URL to check", () => {
+    const store = createCaseStore();
+    importRoleFromClaimsTool(store, {
+      company: "OpenAI",
+      role: "Forward Deployed Engineer, Seoul",
+      claims: [
+        {
+          dimension: "Travel concentration",
+          employerStatement: "50% travel is expected.",
+          unresolvedVariable: "How the stated 50% is distributed",
+          measurableForm: "Median travel days per quarter",
+        },
+      ],
+    });
+    store.setPriorities([{ claimId: "imported-1", importance: "CRITICAL" }]);
+    selectDecisionChanger(store);
+    recordResearchEvidenceTool(store, {
+      stance: "CHALLENGES",
+      summary: "A page claiming to be official says travel runs far above 50%.",
+      sourceUrl: "https://jobs.example-board.com/openai-fde-seoul",
+      sourceLabel: "Claimed official posting",
+      sourceKind: "EMPLOYER_OFFICIAL",
+    });
+    renderWorkspace(store);
+
+    expect(
+      screen.getByText("No job posting domain to verify against"),
+    ).toBeTruthy();
+  });
+
   it("labels neutral-only evidence as neutral instead of empty", () => {
     // Given
     const store = createCaseStore();

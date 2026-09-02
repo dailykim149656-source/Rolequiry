@@ -9,6 +9,7 @@ import {
   recordInterviewAnswer,
   recordResearchEvidence,
 } from "@/lib/domain/derive-case";
+import { sourceOrganization } from "@/lib/domain/policy";
 import { SPEAKER_ROLE } from "@/lib/domain/types";
 import { ATLAS_FDE } from "@/lib/fixtures/atlas-fde";
 
@@ -125,11 +126,34 @@ describe("decision path projection", () => {
       sourceLabel: "Engineering page",
       sourceUrl: "https://northwind.example.com/eng",
     });
+    const caseOrganization = sourceOrganization(updated.sourceUrl);
     const ownership = deriveCase(updated).claims.find(
       (claim) => claim.id === "technical-ownership",
     );
     if (!ownership) throw new Error("ownership missing");
-    expect(publicEvidenceLine(ownership)).toContain("Employer-source conflict");
-    expect(publicEvidenceLine(ownership)).not.toContain("✓");
+    const line = publicEvidenceLine(ownership, caseOrganization);
+    expect(line).toContain("Employer-source conflict");
+    expect(line).not.toContain("✓");
+  });
+
+  it("keeps an unverifiable employer challenge out of the public evidence line", () => {
+    const noBaseline = { ...ATLAS_FDE };
+    delete (noBaseline as { sourceUrl?: string }).sourceUrl;
+    const updated = recordResearchEvidence(noBaseline, {
+      claimId: "technical-ownership",
+      stance: "CHALLENGES",
+      text: "A page claiming to be official says platform review is required.",
+      sourceKind: "EMPLOYER_OFFICIAL",
+      sourceLabel: "Claimed engineering page",
+      sourceUrl: "https://somewhere.example.org/eng",
+    });
+    const ownership = deriveCase(updated).claims.find(
+      (claim) => claim.id === "technical-ownership",
+    );
+    if (!ownership) throw new Error("ownership missing");
+    expect(publicEvidenceLine(ownership, "")).not.toContain(
+      "Employer-source conflict",
+    );
+    expect(ownership.tension).toBeLessThan(1);
   });
 });

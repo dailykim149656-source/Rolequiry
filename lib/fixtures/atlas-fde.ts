@@ -10,6 +10,7 @@ export const ATLAS_FDE: RoleCase = {
   id: "atlas-fde",
   company: "Northwind Automation (synthetic demo)",
   role: "Forward Deployed Engineer",
+  sourceUrl: "https://northwind.example.com/careers/forward-deployed-engineer",
   origin: CASE_ORIGIN.DEMO_FIXTURE,
   claims: [
     {
