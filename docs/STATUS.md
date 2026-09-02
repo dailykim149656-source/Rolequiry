@@ -11,7 +11,7 @@ first if the two ever disagree.
 
 | | |
 | :--- | :--- |
-| Judging surface | [`https://rolequiry.com/case`](https://rolequiry.com/case) — responded `200` on 2026-09-02 |
+| Judging surface | [`https://rolequiry.com/case`](https://rolequiry.com/case) — responded `200` on 2026-09-03, exposing the hardened contracts (verified via `document.modelContext.getTools()` on headless Chrome 152) |
 | Employer surface | [`https://rolequiry.com/employer/atlas-fde`](https://rolequiry.com/employer/atlas-fde) |
 | Branch | `main`, in sync with `origin/main` |
 | WebMCP tools on `/case` | 8, registered on `document.modelContext` after hydration |
