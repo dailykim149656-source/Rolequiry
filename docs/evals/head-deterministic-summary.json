@@ -1,9 +1,9 @@
 {
   "schemaVersion": "rolequiry-webmcp-evals-v1",
   "kind": "deterministic-browser-full-journey",
-  "evaluatedBaseSha": "b6897cf709515b151fb84d37e7d8d15e9e1bb792",
-  "toolContractsSha256": "f4dcbfc1de576153dffc5e4676a445e4011aed5c35a7457b8cce80743db0b4ba",
-  "ranAt": "2026-09-01T16:57:15.228Z",
+  "evaluatedBaseSha": "7aa670e9b64ab10a9fce3460f1ccbedfedbf9694",
+  "toolContractsSha256": "021c28d560a9cddd1ef95b53d527251d19f7e7a9c3adaf7798743d332010d3c6",
+  "ranAt": "2026-09-02T21:35:26.849Z",
   "surfacePath": "/case",
   "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
   "verdict": "PASS",
@@ -45,7 +45,7 @@
     },
     {
       "name": "import_role_from_claims",
-      "description": "When the user asks to analyze a resume or career context against a job description, create a case from extracted employer statements plus testable variables and an optional job-posting sourceUrl. Do not persist the raw resume or supply claim kind, coverage, status, unresolvedness, tension, or ranking. Rolequiry derives those fields. After import, call get_role_claims, propose candidate-specific priorities in natural language, and pause for one explicit confirmation before writing priorities.",
+      "description": "When the user asks to analyze a resume or career context against a job description, create a case from extracted employer statements plus testable variables and an optional job-posting sourceUrl. Each claim models exactly one decision variable: quote only the minimal employer sentences that directly bear on that variable, never adjacent policy, benefits, or location prose. Do not persist the raw resume or supply claim kind, coverage, status, unresolvedness, tension, or ranking. Rolequiry derives those fields. After import, call get_role_claims, propose candidate-specific priorities in natural language, and pause for one explicit confirmation before writing priorities.",
       "annotations": {
         "readOnlyHint": false,
         "untrustedContentHint": false
@@ -61,7 +61,7 @@
     },
     {
       "name": "record_research_evidence",
-      "description": "Decision-directed research only: when the candidate naturally approves research, investigate only the currently active probe, not the whole company. Record one agent-reported public employer-published or first-person source with provenance only when it is credible and claim-specific. Stance is relative to the active employer claim, never the candidate's preference or constraint. Before choosing a strong SUPPORTS or CHALLENGES stance, seek credible counterevidence; use NEUTRAL when the source is genuinely non-resolving or mixed. An employer-published source whose domain does not match the job posting's organization is recorded but excluded from employer authority in the derived decision state. After a successful write, call get_case_state and explain what remains unknown. Never require a tool name or claim ID from the candidate. Do not choose derived decision fields.",
+      "description": "Decision-directed research only: when the candidate naturally approves research, investigate only the currently active probe, not the whole company. Record one agent-reported public employer-published or first-person source with provenance only when it is credible and claim-specific. Stance is relative to the active employer claim, never the candidate's preference or constraint. Before choosing a strong SUPPORTS or CHALLENGES stance, seek credible counterevidence; use NEUTRAL when the source is genuinely non-resolving or mixed. An employer-published source counts toward employer authority only when its domain matches the job posting's organization; mismatched or unverifiable employer sources are recorded but excluded from that authority in the derived decision state. After a successful write, call get_case_state and explain what remains unknown. Never require a tool name or claim ID from the candidate. Do not choose derived decision fields.",
       "annotations": {
         "readOnlyHint": false,
         "untrustedContentHint": false
@@ -159,7 +159,10 @@
       "select_decision_changer"
     ],
     "confirmationRoutingPass": true,
-    "researchRouting": ["record_research_evidence", "get_case_state"],
+    "researchRouting": [
+      "record_research_evidence",
+      "get_case_state"
+    ],
     "researchRoutingPass": true,
     "noPreSelectionProbe": true,
     "fourPriorityWrites": true,
