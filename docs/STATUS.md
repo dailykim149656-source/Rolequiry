@@ -47,13 +47,31 @@ Shared-state behaviour was exercised in the same session: changing one claim's c
 priority in the page UI moved the app's own selection from `technical-ownership` to `travel`,
 and the agent reported the new probe on the next turn without being told what had changed.
 
-**One result worth reading closely.** On the imported real role, the candidate marked
-Travel `CRITICAL`, and the app still selected Technical decision authority. That is correct,
-not a routing fault: the posting states the travel load explicitly, so `deriveCase` scores
-Travel at `unresolvedness 0`, `coverage 1.0`, `SUPPORTED`, and `probeEligible: false`.
-Among the claims that remain eligible, Technical decision authority carries the highest
-confirmed importance. Importance alone does not select a probe — importance that is still
-unresolved does.
+**The run diverged from the documented Candidate A scenario, and the cause is worth keeping.**
+[`docs/demo/openai-fde-seoul.md`](demo/openai-fde-seoul.md) specifies that with Travel `CRITICAL`
+and Technical decision authority `HIGH`, `select_decision_changer` should make **Travel** the
+active probe: the published `50% travel is expected.` settles the posting-level percentage, but
+the lived cadence behind it stays unresolved. In this run the app selected Technical decision
+authority instead.
+
+The application behaved as written. The divergence came from the import. For the Travel
+dimension the agent quoted a whole paragraph:
+
+> "This role is based in Seoul. We use a **hybrid work** model of 3 days in the office per week
+> and offer **relocation assistance** to new employees. 50% travel is expected."
+
+`deriveClaimKind` in [`lib/domain/policy.ts`](../lib/domain/policy.ts) matches
+`hybrid work` and `relocation assistance` as explicit policy statements, so the claim was typed
+`EMPLOYER_POLICY`. Policy claims require only `EMPLOYER_STATED` authority, so the claim came out
+`coverage 1.0`, `unresolvedness 0`, `probeEligible: false` — correctly, for that text. Import the
+bounded fact the demo doc calls for, `50% travel is expected.`, and the same function returns
+`LIVED_EXPERIENCE` and Travel is eligible again.
+
+Two things follow. The classifier is doing its job; nothing here argues for changing it. But
+`import_role_from_claims` does not currently ask the agent to quote only the sentences that bear
+on the dimension being imported, and a claim's derived kind is sensitive to that scoping. Until
+it does, a real-role import can silently reclassify a lived-experience question as settled
+policy by quoting one sentence too many.
 
 ## Local checks
 
