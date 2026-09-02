@@ -1,6 +1,6 @@
 # Project status
 
-Last updated: 2026-09-02. Commit at time of writing: `d4c5d0d`.
+Last updated: 2026-09-03. Commit at time of writing: `7aa670e`.
 
 This file records where the project actually stands — what is deployed, what has been
 verified and by which method, and what is still open. The README explains what Rolequiry
@@ -27,7 +27,7 @@ contract. A handful of model runs is evidence, not a statistical guarantee.
 
 Checked in at [`docs/evals/head-deterministic-summary.json`](evals/head-deterministic-summary.json).
 
-- Base SHA `b6897cf`, run 2026-09-01, verdict `PASS`
+- Base SHA `7aa670e`, run 2026-09-02 UTC, verdict `PASS`
 - 8 tools, 8 tool contracts, a 13-step journey
 - `tests/eval-receipt-freshness.test.ts` compares the receipt against `lib/webmcp/contracts.ts`,
   so changing a tool contract without re-running the receipt fails `bun run test`
@@ -64,9 +64,15 @@ directions were checked against `deriveClaimKind` directly. The later runs added
 operator prompt — quote only the sentences bearing on the dimension being imported — and
 conformed.
 
-Nothing here argues for changing the classifier. It does surface that
-`import_role_from_claims` never asks the agent to scope its quotation that way, and that a
-claim's derived kind is sensitive to it. That gap is unfixed at this SHA.
+Nothing here argues for changing the classifier. It did surface that
+`import_role_from_claims` never asked the agent to scope its quotation that way, and that a
+claim's derived kind is sensitive to it. **Fixed at `601f76f`:** the import contract and
+input schema now require quoting only the minimal employer sentences bearing on the one
+decision variable each claim models, and both directions of this exact failure — the broad
+paragraph and the bounded `50% travel is expected.` — are pinned in
+`tests/import-and-evidence.test.ts`, at `deriveClaimKind` and end to end through the import
+tool. The model-facing runs above predate that contract change and stand as evidence at
+their own SHA.
 
 Provider note: the first four runs used `opencode-go/grok-4.6`. That provider's credits ran out,
 so the last run drove the identical scenario through `xai/grok-4.6`. Nothing about the page or
@@ -74,12 +80,12 @@ the bridge changed — the tools are page-native, so the client path is intercha
 
 ## Local checks
 
-Run on 2026-09-02 at `d4c5d0d`:
+Run on 2026-09-03 at `7aa670e`:
 
 | Command | Result |
 | :--- | :--- |
 | `bun run typecheck` | clean |
-| `bun run test` | 163 tests across 24 files, all passing |
+| `bun run test` | 169 tests across 24 files, all passing |
 
 ## Client surfaces
 
@@ -97,13 +103,26 @@ Two notes for anyone reproducing the model-facing runs:
   to `document.modelContext.getTools()` and `tools/call` to `document.modelContext.executeTool()`.
   No tools other than the page's own were exposed to the model, and no DOM access was given.
 
+## Fixed since the model-facing runs
+
+Both fixes below landed after the 2026-09-02 runs, so those runs are evidence for the
+pre-fix contracts at `d4c5d0d`. The deterministic receipt has been re-run at `7aa670e`.
+
+- **Import quotation scoping** (`601f76f`): the live-run failure documented above is now a
+  contract requirement plus a pinned regression, not an open gap.
+- **Employer authority is opt-in by verified domain match** (`7aa670e`): agent-declared
+  employer-official evidence previously entered authority math whenever the domain check
+  returned `null` — in particular on a case imported without a posting URL, where there is
+  no organization to check against, an unverifiable `CHALLENGES` declaration could flip a
+  claim to `CHALLENGED`. Authority now requires `match === true`; mismatched and uncheckable
+  sources stay recorded and are labelled in the evidence list, but never enter coverage or
+  tension. The demo fixtures gained synthetic posting URLs so their baseline exists.
+
 ## Open
 
 - **Model-facing evidence is five runs on one day, four of them scored.** It is recorded as 4/4,
-  not as a rate. All five used the same model family through one client; repeating it on a
-  genuinely different client would strengthen the claim.
-- **`import_role_from_claims` does not ask the agent to scope its quotation** to the dimension
-  being imported, and a claim's derived kind is sensitive to that. Documented above, unfixed here.
+  not as a rate. All five used the same model family through one client and predate the two
+  fixes above; repeating a run on the current contracts would strengthen the claim.
 - **Provenance is agent-reported.** Rolequiry structures and domain-checks what an agent declares;
   it does not authenticate authorship or page contents. See *Known limitations* in the README.
 - **Employee and workplace signals in the fixtures are synthetic** and labelled as such in the UI.
