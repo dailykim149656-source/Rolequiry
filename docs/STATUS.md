@@ -21,7 +21,7 @@ first if the two ever disagree.
 Two kinds of evidence, kept apart on purpose. Deterministic browser runs prove the page
 exposes the intended tools and that those tools mutate shared state correctly. Model-facing
 runs are probabilistic evidence that a model picks the right tools and respects the
-contract. One model run is evidence, not a statistical guarantee.
+contract. A handful of model runs is evidence, not a statistical guarantee.
 
 ### Deterministic browser receipt — PASS
 
@@ -32,46 +32,45 @@ Checked in at [`docs/evals/head-deterministic-summary.json`](evals/head-determin
 - `tests/eval-receipt-freshness.test.ts` compares the receipt against `lib/webmcp/contracts.ts`,
   so changing a tool contract without re-running the receipt fails `bun run test`
 
-### Model-facing run — PASS, 1/1
+### Model-facing runs — PASS, 4/4 scored
 
 Recorded in [`docs/evals/webmcp-agent-journeys.md`](evals/webmcp-agent-journeys.md).
-Run 2026-09-02 at HEAD `d4c5d0d`, on the live site.
+Five runs on 2026-09-02 at HEAD `d4c5d0d`, against the live site. Four were scored on the
+three routing questions and all four passed; the fifth is reported unscored because its
+research turn never returned — a stall in the agent harness, not in a page tool.
 
 | Routing question | Result |
 | :--- | :--- |
-| After the candidate confirms, is the order `set_candidate_priorities` → `select_decision_changer`? | PASS |
-| Does the model investigate the probe the app returned, without re-ranking it? | PASS |
-| Does "Where does the decision stand?" route to `get_decision_dossier`, relayed as-is? | PASS |
+| After the candidate confirms, is the order `set_candidate_priorities` → `select_decision_changer`? | 4/4 |
+| Does the model investigate the probe the app returned, without re-ranking it? | 4/4 |
+| Does "Where does the decision stand?" route to `get_decision_dossier`, relayed as-is? | 4/4 |
 
-Shared-state behaviour was exercised in the same session: changing one claim's candidate
-priority in the page UI moved the app's own selection from `technical-ownership` to `travel`,
-and the agent reported the new probe on the next turn without being told what had changed.
+Shared-state behaviour held on every run: changing one claim's candidate priority in the page
+UI moved the app's own selection from `technical-ownership` to `travel`, and the agent reported
+the new probe on its next turn without being told what had changed.
 
-**The run diverged from the documented Candidate A scenario, and the cause is worth keeping.**
-[`docs/demo/openai-fde-seoul.md`](demo/openai-fde-seoul.md) specifies that with Travel `CRITICAL`
-and Technical decision authority `HIGH`, `select_decision_changer` should make **Travel** the
-active probe: the published `50% travel is expected.` settles the posting-level percentage, but
-the lived cadence behind it stays unresolved. In this run the app selected Technical decision
-authority instead.
+Three of the four scored runs also matched the documented Candidate A scenario in
+[`docs/demo/openai-fde-seoul.md`](demo/openai-fde-seoul.md): Travel as the active probe,
+2 remaining decision blockers, and the Travel question routed to `TEAM_MEMBER`.
 
-The application behaved as written. The divergence came from the import. For the Travel
-dimension the agent quoted a whole paragraph:
+**The one that did not is worth keeping in the record.** For the Travel dimension that run's
+agent quoted a whole paragraph, which happened to contain `hybrid work` and
+`relocation assistance`. `deriveClaimKind` in [`lib/domain/policy.ts`](../lib/domain/policy.ts)
+matches both as explicit policy language, so the claim was typed `EMPLOYER_POLICY`, required
+only `EMPLOYER_STATED` authority, and came out `coverage 1.0`, `unresolvedness 0`,
+`probeEligible: false` — correctly, for that text. Quoting the bounded fact the demo doc calls
+for, `50% travel is expected.`, returns `LIVED_EXPERIENCE` and Travel is eligible again; both
+directions were checked against `deriveClaimKind` directly. The later runs added one line to the
+operator prompt — quote only the sentences bearing on the dimension being imported — and
+conformed.
 
-> "This role is based in Seoul. We use a **hybrid work** model of 3 days in the office per week
-> and offer **relocation assistance** to new employees. 50% travel is expected."
+Nothing here argues for changing the classifier. It does surface that
+`import_role_from_claims` never asks the agent to scope its quotation that way, and that a
+claim's derived kind is sensitive to it. That gap is unfixed at this SHA.
 
-`deriveClaimKind` in [`lib/domain/policy.ts`](../lib/domain/policy.ts) matches
-`hybrid work` and `relocation assistance` as explicit policy statements, so the claim was typed
-`EMPLOYER_POLICY`. Policy claims require only `EMPLOYER_STATED` authority, so the claim came out
-`coverage 1.0`, `unresolvedness 0`, `probeEligible: false` — correctly, for that text. Import the
-bounded fact the demo doc calls for, `50% travel is expected.`, and the same function returns
-`LIVED_EXPERIENCE` and Travel is eligible again.
-
-Two things follow. The classifier is doing its job; nothing here argues for changing it. But
-`import_role_from_claims` does not currently ask the agent to quote only the sentences that bear
-on the dimension being imported, and a claim's derived kind is sensitive to that scoping. Until
-it does, a real-role import can silently reclassify a lived-experience question as settled
-policy by quoting one sentence too many.
+Provider note: the first four runs used `opencode-go/grok-4.6`. That provider's credits ran out,
+so the last run drove the identical scenario through `xai/grok-4.6`. Nothing about the page or
+the bridge changed — the tools are page-native, so the client path is interchangeable.
 
 ## Local checks
 
@@ -89,19 +88,22 @@ Run on 2026-09-02 at `d4c5d0d`:
 | Chrome 152 stable, `--enable-blink-features=WebMCP` | Working. `document.modelContext.getTools()` returns all 8 tools; `executeTool` mutates case state as specified. |
 | ChatGPT desktop built-in browser | Not exercised in this round. The attempt failed on an account credential error local to the test machine, which says nothing about the page. |
 
-Two notes for anyone reproducing the model-facing run:
+Two notes for anyone reproducing the model-facing runs:
 
 - Chrome's **testing** shim (`navigator.modelContextTesting`) is not present in stable Chrome.
   Generic WebMCP-to-MCP bridges that probe for it will report zero tools even though the page
   has registered eight. `document.modelContext` itself works on stable Chrome behind the flag.
-- The 2026-09-02 run reached the page tools over the DevTools Protocol, forwarding `tools/list`
+- These runs reached the page tools over the DevTools Protocol, forwarding `tools/list`
   to `document.modelContext.getTools()` and `tools/call` to `document.modelContext.executeTool()`.
   No tools other than the page's own were exposed to the model, and no DOM access was given.
 
 ## Open
 
-- **Model-facing evidence is a single run.** It is recorded as 1/1, not as a rate. Repeating it
-  across clients would strengthen the claim; nothing here should be read as a distribution.
+- **Model-facing evidence is five runs on one day, four of them scored.** It is recorded as 4/4,
+  not as a rate. All five used the same model family through one client; repeating it on a
+  genuinely different client would strengthen the claim.
+- **`import_role_from_claims` does not ask the agent to scope its quotation** to the dimension
+  being imported, and a claim's derived kind is sensitive to that. Documented above, unfixed here.
 - **Provenance is agent-reported.** Rolequiry structures and domain-checks what an agent declares;
   it does not authenticate authorship or page contents. See *Known limitations* in the README.
 - **Employee and workplace signals in the fixtures are synthetic** and labelled as such in the UI.

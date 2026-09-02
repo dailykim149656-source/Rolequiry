@@ -4,23 +4,39 @@ Deterministic browser base SHA: `b6897cf709515b151fb84d37e7d8d15e9e1bb792`
 
 Current natural-language contract: committed at the base SHA above and bound to the runtime tool-description digest in [`head-deterministic-summary.json`](head-deterministic-summary.json). `tests/eval-receipt-freshness.test.ts` compares the checked-in receipt against `lib/webmcp/contracts.ts`, so changing a tool contract without re-running the browser receipt fails `bun run test`.
 
-Current model-facing verdict: **PASS, 1/1 run** at `d4c5d0d72e877b6b842fbd6fb609b170e77bc26d` (2026-09-02). One run is evidence, not a statistical guarantee; see the run record below. The historical Gemini rows further down apply only to `175e697d15f61503b651a79295df3a109538fa9a`; their raw artifacts are not tracked in this repository and are not current acceptance evidence.
+Current model-facing verdict: **PASS, 4/4 scored runs** at `d4c5d0d72e877b6b842fbd6fb609b170e77bc26d` (2026-09-02), with one further run unscored because the harness stalled mid-turn. Four runs are evidence, not a statistical guarantee; see the run record below. The historical Gemini rows further down apply only to `175e697d15f61503b651a79295df3a109538fa9a`; their raw artifacts are not tracked in this repository and are not current acceptance evidence.
 
-### Model-facing run — 2026-09-02, HEAD `d4c5d0d`
+### Model-facing runs — 2026-09-02, HEAD `d4c5d0d`
 
-Surface: Chrome 152 stable launched with `--enable-blink-features=WebMCP`, serving `https://rolequiry.com/case`. The page's eight `document.modelContext` tools were exposed to the agent over a stdio MCP shim that forwards `tools/list` to `document.modelContext.getTools()` and `tools/call` to `document.modelContext.executeTool()` via CDP. The shim registers no tools of its own and provides no DOM access, so every tool the model saw was one the page registered. Client: OpenCode 1.18.3. Model: Grok 4.6 (`opencode-go/grok-4.6`).
+Surface for every run: Chrome 152 stable launched with `--enable-blink-features=WebMCP`, serving `https://rolequiry.com/case`. The page's eight `document.modelContext` tools reached the agent through a stdio MCP shim that forwards `tools/list` to `document.modelContext.getTools()` and `tools/call` to `document.modelContext.executeTool()` over CDP. The shim registers no tools of its own and gives no DOM access, so every tool the model saw was one the page registered. Client: OpenCode 1.18.3.
 
-| # | Routing question | Result |
-|---|---|---|
-| 1 | After the candidate confirms priorities, is the tool order `set_candidate_priorities` → `select_decision_changer`? | **PASS** — observed `get_role_claims`, `set_candidate_priorities`, `select_decision_changer`, in that order. |
-| 2 | Does the model investigate the probe the app returned, without re-ranking it? | **PASS** — the app returned `technical decision authority`; the model researched that probe only and recorded one public source through `record_research_evidence`. It did not substitute a probe of its own. |
-| 3 | Does "Where does the decision stand?" route to `get_decision_dossier`, and is the rollup relayed as-is? | **PASS** — single `get_decision_dossier` call; the reply carried the remaining blocker, the resolved claim, and the interview questions with their `askWho` routing. |
+Three routing questions were scored on each run:
 
-Also observed in the same session, as shared-state evidence: changing one claim's candidate priority in the page UI (Travel `LOW` → `CRITICAL`, via a real key event on the select) moved the app's own selection from `technical-ownership` to `travel`, and the model reported the new probe on the next turn without being told what had changed.
+1. After the candidate confirms priorities, is the tool order `set_candidate_priorities` → `select_decision_changer`?
+2. Does the model investigate the probe the app returned, without re-ranking it or substituting its own?
+3. Does "Where does the decision stand?" route to `get_decision_dossier`, with the rollup relayed as-is?
 
-Divergence from the documented scenario, and its cause: `docs/demo/openai-fde-seoul.md` specifies that Candidate A's confirmation should make **Travel** the active probe. This run selected Technical decision authority. The application was not at fault — for the Travel dimension the agent quoted a paragraph containing `hybrid work` and `relocation assistance`, which `deriveClaimKind` matches as explicit policy language, so the claim was typed `EMPLOYER_POLICY`, needed only `EMPLOYER_STATED` authority, and came out fully covered and probe-ineligible. Importing the bounded fact the demo doc calls for, `50% travel is expected.`, yields `LIVED_EXPERIENCE` and restores Travel's eligibility. The three routing questions above are unaffected: they test tool ordering, respect for the app's selection, and dossier routing, all of which held. What this run does show is that `import_role_from_claims` does not yet ask the agent to quote only the sentences bearing on the dimension it is importing, and that a claim's derived kind is sensitive to that scoping.
+| Run | Model | Q1 | Q2 | Q3 | Probe the app selected |
+|---|---|---|---|---|---|
+| A | `opencode-go/grok-4.6` | PASS | PASS | PASS | Technical decision authority — diverged from the demo scenario, see below |
+| B | `opencode-go/grok-4.6` | PASS | PASS | PASS | Travel concentration |
+| C | `opencode-go/grok-4.6` | PASS | PASS | PASS | Travel concentration |
+| D | `xai/grok-4.6` | PASS | PASS | PASS | Travel concentration |
+| E | `opencode-go/grok-4.6` | — | — | — | unscored: the research turn never returned |
 
-Note on expected values: the checked-in browser receipt records the deterministic fixture path. This live run imported a real posting and recorded its own research evidence, so its dossier totals (1 remaining blocker) reflect that run's evidence set rather than the fixture's.
+Run E is reported rather than dropped. Its routing was correct as far as it got — it recorded one `NEUTRAL` source against the active probe through `record_research_evidence` — but the turn did not terminate, so no verdict is claimed. The stall was in the agent harness, not in a page tool.
+
+Runs A–C and E used the same provider. By run D that provider's credits were exhausted, so run D drove the identical scenario through xAI directly. Nothing about the page or the shim changed, which is a small piece of evidence in its own right: the tools are page-native, so the client path is interchangeable.
+
+Shared-state behaviour, observed on every run: changing one claim's candidate priority in the page UI (Travel `LOW` → `CRITICAL`, by a real key event on the select) moved the app's own selection from `technical-ownership` to `travel`, and the model reported the new probe on its next turn without being told what had changed.
+
+Scenario conformance: [`docs/demo/openai-fde-seoul.md`](../demo/openai-fde-seoul.md) specifies that Candidate A's confirmation should make **Travel** the active probe. Runs B, C and D matched it, and their dossiers came back with 2 remaining decision blockers and the Travel question routed to `TEAM_MEMBER`, as the demo doc expects.
+
+**Run A diverged, and the cause is worth keeping.** The application was not at fault. For the Travel dimension the agent quoted a whole paragraph, which happened to contain `hybrid work` and `relocation assistance`; `deriveClaimKind` matches both as explicit policy language, so the claim was typed `EMPLOYER_POLICY`, needed only `EMPLOYER_STATED` authority, and came out fully covered and probe-ineligible. Quoting the bounded fact the demo doc calls for, `50% travel is expected.`, returns `LIVED_EXPERIENCE` and Travel is eligible again; both directions were checked against `deriveClaimKind` directly. Runs B–D added one line to the operator prompt — quote only the sentences that bear on the dimension being imported — and conformed.
+
+Nothing here argues for changing the classifier. It does surface that `import_role_from_claims` never asks the agent to scope its quotation to the dimension, and that a claim's derived kind is sensitive to that scoping. That is a contract gap, not a routing fault, and it is unfixed at this SHA.
+
+Note on expected values: the checked-in browser receipt records the deterministic fixture path. These live runs imported a real posting and recorded their own research evidence, so their dossier totals reflect each run's evidence set rather than the fixture's.
 
 Source rationale: Chrome's WebMCP eval guidance treats browser-tool checks as contract evidence: deterministic browser runs prove that the page exposes the intended tools and that those tools mutate shared state correctly; model-facing runs are probabilistic evidence that a model chooses the right tools, arguments, output reuse, and final-answer policy. One model run is evidence, not a statistical guarantee.
 
