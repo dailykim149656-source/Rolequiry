@@ -7,6 +7,7 @@ import { createCaseStore } from "@/lib/case-store";
 import { deriveClaimKind } from "@/lib/domain/policy";
 import { SPEAKER_ROLE } from "@/lib/domain/types";
 import {
+  CASE_TOOL_CONTRACTS,
   getCaseState,
   importRoleFromClaimsTool,
   selectDecisionChanger,
@@ -164,6 +165,80 @@ describe("import_role_from_claims", () => {
         employerStatement: "Annual bonus of up to 15%",
       }),
     ).toBe("EMPLOYER_POLICY");
+  });
+
+  // Pins the failure observed in a 2026-09-02 model-facing run: an agent that
+  // quotes a whole posting paragraph drags adjacent policy language into a
+  // lived-experience claim and flips its derived kind, which silently removes
+  // the claim from probing. The import contract now forbids that quotation.
+  describe("claim quotation scoping", () => {
+    const broadTravelParagraph =
+      "50% travel is expected. The team operates on a hybrid work schedule, " +
+      "and relocation assistance is available for candidates moving to Seoul.";
+
+    it("shows why unscoped quotation is unsafe: adjacent policy prose flips the derived kind", () => {
+      expect(
+        deriveClaimKind({
+          dimension: "Travel concentration",
+          employerStatement: broadTravelParagraph,
+        }),
+      ).toBe("EMPLOYER_POLICY");
+      expect(
+        deriveClaimKind({
+          dimension: "Travel concentration",
+          employerStatement: "50% travel is expected.",
+        }),
+      ).toBe("LIVED_EXPERIENCE");
+    });
+
+    it("keeps a minimally quoted travel claim probe-eligible end to end", () => {
+      const importTravel = (employerStatement: string) => {
+        const store = createCaseStore();
+        importRoleFromClaimsTool(store, {
+          company: "OpenAI",
+          role: "Forward Deployed Engineer, Seoul",
+          sourceUrl:
+            "https://openai.com/careers/forward-deployed-engineer-seoul-seoul-south-korea/",
+          claims: [
+            {
+              dimension: "Travel concentration",
+              employerStatement,
+              unresolvedVariable: "How the stated 50% is distributed",
+              measurableForm: "Median travel days per quarter",
+            },
+          ],
+        });
+        store.setPriorities([
+          { claimId: "imported-1", importance: "CRITICAL" },
+        ]);
+        return store
+          .getState()
+          .derived.claims.find((claim) => claim.id === "imported-1");
+      };
+
+      const bounded = importTravel("50% travel is expected.");
+      expect(bounded?.kind).toBe("LIVED_EXPERIENCE");
+      expect(bounded?.probeEligible).toBe(true);
+
+      const broad = importTravel(broadTravelParagraph);
+      expect(broad?.kind).toBe("EMPLOYER_POLICY");
+      expect(broad?.probeEligible).toBe(false);
+    });
+
+    it("instructs the agent to quote one decision variable per claim", () => {
+      const importContract = CASE_TOOL_CONTRACTS.find(
+        (tool) => tool.name === "import_role_from_claims",
+      );
+      expect(importContract?.description).toMatch(
+        /exactly one decision variable/i,
+      );
+      expect(importContract?.description).toMatch(
+        /minimal employer sentences/i,
+      );
+      expect(importContract?.description).toMatch(
+        /never adjacent policy, benefits, or location prose/i,
+      );
+    });
   });
 
   it("ranks only claims the candidate has set after import", () => {

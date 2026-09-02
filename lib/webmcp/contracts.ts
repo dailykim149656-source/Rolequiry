@@ -26,7 +26,7 @@ export const CASE_TOOL_CONTRACTS = [
   {
     name: "import_role_from_claims",
     description:
-      "When the user asks to analyze a resume or career context against a job description, create a case from extracted employer statements plus testable variables and an optional job-posting sourceUrl. Do not persist the raw resume or supply claim kind, coverage, status, unresolvedness, tension, or ranking. Rolequiry derives those fields. After import, call get_role_claims, propose candidate-specific priorities in natural language, and pause for one explicit confirmation before writing priorities.",
+      "When the user asks to analyze a resume or career context against a job description, create a case from extracted employer statements plus testable variables and an optional job-posting sourceUrl. Each claim models exactly one decision variable: quote only the minimal employer sentences that directly bear on that variable, never adjacent policy, benefits, or location prose. Do not persist the raw resume or supply claim kind, coverage, status, unresolvedness, tension, or ranking. Rolequiry derives those fields. After import, call get_role_claims, propose candidate-specific priorities in natural language, and pause for one explicit confirmation before writing priorities.",
     annotations: { readOnlyHint: false },
   },
   {

@@ -94,11 +94,14 @@ const importSchema = {
         properties: {
           dimension: {
             type: "string",
+            description: "The single decision variable this claim models.",
             minLength: 1,
             maxLength: WEBMCP_INPUT_LIMITS.label,
           },
           employerStatement: {
             type: "string",
+            description:
+              "Only the minimal employer sentences that directly bear on this claim's decision variable. Never fold adjacent policy, benefits, or location prose into the same claim.",
             minLength: 1,
             maxLength: WEBMCP_INPUT_LIMITS.text,
           },
