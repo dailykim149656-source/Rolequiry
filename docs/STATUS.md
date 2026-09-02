@@ -1,6 +1,6 @@
 # Project status
 
-Last updated: 2026-09-03. Commit at time of writing: `d15ab03`.
+Last updated: 2026-09-03. Model-facing runtime SHA: `d15ab03`.
 
 This file records where the project actually stands — what is deployed, what has been
 verified and by which method, and what is still open. The README explains what Rolequiry
@@ -36,7 +36,7 @@ Checked in at [`docs/evals/head-deterministic-summary.json`](evals/head-determin
 
 Recorded in [`docs/evals/webmcp-agent-journeys.md`](evals/webmcp-agent-journeys.md).
 
-**Current contracts:** two runs on 2026-09-03 at HEAD `d15ab03` (`xai/grok-4.6`, live site),
+**Current contracts:** two runs on 2026-09-03 at runtime SHA `d15ab03` (`xai/grok-4.6`, live site),
 scored on the three routing questions plus a new scoping question. The operator prompt
 deliberately omitted the quotation-scoping line the earlier runs had needed; both runs still
 imported the travel claim as exactly `50% travel is expected.` — leaving out the adjacent
@@ -154,3 +154,5 @@ and the 2026-09-03 model-facing runs verify both fixes against a live model.
 Entered in The WebMCP Challenge. The entry deadline is **2026-09-03 13:00 PDT
 (2026-09-04 05:00 KST)**. After it passes, the repository, the live site, and the submitted
 entry should be treated as frozen until results are published; judging runs to 9/23.
+Judge-only testing and client fields were re-submitted on 2026-09-03 to include
+the current 2/2 hardened-contract evidence.

@@ -32,6 +32,19 @@
 
 **Your agent investigates. Rolequiry keeps the case.**
 
+Rolequiry separates what an employer has stated from what a candidate actually needs to know.
+
+A second official source can corroborate a published requirement while the lived-experience question remains unresolved.
+
+Change one priority in the page without telling the agent; on the next check, Rolequiry recomputes the shared case and returns a different authoritative probe through WebMCP.
+
+| Current verification | |
+| :--- | :--- |
+| Page-native WebMCP tools | 8 |
+| Tests | 169 across 24 files |
+| Deterministic 13-step browser journey | PASS |
+| Model-facing | 2/2 current hardened contracts, plus 4/4 pre-hardening |
+
 Rolequiry is an agent-native candidate due-diligence app for the OpenAI WebMCP Challenge. ChatGPT can analyze a JD; Rolequiry turns that analysis into application-owned, inspectable case state for candidate-confirmed priorities, employer claims, evidence and provenance, active uncertainty, and the next verification target.
 
 A bad job is costly for the candidate. A bad hire is costly for the employer. Rolequiry treats both as the same pre-hire mismatch: expectations that were never made inspectable. Candidate due diligence here is expectation alignment before anyone signs — better self-selection on the candidate side, and less early attrition from avoidable expectation gaps on the employer side.
@@ -73,7 +86,7 @@ bun run dev -- --port 3100
 
 Then open `http://127.0.0.1:3100/case`.
 
-Supported test environment: ChatGPT built-in browser / Chrome with WebMCP. The page registers tools on `document.modelContext` after hydration via `use-webmcp-tool`.
+Judging environments: ChatGPT in-app browser or Chrome with WebMCP. The page registers tools on `document.modelContext` after hydration via `use-webmcp-tool`. Current acceptance evidence is recorded in [`docs/STATUS.md`](docs/STATUS.md).
 
 ---
 

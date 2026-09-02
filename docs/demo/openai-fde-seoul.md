@@ -7,7 +7,7 @@ This is a repeatable page-native WebMCP demo, not a saved candidate profile, fit
 - Official job page: https://openai.com/careers/forward-deployed-engineer-seoul-seoul-south-korea/
 - Verified against the public page on 2026-08-31.
 - Open `/case` on the current Rolequiry origin in a browser that can see page-native WebMCP tools.
-- Confirm that the product bar reports `WebMCP 7/7 live`.
+- Confirm that the product bar reports `WebMCP 8/8 live`.
 
 Do not copy the full JD into this repository. Before the demo, capture the posting's final URL, title, and timestamp. Keep this bounded official fact visible in the rehearsal: `50% travel is expected.` For Candidate A, that published percentage already exceeds the candidate's roughly 20% travel ceiling, so the posting-level percentage mismatch is resolved by the official page and is not itself unknown. The remaining Travel uncertainty is narrower: how that stated expectation is actually distributed across the Seoul team's cadence, concentration, duration, launch spikes, and consecutive onsite stretches.
 
@@ -100,7 +100,7 @@ Rolequiry preserves both outcomes without turning them into a fit score or join 
 
 ## Observable checkpoints
 
-- Product bar shows `WebMCP 7/7 live`.
+- Product bar shows `WebMCP 8/8 live`.
 - The dossier header shows the OpenAI role and the agent-reported posting link.
 - `get_role_claims` returns only agent-imported, untrusted employer-claim extracts, source snippets, and claim IDs.
 - After Candidate A confirmation, all four priority controls show `CRITICAL`, `MEDIUM`, `HIGH`, `MEDIUM` with no active probe before selection.
@@ -111,7 +111,7 @@ Rolequiry preserves both outcomes without turning them into a fit score or join 
 
 ## Storyboard
 
-Prepared, not published:
+Published on YouTube and embedded on the Devpost entry:
 
 ```text
 0:00-0:20 problem and thesis
@@ -122,4 +122,4 @@ Prepared, not published:
 2:25-2:50 why Rolequiry is more than a ChatGPT answer
 ```
 
-Do not record, upload, or publish a video from this document alone.
+The public demo video follows this storyboard. Do not treat this document as the source of the video file itself.
