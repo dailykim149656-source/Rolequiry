@@ -1,6 +1,6 @@
 # Project status
 
-Last updated: 2026-09-03. Commit at time of writing: `7aa670e`.
+Last updated: 2026-09-03. Commit at time of writing: `d15ab03`.
 
 This file records where the project actually stands — what is deployed, what has been
 verified and by which method, and what is still open. The README explains what Rolequiry
@@ -32,24 +32,42 @@ Checked in at [`docs/evals/head-deterministic-summary.json`](evals/head-determin
 - `tests/eval-receipt-freshness.test.ts` compares the receipt against `lib/webmcp/contracts.ts`,
   so changing a tool contract without re-running the receipt fails `bun run test`
 
-### Model-facing runs — PASS, 4/4 scored
+### Model-facing runs — PASS: 2/2 on current contracts, 4/4 pre-hardening
 
 Recorded in [`docs/evals/webmcp-agent-journeys.md`](evals/webmcp-agent-journeys.md).
-Five runs on 2026-09-02 at HEAD `d4c5d0d`, against the live site. Four were scored on the
-three routing questions and all four passed; the fifth is reported unscored because its
-research turn never returned — a stall in the agent harness, not in a page tool.
 
-| Routing question | Result |
+**Current contracts:** two runs on 2026-09-03 at HEAD `d15ab03` (`xai/grok-4.6`, live site),
+scored on the three routing questions plus a new scoping question. The operator prompt
+deliberately omitted the quotation-scoping line the earlier runs had needed; both runs still
+imported the travel claim as exactly `50% travel is expected.` — leaving out the adjacent
+`hybrid work` and `relocation assistance` prose in the same posting paragraph — so the
+hardened import contract carried the scoping on its own. Both runs also exercised the opt-in
+employer-authority path (`sourceOrganizationMatch: true` on a same-organization official
+source, recorded `NEUTRAL`, tension `0`) and matched the documented Candidate A scenario:
+Travel active, 2 remaining decision blockers, Travel question routed to `TEAM_MEMBER`.
+
+| Question (2026-09-03 runs) | Result |
+| :--- | :--- |
+| No scoping line in the prompt: does the agent quote only the minimal employer sentences per claim? | 2/2 |
+| After the candidate confirms, is the order `set_candidate_priorities` → `select_decision_changer`? | 2/2 |
+| Does the model investigate the probe the app returned, without re-ranking it? | 2/2 |
+| Does "Where does the decision stand?" route to `get_decision_dossier`, relayed as-is? | 2/2 |
+
+**Pre-hardening:** five runs on 2026-09-02 at HEAD `d4c5d0d`, against the live site. Four were
+scored on the three routing questions and all four passed; the fifth is reported unscored
+because its research turn never returned — a stall in the agent harness, not in a page tool.
+
+| Routing question (2026-09-02 runs) | Result |
 | :--- | :--- |
 | After the candidate confirms, is the order `set_candidate_priorities` → `select_decision_changer`? | 4/4 |
 | Does the model investigate the probe the app returned, without re-ranking it? | 4/4 |
 | Does "Where does the decision stand?" route to `get_decision_dossier`, relayed as-is? | 4/4 |
 
-Shared-state behaviour held on every run: changing one claim's candidate priority in the page
-UI moved the app's own selection from `technical-ownership` to `travel`, and the agent reported
-the new probe on its next turn without being told what had changed.
+Shared-state behaviour held on every 2026-09-02 run: changing one claim's candidate priority in
+the page UI moved the app's own selection from `technical-ownership` to `travel`, and the agent
+reported the new probe on its next turn without being told what had changed.
 
-Three of the four scored runs also matched the documented Candidate A scenario in
+Three of the four scored 2026-09-02 runs also matched the documented Candidate A scenario in
 [`docs/demo/openai-fde-seoul.md`](demo/openai-fde-seoul.md): Travel as the active probe,
 2 remaining decision blockers, and the Travel question routed to `TEAM_MEMBER`.
 
@@ -71,12 +89,14 @@ input schema now require quoting only the minimal employer sentences bearing on 
 decision variable each claim models, and both directions of this exact failure — the broad
 paragraph and the bounded `50% travel is expected.` — are pinned in
 `tests/import-and-evidence.test.ts`, at `deriveClaimKind` and end to end through the import
-tool. The model-facing runs above predate that contract change and stand as evidence at
-their own SHA.
+tool. The 2026-09-02 runs predate that contract change and stand as evidence at their own SHA;
+the 2026-09-03 runs above verify, with no operator-prompt scoping line, that the hardened
+contract alone now produces the bounded quote.
 
-Provider note: the first four runs used `opencode-go/grok-4.6`. That provider's credits ran out,
-so the last run drove the identical scenario through `xai/grok-4.6`. Nothing about the page or
-the bridge changed — the tools are page-native, so the client path is interchangeable.
+Provider note: the first four 2026-09-02 runs used `opencode-go/grok-4.6`. That provider's
+credits ran out, so the last 2026-09-02 run and both 2026-09-03 runs drove the identical
+scenario through `xai/grok-4.6`. Nothing about the page or the bridge changed — the tools are
+page-native, so the client path is interchangeable.
 
 ## Local checks
 
@@ -103,10 +123,11 @@ Two notes for anyone reproducing the model-facing runs:
   to `document.modelContext.getTools()` and `tools/call` to `document.modelContext.executeTool()`.
   No tools other than the page's own were exposed to the model, and no DOM access was given.
 
-## Fixed since the model-facing runs
+## Fixed since the 2026-09-02 model-facing runs
 
 Both fixes below landed after the 2026-09-02 runs, so those runs are evidence for the
-pre-fix contracts at `d4c5d0d`. The deterministic receipt has been re-run at `7aa670e`.
+pre-fix contracts at `d4c5d0d`. The deterministic receipt has been re-run at `7aa670e`,
+and the 2026-09-03 model-facing runs verify both fixes against a live model.
 
 - **Import quotation scoping** (`601f76f`): the live-run failure documented above is now a
   contract requirement plus a pinned regression, not an open gap.
@@ -120,9 +141,10 @@ pre-fix contracts at `d4c5d0d`. The deterministic receipt has been re-run at `7a
 
 ## Open
 
-- **Model-facing evidence is five runs on one day, four of them scored.** It is recorded as 4/4,
-  not as a rate. All five used the same model family through one client and predate the two
-  fixes above; repeating a run on the current contracts would strengthen the claim.
+- **Model-facing evidence is seven runs over two days, six of them scored.** It is recorded
+  as 4/4 pre-hardening plus 2/2 on the current contracts, not as a rate. All runs used one
+  model family (`grok-4.6`) through one client; other model families have not been scored
+  against the current contracts.
 - **Provenance is agent-reported.** Rolequiry structures and domain-checks what an agent declares;
   it does not authenticate authorship or page contents. See *Known limitations* in the README.
 - **Employee and workplace signals in the fixtures are synthetic** and labelled as such in the UI.

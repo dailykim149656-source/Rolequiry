@@ -159,10 +159,7 @@
       "select_decision_changer"
     ],
     "confirmationRoutingPass": true,
-    "researchRouting": [
-      "record_research_evidence",
-      "get_case_state"
-    ],
+    "researchRouting": ["record_research_evidence", "get_case_state"],
     "researchRoutingPass": true,
     "noPreSelectionProbe": true,
     "fourPriorityWrites": true,
